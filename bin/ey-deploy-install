@@ -1,0 +1,5 @@
+dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib/server'))
+
+Dir.chdir dir do
+  puts `#{dir}/install.sh`
+end

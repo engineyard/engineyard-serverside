@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Checkout the real 'master' so we can view the repo files
+here=`pwd`
+working_dir=`echo "$here" | sed 's/\/.git$//g'`
+
+output=`git --work-tree=$working_dir checkout -b deploy master 2>&1`
+has_error=`echo "$output" | grep 'already exists'`
+if [ -z "$has_error" ]; then
+	echo 'Checked out master branch'
+else
+	echo 'Merging latest changes'
+	git --work-tree=$working_dir merge master
+fi
+
+sh -c "/usr/bin/ey-deploy $working_dir"
+

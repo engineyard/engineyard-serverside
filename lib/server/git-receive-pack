@@ -1,0 +1,19 @@
+#! /bin/bash
+
+repo="$1"
+post_receive_hook_script="$(dirname $0)/engineyard_post-receive_hook"
+
+if [[ ! -d "$repo" ]]; then
+	go_back="$(pwd)"
+	mkdir -pv "$repo" > /dev/null
+	cd "$repo"
+	git init > /dev/null
+	# remove .git/hooks/post-receive if it exists (which it will in certain git versions)
+	if [[ -f .git/hooks/post-receive ]]; then
+		rm .git/hooks/post-receive
+	fi
+	ln -s $post_receive_hook_script .git/hooks/post-receive > /dev/null
+	cd "$go_back"
+fi
+
+/usr/bin/git-receive-pack_original/git-receive-pack $*
