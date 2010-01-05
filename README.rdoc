@@ -1,3 +1,20 @@
 == ey-deploy
 
-A gem that provides...
+You have an environment called  foo_production  on the ey cloud
+You boot a server with an app attached called railsapp from a git repo
+Once the server fully comes up ssh into it and run this:
+
+# as root
+gem install ey-deploy --source http://gems.engineyard.com
+ey-deploy-install
+
+Now back on your local machine, 
+
+cd railsapp
+git remote add foo_production deploy@12.123.12.123:/data/railsapp/shared/cached-copy
+
+THen make a small change to the rails app and commit it to git, then run this command:
+
+git push foo_production master
+
+Thats it! you are now deploying with git directly to your instance
