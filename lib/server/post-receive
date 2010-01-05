@@ -13,5 +13,5 @@ else
 	git --work-tree=$working_dir merge master
 fi
 
-sh -c "/usr/bin/ey-deploy $working_dir"
+sh -c "sudo /usr/bin/ey-deploy $working_dir"
 

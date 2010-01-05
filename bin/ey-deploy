@@ -28,8 +28,6 @@ when "nginx_passenger", "apache_passenger"
   "touch tmp/restart.txt"
 end
 
-FileUtils.mkdir_p "#{deploy_to}/shared"
-FileUtils.mkdir_p "#{deploy_to}/releases"
 dep = EyDeploy.new :user                  => user,
                    :group                 => user,
                    :role                  => node['instance_role'],
@@ -39,7 +37,7 @@ dep = EyDeploy.new :user                  => user,
                    :migration_command     => "rake db:migrate",
                    :migrate               => false,
                    :deploy_to             => deploy_to,
-                   :repository_cache      => 'repo',
+                   :repository_cache      => 'cached-copy',
                    :copy_exclude          => '.git',
                    :node                  => node
 

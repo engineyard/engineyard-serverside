@@ -48,7 +48,8 @@ class EyDeploy
     if File.exist?("#{latest_release}/Gemfile")
       puts "~> Gemfile detected, bundling gems"
       puts "~> have patience young one..."
-      puts run_with_result("cd #{latest_release} && gem bundle")
+      system("cd #{latest_release} && gem bundle")
+      #puts run_with_result("cd #{latest_release} && gem bundle")
     end
   end
 

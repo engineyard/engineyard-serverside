@@ -22,6 +22,7 @@ else
 		mv $real_script_path $real_script_new_path
 		cp $our_script_path $real_script_path
 		cp $post_receive_hook_path $post_receive_hook_new_path
+		chmod +x $post_receive_hook_new_path
 		echo 'engineyard git hooks installed'
 	fi
 fi
