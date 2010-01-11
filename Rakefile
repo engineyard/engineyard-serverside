@@ -5,7 +5,7 @@ require 'date'
 require 'spec/rake/spectask'
 
 GEM = "ey-deploy"
-GEM_VERSION = "0.0.3"
+GEM_VERSION = "0.0.7"
 AUTHOR = "Your Name"
 EMAIL = "Your Email"
 HOMEPAGE = "http://example.com"

@@ -5,10 +5,41 @@ class EyDeployFailure < StandardError
 end
 
 class EyDeploy
-  # Executes the SCM command for this strategy and writes the REVISION
-  # mark file to each host.
+  
+  def self.deploy(opts={})
+    repository_cache = File.expand_path(opts[:repo])
+    
+    opts[:migration_command] ||= "rake db:migrate" 
+
+    app = repository_cache.gsub(%r{/data/([^\/]+)/.*}, '\1')
+
+    node = JSON.parse(IO.read('/etc/chef/dna.json'))
+
+    app_data = node['applications'][app]
+
+    user = node['users'].first['username']
+
+    deploy_to = "/data/#{app}"
+
+    dep = EyDeploy.new :user                  => user,
+                       :group                 => user,
+                       :role                  => node['instance_role'],
+                       :branch                => 'master',
+                       :environment           => node['environment']['framework_env'],
+                       :migration_command     => opts[:migration_command],
+                       :migrate               => false,
+                       :deploy_to             => deploy_to,
+                       :repository_cache      => repository_cache,
+                       :copy_exclude          => '.git',
+                       :node                  => node,
+                       :app                   => app
+
+    Dir.chdir(deploy_to) do
+      dep.deploy
+    end
+  end
+    
   def deploy
-    puts "*" * 40
     puts "~> application received"
     @configuration[:release_path] = "#{@configuration[:deploy_to]}/releases/#{Time.now.utc.strftime("%Y%m%d%H%M%S")}"
     if @configuration[:revision] == ''
@@ -33,14 +64,21 @@ class EyDeploy
     restart
     callback(:after_restart)
     cleanup
-    puts "*" * 40
-    puts "~> deploy finished successfuly"
+    puts "~> finalizing deploy"
   end
 
   def restart
-    unless @configuration[:restart_command].empty?
+    restart = case node['environment']['stack']
+    when "nginx_unicorn"
+      "/etc/init.d/unicorn_#{app} restart"
+    when "nginx_mongrel"
+      "monit restart all -g #{app}"
+    when "nginx_passenger", "apache_passenger"
+      "touch #{latest_release}/tmp/restart.txt"
+    end
+    if restart
       puts "~> restarting app: #{latest_release}"
-      run_with_result("cd #{current_path} && INLINEDIR=/tmp RAILS_ENV=#{@configuration[:environment]} RACK_ENV=#{@configuration[:environment]} MERB_ENV=#{@configuration[:environment]} #{@configuration[:restart_command]}")
+      run_with_result("cd #{current_path} && INLINEDIR=/tmp RAILS_ENV=#{@configuration[:environment]} RACK_ENV=#{@configuration[:environment]} MERB_ENV=#{@configuration[:environment]} #{restart}")
     end
   end
 
@@ -48,7 +86,9 @@ class EyDeploy
     if File.exist?("#{latest_release}/Gemfile")
       puts "~> Gemfile detected, bundling gems"
       puts "~> have patience young one..."
-      system("cd #{latest_release} && gem bundle")
+      Dir.chdir(latest_release) do
+        system("gem bundle")
+      end
       #puts run_with_result("cd #{latest_release} && gem bundle")
     end
   end
@@ -133,6 +173,10 @@ class EyDeploy
   def node
     @configuration[:node]
   end
+  
+  def app
+    @configuration[:app]
+  end
 
   def symlink(release_to_link=latest_release)
     symlink = false
@@ -174,14 +218,6 @@ class EyDeploy
     run cmd
   end
 
-  # :repository_cache
-  # :shared_path
-  # :repository
-  # :release_path
-  # :copy_exclude
-  # :revision
-  # :user
-  # :group
   def initialize(opts={})
     @configuration = opts
     @configuration[:shared_path] = "#{@configuration[:deploy_to]}/shared"
@@ -194,7 +230,7 @@ class EyDeploy
   private
 
   def repository_cache
-    File.join(configuration[:shared_path], configuration[:repository_cache] || "cached-copy")
+    configuration[:repository_cache]
   end
 
   def copy_repository_cache

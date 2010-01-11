@@ -1,46 +1,25 @@
 require 'rubygems'
+require 'optparse'
 require 'ey-deploy'
+
 require 'json'
 
-$stdout.sync = true
+options = {:foo => ''}
 
-# ARGV[0] == /data/appname/shared/repo
+opts = OptionParser.new do |opts|
+  opts.banner = "Usage: ey-deploy [-r] [/path/to/repo]"
+  opts.define_head "Deploying your codez"
+  opts.separator '*'*80
 
-repository_cache = File.expand_path(ARGV[0])
+  opts.on("-r", "--repo REPO", "Specify the git repo to deploy from.") do |repo|
+    options[:repo] = repo
+  end
 
-app = repository_cache.gsub(%r{/data/([^\/]+)/.*}, '\1')
-
-node = JSON.parse(IO.read('/etc/chef/dna.json'))
-
-app_data = node['applications'][app]
-
-user = node['users'].first['username']
-
-deploy_to = "/data/#{app}"
-
-stack = node['environment']['stack']
-restart = case stack
-when "nginx_unicorn"
-  "/etc/init.d/unicorn_#{app} restart"
-when "nginx_mongrel"
-  "monit restart all -g #{app}"
-when "nginx_passenger", "apache_passenger"
-  "touch tmp/restart.txt"
 end
 
-dep = EyDeploy.new :user                  => user,
-                   :group                 => user,
-                   :role                  => node['instance_role'],
-                   :branch                => 'master',
-                   :restart_command       => (restart || ""),
-                   :environment           => node['environment']['framework_env'],
-                   :migration_command     => "rake db:migrate",
-                   :migrate               => false,
-                   :deploy_to             => deploy_to,
-                   :repository_cache      => 'cached-copy',
-                   :copy_exclude          => '.git',
-                   :node                  => node
+opts.parse!
 
-Dir.chdir(deploy_to) do
-  dep.deploy
-end
+EyDeploy.deploy(options)
+
+
+

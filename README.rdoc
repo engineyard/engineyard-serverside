@@ -6,7 +6,7 @@ You boot a server with an app attached called railsapp from a git repo
 
 Once the server fully comes up ssh into it and run this:
 
-  # as root
+  # as root on the app master only
   gem install ey-deploy --source http://gems.engineyard.com
   ey-deploy-install
 
@@ -15,8 +15,11 @@ Now back on your local machine,
   cd railsapp
   git remote add foo_production deploy@12.123.12.123:/data/railsapp/shared/cached-copy
 
+# NOTE  make sure to replace 'deploy' with the username you created for this env
+# NOTE  also make sure to change the ip address to the addr of your app master
+
 Then make a small change to the rails app and commit it to git, then run this command:
 
   git push foo_production master
 
-Thats it! you are now deploying with git directly to your instance
+Thats it! you are now deploying with git directly to your instances
