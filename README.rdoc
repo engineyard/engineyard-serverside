@@ -22,6 +22,14 @@ Now back on your local machine,
 # NOTE  make sure to replace 'deploy' with the username you created for this env
 # NOTE  also make sure to change the ip address to the addr of your app master
 
+You need to set up one ssh keypair for the nodes to talk to each other with. This will require
+the public and private key living on the app nodes. This is ok since they are not used outside 
+of the cluster anywhere. This will be scripted by chef once we finalize but for now you need
+to create a private key here:  /home/deploy/.ssh/internal  and put it in authorized_keys on 
+all your app servers. Ensure that as the deploy user you can ssh between your app nodes
+with the ssh -i /home/deploy/.ssh/internal deploy@foobar.ec2.internal and then you are good
+to go.
+
 Then make a small change to the rails app and commit it to git, then run this command:
 
   git push foo_production master
