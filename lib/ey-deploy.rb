@@ -98,7 +98,7 @@ class EyDeploy
   def callback(what)
     if File.exist?("#{latest_release}/deploy/#{what}.rb")
       Dir.chdir(latest_release) do
-        puts "~> running deploy hook: #{latest_release}/deploy/#{what}.rb"
+        puts "~> running deploy hook: deploy/#{what}.rb"
         instance_eval(IO.read("#{latest_release}/deploy/#{what}.rb"))
       end
     end
@@ -235,19 +235,15 @@ class EyDeploy
 
   def copy_repository_cache
     if copy_exclude.empty?
-      return "cp -RPp #{repository_cache} #{release_path} && #{mark}"
+      return "cp -RPp #{repository_cache} #{release_path}"
     else
       exclusions = copy_exclude.map { |e| "--exclude=\"#{e}\"" }.join(' ')
-      return "rsync -lrpt #{exclusions} #{repository_cache}/* #{release_path} && #{mark}"
+      return "rsync -lrpt #{exclusions} #{repository_cache}/* #{release_path}"
     end
   end
 
   def revision
     configuration[:revision]
-  end
-
-  def mark
-    "(echo #{revision} > #{release_path}/REVISION)"
   end
 
   def copy_exclude

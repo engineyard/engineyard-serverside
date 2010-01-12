@@ -17,9 +17,10 @@ user=`sudo ruby -rubygems  -e "require 'json';puts  JSON.parse(IO.read('/etc/che
 hosts=`sudo ruby -rubygems  -e "require 'json';puts  JSON.parse(IO.read('/etc/chef/dna.json'))['members'].join(' ') rescue puts(%x{curl http://169.254.169.254/2008-02-01/meta-data/hostname -s})"`
 me=`curl http://169.254.169.254/2008-02-01/meta-data/hostname -s`
 
+echo "~> rsyncing code"
 for host in $hosts
 do
-  echo "~> rsyncing code to $host"
+  echo " ~> to $host"
   if [[ $me == $host ]]
   then rsync -lrpt $working_dir/ $user@$host:$working_dir &
   else rsync -lrpt $working_dir/ $user@$host:$working_dir 2>&1 >> /dev/null &
@@ -29,10 +30,10 @@ done
 wait
 echo "~> all hosts rsync'd and up to date"
 
-
+echo "~> deploying code"
 for host in $hosts
 do
-  echo "~> deploying on $host"
+  echo " ~> on $host"
   if [[ $me == $host ]]
   then sudo /usr/bin/ey-deploy -r $working_dir &
   else ssh $user@$host sudo /usr/bin/ey-deploy -r $working_dir 2>&1 >> /dev/null &
