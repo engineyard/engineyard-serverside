@@ -7,8 +7,12 @@ You boot a server with an app attached called railsapp from a git repo
 Once the server fully comes up ssh into it and run this:
 
   # as root on the app master only
-  gem install ey-deploy --source http://gems.engineyard.com
-  ey-deploy-install
+  ip-10-212-99-148 ~ # gem install ey-deploy --source http://gems.engineyard.com
+  Successfully installed ey-deploy-0.0.7
+  1 gem installed
+  ip-10-212-99-148 ~ # ey-deploy-install
+  engineyard git hooks installed
+  ip-10-212-99-148 ~ # 
 
 Now back on your local machine, 
 

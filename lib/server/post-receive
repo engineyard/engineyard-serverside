@@ -22,8 +22,8 @@ for host in $hosts
 do
   echo " ~> to $host"
   if [[ $me == $host ]]
-  then rsync -lrpt $working_dir/ $user@$host:$working_dir &
-  else rsync -lrpt $working_dir/ $user@$host:$working_dir 2>&1 >> /dev/null &
+  then rsync -lrpt -e "ssh -i /home/$user/.ssh/internal" $working_dir/ $user@$host:$working_dir &
+  else rsync -lrpt -e "ssh -i /home/$user/.ssh/internal" $working_dir/ $user@$host:$working_dir 2>&1 >> /dev/null &
   fi
 done
 
@@ -36,7 +36,7 @@ do
   echo " ~> on $host"
   if [[ $me == $host ]]
   then sudo /usr/bin/ey-deploy -r $working_dir &
-  else ssh $user@$host sudo /usr/bin/ey-deploy -r $working_dir 2>&1 >> /dev/null &
+  else ssh -i /home/$user/.ssh/internal $user@$host sudo /usr/bin/ey-deploy -r $working_dir 2>&1 >> /dev/null &
   fi
 done
 
