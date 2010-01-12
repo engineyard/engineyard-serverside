@@ -9,31 +9,31 @@ has_error=`echo "$output" | grep 'already exists'`
 if [ -z "$has_error" ]; then
 	echo 'Checked out master branch'
 else
-	echo 'Merging latest changes'
-	git --work-tree=$working_dir merge master
+	#echo 'Merging latest changes'
+	git --work-tree=$working_dir merge master 2>&1 >> /dev/null
 fi
 
 user=`sudo ruby -rubygems  -e "require 'json';puts  JSON.parse(IO.read('/etc/chef/dna.json'))['users'].first['username']"`
-hosts=`sudo ruby -rubygems  -e "require 'json';puts  JSON.parse(IO.read('/etc/chef/dna.json'))['members'].join(' ') rescue puts(%x{curl http://169.254.169.254/2008-02-01/meta-data/hostname})"`
-mine=`curl http://169.254.169.254/2008-02-01/meta-data/hostname`
+hosts=`sudo ruby -rubygems  -e "require 'json';puts  JSON.parse(IO.read('/etc/chef/dna.json'))['members'].join(' ') rescue puts(%x{curl http://169.254.169.254/2008-02-01/meta-data/hostname -s})"`
+me=`curl http://169.254.169.254/2008-02-01/meta-data/hostname -s`
 
 for host in $hosts
 do
-  echo "~> rsync to $host"
-  if [[ $mine == $host ]]
+  echo "~> rsyncing code to $host"
+  if [[ $me == $host ]]
   then rsync -lrpt $working_dir/ $user@$host:$working_dir &
   else rsync -lrpt $working_dir/ $user@$host:$working_dir 2>&1 >> /dev/null &
   fi
 done
 
 wait
-echo "~> all hosts sync'd and up to date"
+echo "~> all hosts rsync'd and up to date"
 
 
 for host in $hosts
 do
-  echo "~> deploying to $host"
-  if [[ $mine == $host ]]
+  echo "~> deploying on $host"
+  if [[ $me == $host ]]
   then sudo /usr/bin/ey-deploy -r $working_dir &
   else ssh $user@$host sudo /usr/bin/ey-deploy -r $working_dir 2>&1 >> /dev/null &
   fi
