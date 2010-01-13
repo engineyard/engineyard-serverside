@@ -14,7 +14,7 @@ post_receive_hook_new_path="$real_script_dir/engineyard_post-receive_hook"
 if [[ ! -w "$real_script_path" ]]; then
 	echo "You have to run this as root."
 	exit 1
-else 
+fi 
 
 
 if [[ -f "$real_script_new_path" ]]; then
