@@ -42,9 +42,6 @@ class EyDeploy
   def deploy
     puts "~> application received"
     @configuration[:release_path] = "#{@configuration[:deploy_to]}/releases/#{Time.now.utc.strftime("%Y%m%d%H%M%S")}"
-    if @configuration[:revision] == ''
-       @configuration[:revision] = `git rev-list --branches`.split.first
-    end
 
     puts "~> ensuring proper ownership"
     run_with_result("chown -R #{user}:#{group} #{@configuration[:deploy_to]}")
@@ -240,10 +237,6 @@ class EyDeploy
       exclusions = copy_exclude.map { |e| "--exclude=\"#{e}\"" }.join(' ')
       return "rsync -lrpt #{exclusions} #{repository_cache}/* #{release_path}"
     end
-  end
-
-  def revision
-    configuration[:revision]
   end
 
   def copy_exclude

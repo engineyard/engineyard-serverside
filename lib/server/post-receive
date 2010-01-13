@@ -54,8 +54,6 @@ else
   echo "~> all hosts rsync'd and up to date"
 fi
 
-
-
 echo "~> deploying code"
 for host in $hosts
 do
