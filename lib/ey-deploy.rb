@@ -200,19 +200,30 @@ class EyDeploy
   end
 
   def run_with_result(cmd)
-    res = `#{cmd} 2>&1`
-    raise(EyDeployFailure, res) unless $? == 0
+    res = `sh -c "#{cmd} 2>&1"`
+    unless $? == 0
+      puts res
+      exit 1
+    end
     res
   end
 
   def run(cmd)
-    res = `sudo -u #{user} #{cmd} 2>&1`
-    raise(EyDeployFailure, res) unless $? == 0
+    res = `sudo -u #{user} sh -c "#{cmd} 2>&1"`
+    unless $? == 0
+      puts res
+      exit 1
+    end
     res
   end
 
   def sudo(cmd)
-    run cmd
+    res = `sh -c "#{cmd} 2>&1"`
+    unless $? == 0
+      puts res
+      exit 1
+    end
+    res
   end
 
   def initialize(opts={})

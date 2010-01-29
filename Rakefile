@@ -5,11 +5,11 @@ require 'date'
 require 'spec/rake/spectask'
 
 GEM = "ey-deploy"
-GEM_VERSION = "0.0.7"
-AUTHOR = "Your Name"
-EMAIL = "Your Email"
-HOMEPAGE = "http://example.com"
-SUMMARY = "A gem that provides..."
+GEM_VERSION = "0.0.8"
+AUTHOR = "Ezra Zygmuntowicz"
+EMAIL = "ez@engineyard.com"
+HOMEPAGE = "http://engineyard.com"
+SUMMARY = "A gem that provides git push deployson the engine yard cloud"
 
 spec = Gem::Specification.new do |s|
   s.name = GEM
