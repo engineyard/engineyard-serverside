@@ -7,32 +7,30 @@ module Ey
     class Deploy
       def self.run(opts={})
         node = JSON.parse(IO.read('/etc/chef/dna.json'))
-      
+
         default_config = {
           :migration_command => "rake db:migrate",
           :repository_cache  => File.expand_path(opts[:repo]),
-          :role              => node['instance_role'],
           :branch            => 'master',
-          :environment       => node['environment']['framework_env'],
           :migrate           => false,
           :deploy_to         => "/data/#{opts[:app]}",
           :copy_exclude      => '.git',
           :node              => node,
         }
-      
+
         dep = EyDeploy.new(default_config.merge!(opts))
 
         Dir.chdir(dep.deploy_to) do
           dep.deploy
         end
       end
-    
+
       attr_reader :configuration
-    
+
       def initialize(opts={})
         @configuration = opts
       end
-    
+
       def deploy
         puts "~> application received"
 
@@ -68,7 +66,7 @@ module Ey
         end
         if restart
           puts "~> restarting app: #{latest_release}"
-          run_with_result("cd #{current_path} && INLINEDIR=/tmp RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment} #{restart}")
+          run_with_result("cd #{current_path} && INLINEDIR=/tmp #{framework_env} #{restart}")
         end
       end
 
@@ -135,7 +133,7 @@ module Ey
           run_with_result("cd #{latest_release} && sudo -u #{user} #{framework_envs} #{migration_command}")
         end
       end
-    
+
       def framework_envs
         "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
       end
@@ -144,7 +142,15 @@ module Ey
         node['users'].first['username'] || 'nobody'
       end
       alias :group :user
-    
+
+      def role
+        node['instance_role']
+      end
+
+      def environment
+        node['environment']['framework_env']
+      end
+
       def current_path
         File.join(deploy_to, "current")
       end
@@ -211,7 +217,7 @@ module Ey
         end
         res
       end
-    
+
       def method_missing(meth, *args, &blk)
         if configuration.key?(meth)
           configuration[meth]
@@ -219,7 +225,7 @@ module Ey
           super
         end
       end
-    
+
       def respond_to?(meth)
         if configuration.key?(meth)
           true
@@ -227,7 +233,7 @@ module Ey
           super
         end
       end
-    
+
     private
 
       def copy_repository_cache
