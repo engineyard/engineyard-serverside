@@ -4,14 +4,8 @@
 here=`pwd`
 working_dir=`echo "$here" | sed 's/\/.git$//g'`
 
-output=`git --work-tree=$working_dir checkout -b deploy master 2>&1`
-has_error=`echo "$output" | grep 'already exists'`
-if [ -z "$has_error" ]; then
-	echo 'Checked out master branch'
-else
-	#echo 'Merging latest changes'
-	git --work-tree=$working_dir merge master 2>&1 >> /dev/null
-fi
+echo "Checking out master branch"
+git --work-tree=$working_dir reset --hard master 2>&1 >> /dev/null
 
 user=`sudo ruby -rubygems  -e "require 'json';puts  JSON.parse(IO.read('/etc/chef/dna.json'))['users'].first['username']"`
 hosts=`sudo ruby -rubygems  -e "require 'json';puts  JSON.parse(IO.read('/etc/chef/dna.json'))['members'].join(' ') rescue puts(%x{curl http://169.254.169.254/2008-02-01/meta-data/hostname -s})"`
