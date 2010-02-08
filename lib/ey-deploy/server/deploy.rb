@@ -2,11 +2,11 @@
 require 'fileutils'
 require 'json'
 
-module Ey
+module EY
   module Server
     class Deploy
       def self.run(opts={})
-        node = JSON.parse(IO.read('/etc/chef/dna.json'))
+        node = JSON.parse(File.read(EY::DNA_FILE))
 
         default_config = {
           :migration_command => "rake db:migrate",
@@ -18,7 +18,7 @@ module Ey
           :node              => node,
         }
 
-        EyDeploy.new(default_config.merge!(opts)).deploy
+        new(default_config.merge!(opts)).deploy
       end
 
       attr_reader :configuration

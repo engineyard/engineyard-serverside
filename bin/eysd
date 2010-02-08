@@ -3,4 +3,4 @@
 $LOAD_PATH.push(File.expand_path("../lib", File.dirname(__FILE__)))
 require 'ey-deploy'
 
-Ey::Server::CLI.start
+EY::Server::CLI.start

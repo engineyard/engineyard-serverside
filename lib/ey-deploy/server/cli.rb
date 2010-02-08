@@ -2,7 +2,7 @@ $:.unshift File.expand_path('../../vendor/thor/lib', File.dirname(__FILE__))
 
 require 'thor'
 
-module Ey
+module EY
   module Server
     class CLI < Thor
       class_option :migrate, :type     => :boolean,
@@ -21,7 +21,7 @@ module Ey
                              :aliases  => ["-a"]
       desc "deploy", "Deploy code from /data/<app>"
       def deploy
-        Ey::Server::Deploy.run(options)
+        EY::Server::Deploy.run(options)
       end
 
       method_option :app,    :type     => :string,
@@ -30,7 +30,7 @@ module Ey
                              :aliases  => ["-a"]
       desc "update", "Update code locally, push to all other instances and run the deploy"
       def update
-        Ey::Server::Update.run(options)
+        EY::Server::Update.run(options)
       end
     end
   end
