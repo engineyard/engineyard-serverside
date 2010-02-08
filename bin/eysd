@@ -1,42 +1,6 @@
-require 'rubygems'
-require 'optparse'
+#!/usr/bin/env ruby
+
+$LOAD_PATH.push(File.expand_path("../lib", File.dirname(__FILE__)))
 require 'ey-deploy'
 
-require 'json'
-
-options = {
-  :migrate => true, 
-  :branch => "master",
-  :action => "Update",
-}
-
-opts = OptionParser.new do |opts|
-  opts.banner = "Usage: ey-deploy [-r /path/to/repo]"
-  opts.define_head "Deploying your codez"
-  opts.separator '*' * 80
-
-  opts.on("-d", "--deploy REPO", "Deploy from <repo> directory.") do |repo|
-    options[:action] = "Deploy"
-    options[:repo] = repo
-  end
-  
-  opts.on("-m", "--[no-]migrate", "Run migrations with the deploy") do |migrate|
-    options[:migrate] = migrate
-  end
-  
-  opts.on("-b", "--branch BRANCH", "Branch to deploy from") do |branch|
-    options[:branch] = branch
-  end
-  
-  opts.on("-a", "--app APP_NAME", "Application to deploy") do |app|
-    options[:app] = app
-  end
-
-end
-
-opts.parse!
-
-raise OptionParser::MissingArgument unless options[:app]
-
-action = opts.delete(:action)
-Ey.const_get(action).run(opts)
+Ey::Server::CLI.start
