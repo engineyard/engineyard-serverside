@@ -1,2 +1,4 @@
-$TESTING=true
-$:.push File.join(File.dirname(__FILE__), '..', 'lib')
+$LOAD_PATH.push File.expand_path("../lib", File.dirname(__FILE__))
+
+Bundler.require :default, :runtime, :test
+

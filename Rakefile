@@ -6,10 +6,10 @@ require 'spec/rake/spectask'
 
 GEM = "ey-deploy"
 GEM_VERSION = "0.0.8"
-AUTHOR = "Ezra Zygmuntowicz"
-EMAIL = "ez@engineyard.com"
+AUTHOR = "EY Cloud Team"
+EMAIL = "cloud@engineyard.com"
 HOMEPAGE = "http://engineyard.com"
-SUMMARY = "A gem that provides git push deployson the engine yard cloud"
+SUMMARY = "A gem that deploys ruby applications on EY Cloud instances"
 
 spec = Gem::Specification.new do |s|
   s.name = GEM
@@ -24,11 +24,13 @@ spec = Gem::Specification.new do |s|
   s.homepage = HOMEPAGE
   s.bindir       = "bin"
   s.executables  = %w(ey-deploy ey-deploy-install)
-  
-  
-  # Uncomment this to add a dependency
-  # s.add_dependency "foo"
-  
+
+  bundle = Bundler::Definition.from_gemfile('Gemfile')
+  bundle.dependencies.each do |dep|
+    next unless dep.groups.include?(:runtime)
+    s.add_dependency(dep.name, dep.version_requirements.to_s)
+  end
+
   s.require_path = 'lib'
   s.autorequire = GEM
   s.files = %w(LICENSE README.rdoc Rakefile TODO) + Dir.glob("{lib,spec}/**/*")

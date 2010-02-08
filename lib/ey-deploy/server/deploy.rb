@@ -1,6 +1,6 @@
 # stolen wholesale from capistrano, thanks Jamis!
-require 'yaml'
 require 'fileutils'
+require 'json'
 
 module Ey
   module Server
@@ -18,11 +18,7 @@ module Ey
           :node              => node,
         }
 
-        dep = EyDeploy.new(default_config.merge!(opts))
-
-        Dir.chdir(dep.deploy_to) do
-          dep.deploy
-        end
+        EyDeploy.new(default_config.merge!(opts)).deploy
       end
 
       attr_reader :configuration
@@ -32,6 +28,8 @@ module Ey
       end
 
       def deploy
+        Dir.chdir deploy_to
+
         puts "~> application received"
 
         puts "~> ensuring proper ownership"
