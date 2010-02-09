@@ -18,7 +18,7 @@ module EY
           :node              => node,
         }
 
-        new(default_config.merge!(opts)).deploy
+        new(default_config.merge!(opts)).send(opts[:default_task])
       end
 
       attr_reader :configuration

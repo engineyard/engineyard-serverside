@@ -20,8 +20,8 @@ module EY
                              :desc     => "Application to deploy",
                              :aliases  => ["-a"]
       desc "deploy", "Deploy code from /data/<app>"
-      def deploy
-        EY::Server::Deploy.run(options)
+      def deploy(default_task=:deploy)
+        EY::Server::Deploy.run(options.merge!(:default_task => default_task))
       end
 
       method_option :app,    :type     => :string,
