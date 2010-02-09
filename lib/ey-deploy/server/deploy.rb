@@ -27,18 +27,19 @@ module EY
         @configuration = opts
       end
 
+      # task, default
       def deploy
         Dir.chdir deploy_to
 
         puts "~> application received"
 
         puts "~> ensuring proper ownership"
-        run_with_result("chown -R #{user}:#{group} #{deploy_to}")
+        sudo("chown -R #{user}:#{group} #{deploy_to}")
 
         puts "~> copying to #{release_path}"
-        run_with_result(copy_repository_cache)
+        sudo(copy_repository_cache)
 
-        run_with_result("chown -R #{user}:#{group} #{deploy_to}")
+        sudo("chown -R #{user}:#{group} #{deploy_to}")
 
         callback(:before_migrate)
         bundle
@@ -53,6 +54,7 @@ module EY
         puts "~> finalizing deploy"
       end
 
+      # task
       def restart
         restart = case node['environment']['stack']
         when "nginx_unicorn"
@@ -64,10 +66,11 @@ module EY
         end
         if restart
           puts "~> restarting app: #{latest_release}"
-          run_with_result("cd #{current_path} && INLINEDIR=/tmp #{framework_env} #{restart}")
+          sudo("cd #{current_path} && INLINEDIR=/tmp #{framework_env} #{restart}")
         end
       end
 
+      # task
       def bundle
         if File.exist?("#{latest_release}/Gemfile")
           puts "~> Gemfile detected, bundling gems"
@@ -75,7 +78,34 @@ module EY
           Dir.chdir(latest_release) do
             system("gem bundle")
           end
-          #puts run_with_result("cd #{latest_release} && gem bundle")
+        end
+      end
+
+      # task
+      def cleanup
+        while all_releases.size >= 3
+          puts "~> cleaning up old releases"
+          FileUtils.rm_rf oldest_release
+        end
+      end
+
+      # task
+      def rollback
+        puts "~> rolling back to previous release"
+        symlink(previous_release)
+        FileUtils.rm_rf latest_release
+        puts "~> restarting with previous release"
+        restart
+      end
+
+      # task
+      def migrate
+        if migrate
+          sudo "ln -nfs #{shared_path}/config/database.yml #{latest_release}/config/database.yml"
+          sudo "ln -nfs #{shared_path}/log #{latest_release}/log"
+          puts "~> Migrating: cd #{latest_release} && sudo -u #{user} #{framework_envs} #{migration_command}"
+          sudo("chown -R #{user}:#{group} #{latest_release}")
+          sudo("cd #{latest_release} && sudo -u #{user} #{framework_envs} #{migration_command}")
         end
       end
 
@@ -107,30 +137,6 @@ module EY
         `ls #{release_dir}`.split("\n").sort.map{|r| File.join(release_dir, r)}
       end
 
-      def cleanup
-        while all_releases.size >= 3
-          puts "~> cleaning up old releases"
-          FileUtils.rm_rf oldest_release
-        end
-      end
-
-      def rollback
-        puts "~> rolling back to previous release"
-        symlink(previous_release)
-        FileUtils.rm_rf latest_release
-        puts "~> restarting with previous release"
-        restart
-      end
-
-      def migrate
-        if migrate
-          run_with_result "ln -nfs #{shared_path}/config/database.yml #{latest_release}/config/database.yml"
-          run_with_result "ln -nfs #{shared_path}/log #{latest_release}/log"
-          puts "~> Migrating: cd #{latest_release} && sudo -u #{user} #{framework_envs} #{migration_command}"
-          run_with_result("chown -R #{user}:#{group} #{latest_release}")
-          run_with_result("cd #{latest_release} && sudo -u #{user} #{framework_envs} #{migration_command}")
-        end
-      end
 
       def framework_envs
         "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
@@ -168,7 +174,7 @@ module EY
       def symlink(release_to_link=latest_release)
         symlink = false
         begin
-          run_with_result [ "chmod -R g+w #{release_to_link}",
+          sudo [ "chmod -R g+w #{release_to_link}",
             "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
             "mkdir -p #{release_to_link}/tmp",
             "ln -nfs #{shared_path}/log #{release_to_link}/log",
@@ -181,21 +187,12 @@ module EY
             ].join(" && ")
 
           symlink = true
-          run_with_result "rm -f #{current_path} && ln -nfs #{release_to_link} #{current_path} && chown -R #{user}:#{group} #{current_path}"
+          sudo "rm -f #{current_path} && ln -nfs #{release_to_link} #{current_path} && chown -R #{user}:#{group} #{current_path}"
         rescue => e
-          run_with_result "rm -f #{current_path} && ln -nfs #{previous_release(release_to_link)} #{current_path} && chown -R #{user}:#{group} #{current_path}" if symlink
-          run_with_result "rm -rf #{release_to_link}"
+          sudo "rm -f #{current_path} && ln -nfs #{previous_release(release_to_link)} #{current_path} && chown -R #{user}:#{group} #{current_path}" if symlink
+          sudo "rm -rf #{release_to_link}"
           raise e
         end
-      end
-
-      def run_with_result(cmd)
-        res = `sh -c "#{cmd} 2>&1"`
-        unless $? == 0
-          puts res
-          exit 1
-        end
-        res
       end
 
       def run(cmd)
@@ -235,16 +232,15 @@ module EY
     private
 
       def copy_repository_cache
-        if copy_exclude.empty?
-          return "cp -RPp #{repository_cache} #{release_path}"
-        else
-          exclusions = copy_exclude.map { |e| "--exclude=\"#{e}\"" }.join(' ')
-          return "rsync -lrpt #{exclusions} #{repository_cache}/* #{release_path}"
-        end
+        "rsync -aq #{exclusions} #{repository_cache}/* #{release_path}"
       end
 
       def copy_exclude
         @copy_exclude ||= Array(configuration.fetch(:copy_exclude, []))
+      end
+
+      def exclusions
+        copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
       end
     end
   end
