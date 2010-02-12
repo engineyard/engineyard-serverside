@@ -5,7 +5,7 @@ require 'date'
 require 'spec/rake/spectask'
 
 GEM = "ey-deploy"
-GEM_VERSION = "0.0.8"
+GEM_VERSION = "0.1.0"
 AUTHOR = "EY Cloud Team"
 EMAIL = "cloud@engineyard.com"
 HOMEPAGE = "http://engineyard.com"
@@ -23,7 +23,7 @@ spec = Gem::Specification.new do |s|
   s.email = EMAIL
   s.homepage = HOMEPAGE
   s.bindir       = "bin"
-  s.executables  = %w(ey-deploy ey-deploy-install)
+  s.executables  = %w(eysd ey-deploy-install)
 
   bundle = Bundler::Definition.from_gemfile('Gemfile')
   bundle.dependencies.each do |dep|

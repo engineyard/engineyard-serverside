@@ -3,6 +3,12 @@
 # Checkout the real 'master' so we can view the repo files
 here=`pwd`
 working_dir=`echo "$here" | sed 's/\/.git$//g'`
+app_name=`echo $working_dir | ruby -n -e 'puts split(%r|/|)[2]'`
+
+echo $working_dir
+echo $app_name
+
+echo
 
 echo "Checking out master branch"
 git --work-tree=$working_dir reset --hard master 2>&1 >> /dev/null
@@ -53,8 +59,8 @@ for host in $hosts
 do
   echo " ~> on $host"
   if [[ $me == $host ]]
-  then sudo /usr/bin/ey-deploy -r $working_dir &
-  else (ssh -i /home/$user/.ssh/internal $user@$host sudo /usr/bin/ey-deploy -r $working_dir > /tmp/$pid-$host.deploy.log 2>&1; echo "$?" > /tmp/$pid-$host.deploy.exitstatus) &
+  then sudo /usr/bin/eysd deploy -a $app_name --repo $working_dir &
+  else (ssh -i /home/$user/.ssh/internal $user@$host sudo /usr/bin/eysd deploy -a $app_name --repo $working_dir > /tmp/$pid-$host.deploy.log 2>&1; echo "$?" > /tmp/$pid-$host.deploy.exitstatus) &
   fi
 done
 

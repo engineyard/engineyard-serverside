@@ -6,15 +6,15 @@ real_script_dir=$(dirname $real_script_path)
 real_script_new_dir="$real_script_dir/git-receive-pack_original"
 real_script_new_path="$real_script_new_dir/git-receive-pack"
 
-our_script_path="$(dirname $0)/../lib/ey-deploy/server/git-receive-pack"
+our_script_path="$(dirname $0)/../lib/ey-deploy/git-receive-pack"
 
-post_receive_hook_path="$(dirname $0)/../lib/ey-deploy/server/post-receive"
+post_receive_hook_path="$(dirname $0)/../lib/ey-deploy/post-receive"
 post_receive_hook_new_path="$real_script_dir/engineyard_post-receive_hook"
 
 if [[ ! -w "$real_script_path" ]]; then
 	echo "You have to run this as root."
 	exit 1
-fi 
+fi
 
 
 if [[ -f "$real_script_new_path" ]]; then
