@@ -1,4 +1,8 @@
 #!/usr/bin/env ruby
+begin
+  require 'rubygems'
+rescue LoadError
+end
 
 $LOAD_PATH.push(File.expand_path("../lib", File.dirname(__FILE__)))
 require 'ey-deploy'

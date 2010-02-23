@@ -4,31 +4,14 @@ require 'json'
 require 'pp'
 
 module EY
-  class Deploy
+  class Deploy < Task
     def self.run(opts={})
-      node = JSON.parse(File.read(EY::DNA_FILE))
-
-      default_config = {
-        "migration_command" => "rake db:migrate",
-        "repository_cache"  => File.expand_path(opts[:repo]),
-        "branch"            => 'master',
-        "migrate"           => false,
-        "deploy_to"         => "/data/#{opts[:app]}",
-        "copy_exclude"      => '.git',
-        "node"              => node,
-      }
-
-      new(default_config.merge!(opts)).send(opts["default_task"])
-    end
-
-    attr_reader :configuration
-
-    def initialize(opts={})
-      @configuration = opts
+      new(DEFAULT_CONFIG.merge!(opts)).send(opts["default_task"])
     end
 
     # task, default
     def deploy
+      puts "~> full deploy"
       Dir.chdir deploy_to
 
       puts "~> application received"
@@ -54,6 +37,29 @@ module EY
       puts "~> finalizing deploy"
     end
 
+    # task, default
+    def symlink_only
+      puts "~> symlink deploy"
+      Dir.chdir deploy_to
+
+      puts "~> application received"
+
+      puts "~> ensuring proper ownership"
+      sudo("chown -R #{user}:#{group} #{deploy_to}")
+
+      puts "~> copying to #{release_path}"
+      sudo(copy_repository_cache)
+
+      sudo("chown -R #{user}:#{group} #{deploy_to}")
+
+      bundle
+      puts "~> symlinking code"
+      symlink
+      cleanup
+      puts "~> finalizing deploy"
+    end
+
+
     # task
     def restart
       restart = case node['environment']['stack']
@@ -74,9 +80,8 @@ module EY
     def bundle
       if File.exist?("#{latest_release}/Gemfile")
         puts "~> Gemfile detected, bundling gems"
-        puts "~> have patience young one..."
         Dir.chdir(latest_release) do
-          system("gem bundle")
+          system("bundle install")
         end
       end
     end
@@ -167,10 +172,6 @@ module EY
       File.join(deploy_to, "releases")
     end
 
-    def migrate?
-      configuration['migrate']
-    end
-
     def release_path
       @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
     end
@@ -217,26 +218,10 @@ module EY
       res
     end
 
-    def method_missing(meth, *args, &blk)
-      if configuration.key?(meth.to_s)
-        configuration[meth.to_s]
-      else
-        super
-      end
-    end
-
-    def respond_to?(meth)
-      if configuration.key?(meth.to_s)
-        true
-      else
-        super
-      end
-    end
-
   private
 
     def copy_repository_cache
-      "rsync -aq #{exclusions} #{repository_cache}/* #{release_path}"
+      "mkdir -p #{release_path} && rsync -aq #{exclusions} #{repository_cache}/* #{release_path}"
     end
 
     def copy_exclude
