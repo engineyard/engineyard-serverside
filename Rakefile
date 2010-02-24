@@ -23,7 +23,7 @@ spec = Gem::Specification.new do |s|
   s.email = EMAIL
   s.homepage = HOMEPAGE
   s.bindir       = "bin"
-  s.executables  = %w(eysd ey-deploy-install)
+  s.executables  = %w(eysd)
 
   bundle = Bundler::Definition.from_gemfile('Gemfile')
   bundle.dependencies.each do |dep|
