@@ -34,7 +34,7 @@ module EY
     end
 
     def deploy_command(server)
-      "eysd deploy #{server.default_task} -a #{app} #{migrate_option}"
+      "eysd deploy #{all_servers.size == 1 ? "deploy" : server.default_task} -a #{app} #{migrate_option}"
     end
 
     def migrate_option
@@ -46,7 +46,7 @@ module EY
     end
 
     def all_servers
-      (app_slaves + db_servers + util_servers).flatten.uniq
+      @servers ||= (app_slaves + db_servers + util_servers).flatten.uniq
     end
 
     def app_slaves
