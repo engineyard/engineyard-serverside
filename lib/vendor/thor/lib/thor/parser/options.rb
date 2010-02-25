@@ -3,9 +3,9 @@ class Thor
   # under Ruby's license.
   #
   class Options < Arguments #:nodoc:
-    LONG_RE     = /^(--\w+[-\w+]*)$/
+    LONG_RE     = /^(--\w+(?:-\w+)*)$/
     SHORT_RE    = /^(-[a-z])$/i
-    EQ_RE       = /^(--\w+[-\w+]*|-[a-z])=(.*)$/i
+    EQ_RE       = /^(--\w+(?:-\w+)*|-[a-z])=(.*)$/i
     SHORT_SQ_RE = /^-([a-z]{2,})$/i # Allow either -x -v or -xv style for single char args
     SHORT_NUM   = /^(-[a-z])#{NUMERIC}$/i
 
@@ -128,7 +128,7 @@ class Thor
           elsif no_or_skip?(switch)
             return nil # User set value to nil
           elsif option.string? && !option.required?
-            return option.human_name # Return the option name
+            return option.default || option.human_name # Return the option name
           else
             raise MalformattedArgumentError, "no value provided for option '#{switch}'"
           end

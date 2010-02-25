@@ -4,11 +4,11 @@ require 'thor'
 
 module EY
   class CLI < Thor
-    class_option :migration_command,
+    class_option :migrate,
                           :type     => :string,
                           :default  => "rake db:migrate",
                           :desc     => "Run migrations with this deploy",
-                          :aliases  => ["-m", "--migrate"]
+                          :aliases  => ["-m"]
 
     class_option :branch, :type     => :string,
                           :default  => "master",

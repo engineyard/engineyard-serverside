@@ -1,10 +1,10 @@
 module EY
   class Task
     DEFAULT_CONFIG = {
-      "migration_command" => "rake db:schema:load",
-      "branch"            => 'master',
-      "copy_exclude"      => '.git',
-      "strategy"          => "Git",
+      "migrate"      => "rake db:migrate",
+      "branch"       => "master",
+      "copy_exclude" => ".git",
+      "strategy"     => "Git",
     }
 
     attr_reader :configuration
@@ -47,9 +47,12 @@ module EY
       configuration['deploy_to'] || "/data/#{app}"
     end
 
-    def migrate
-      !!configuration['migration_command']
+    def migrate?
+      !!configuration['migrate']
     end
-    alias :migrate? :migrate
+
+    def migration_command
+      configuration['migrate']
+    end
   end
 end
