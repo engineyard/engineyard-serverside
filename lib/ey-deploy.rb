@@ -8,5 +8,7 @@ require 'update'
 require 'cli'
 
 module EY
-  DNA_FILE = "/etc/chef/dna.json"
+  def self.node
+    @node ||= JSON.parse(File.read("/etc/chef/dna.json"))
+  end
 end

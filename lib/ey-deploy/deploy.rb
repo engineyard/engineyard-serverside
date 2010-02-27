@@ -62,7 +62,7 @@ module EY
 
     # task
     def restart
-      restart = case node['environment']['stack']
+      restart = case EY.node['environment']['stack']
       when "nginx_unicorn"
         "/etc/init.d/unicorn_#{app} restart"
       when "nginx_mongrel"
@@ -148,16 +148,16 @@ module EY
     end
 
     def user
-      node['users'].first['username'] || 'nobody'
+      EY.node['users'].first['username'] || 'nobody'
     end
     alias :group :user
 
     def role
-      node['instance_role']
+      EY.node['instance_role']
     end
 
     def environment
-      node['environment']['framework_env']
+      EY.node['environment']['framework_env']
     end
 
     def current_path

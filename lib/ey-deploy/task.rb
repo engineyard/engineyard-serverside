@@ -30,17 +30,12 @@ module EY
       end
     end
 
-    # Helpers
-    def node
-      @node ||= JSON.parse(File.read(EY::DNA_FILE))
-    end
-
     def repository_cache
       configuration['repository_cache'] || File.join(deploy_to, "/shared/cached-copy")
     end
 
     def repo
-      configuration['repo'] || node["applications"][app]["repository_name"]
+      configuration['repo'] || EY.node["applications"][app]["repository_name"]
     end
 
     def deploy_to
