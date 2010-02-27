@@ -12,6 +12,7 @@ module EY
 
     # default task
     def update
+      EY::Server.repository_cache = repository_cache
       update_repository_cache
 
       push_code
@@ -20,21 +21,21 @@ module EY
 
     # task
     def push_code
-      all_servers.each do |server|
+      EY::Server.all.each do |server|
         server.push_code
       end
     end
 
     # task
     def deploy
-      all_servers.each do |server|
+      Server.all.each do |server|
         puts "~ Deploying with #{deploy_command(server)}"
         server.run(deploy_command(server))
       end
     end
 
     def deploy_command(server)
-      "eysd deploy #{all_servers.size == 1 ? "deploy" : server.default_task} -a #{app} #{migrate_option}"
+      "eysd deploy #{server.default_task} -a #{app} #{migrate_option}"
     end
 
     def migrate_option
@@ -45,42 +46,5 @@ module EY
       end
     end
 
-    def all_servers
-      @servers ||= (app_slaves + db_servers + util_servers).flatten.uniq
-    end
-
-    def app_slaves
-      to_servers(Array(node["members"]))
-    end
-
-    def db_servers
-      to_servers(db_master + db_slaves).each do |server|
-        server.default_task = :symlink_only
-      end
-    end
-
-    def db_master
-      to_servers(node["db_host"]).each do |server|
-        server.default_task = :symlink_only
-      end
-    end
-
-    def db_slaves
-      to_servers(node["db_slaves"]).each do |server|
-        server.default_task = :symlink_only
-      end
-    end
-
-    def util_servers
-      to_servers(node["utility_instances"].map{|util| util["hostname"]}).each do |server|
-        server.default_task = :symlink_only
-      end
-    end
-
-    def to_servers(*args)
-      args.flatten.map do |s|
-        s.respond_to?(:run) ? s : EY::Server.new(s, repository_cache)
-      end
-    end
   end
 end
