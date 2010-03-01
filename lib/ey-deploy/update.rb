@@ -28,7 +28,7 @@ module EY
 
     # task
     def deploy
-      Server.all.each do |server|
+      EY::Server.all.each do |server|
         puts "~ Deploying with #{deploy_command(server)}"
         server.run(deploy_command(server))
       end
