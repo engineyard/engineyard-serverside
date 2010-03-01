@@ -3,9 +3,10 @@ require 'rake/gempackagetask'
 require 'rubygems/specification'
 require 'date'
 require 'spec/rake/spectask'
+require File.expand_path("lib/ey-deploy/version", File.dirname(__FILE__))
 
 GEM = "ey-deploy"
-GEM_VERSION = "0.1.2.pre"
+GEM_VERSION = EY::VERSION
 AUTHOR = "EY Cloud Team"
 EMAIL = "cloud@engineyard.com"
 HOMEPAGE = "http://engineyard.com"

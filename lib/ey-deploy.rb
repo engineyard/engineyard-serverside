@@ -1,5 +1,7 @@
 $LOAD_PATH.push(File.expand_path("ey-deploy", File.dirname(__FILE__)))
 
+require 'version'
+require 'compatibility'
 require 'strategies/git'
 require 'task'
 require 'server'
