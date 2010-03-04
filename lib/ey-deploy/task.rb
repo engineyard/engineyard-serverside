@@ -1,53 +1,36 @@
 module EY
   class Task
-    DEFAULT_CONFIG = {
-      "migrate"      => "rake db:migrate",
-      "branch"       => "master",
-      "copy_exclude" => ".git",
-      "strategy"     => "Git",
-    }
 
-    attr_reader :configuration
+    attr_reader :config
+    alias :c :config
 
-    def initialize(opts={})
-      @configuration = opts
+    def initialize(conf)
+      @config = conf
     end
 
-    # Delegate to the configuration objects
-    def method_missing(meth, *args, &blk)
-      if configuration.key?(meth.to_s)
-        configuration[meth.to_s]
-      else
-        super
+    def require_custom_tasks
+      deploy_file = ["config/eydeploy.rb", "eydeploy.rb"].detect do |file|
+        File.exists?(File.join(c.repository_cache, file))
       end
+      require File.join(c.repository_cache, deploy_file) if deploy_file
     end
 
-    def respond_to?(meth)
-      if configuration.key?(meth.to_s)
-        true
-      else
-        super
+    def run(cmd)
+      res = `sudo -u #{c.user} sh -c "#{cmd} 2>&1"`
+      unless $? == 0
+        puts res
+        exit 1
       end
+      res
     end
 
-    def repository_cache
-      configuration['repository_cache'] || File.join(deploy_to, "/shared/cached-copy")
-    end
-
-    def repo
-      configuration['repo'] || EY.node["applications"][app]["repository_name"]
-    end
-
-    def deploy_to
-      configuration['deploy_to'] || "/data/#{app}"
-    end
-
-    def migrate?
-      !!configuration['migrate']
-    end
-
-    def migration_command
-      configuration['migrate']
+    def sudo(cmd)
+      res = `sh -c "#{cmd} 2>&1"`
+      unless $? == 0
+        puts res
+        exit 1
+      end
+      res
     end
   end
 end

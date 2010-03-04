@@ -1,86 +1,59 @@
 # stolen wholesale from capistrano, thanks Jamis!
 require 'fileutils'
 require 'json'
-require 'pp'
 
 module EY
-  class Deploy < Task
-    def self.run(opts={})
-      new(DEFAULT_CONFIG.merge!(opts)).send(opts["default_task"])
-    end
-
+  class DeployBase < Task
     # task, default
     def deploy
-      puts "~> full deploy"
-      Dir.chdir deploy_to
+      puts "~> Starting full deploy"
+      Dir.chdir c.deploy_to
 
-      puts "~> application received"
-
-      puts "~> ensuring proper ownership"
-      sudo("chown -R #{user}:#{group} #{deploy_to}")
-
-      puts "~> copying to #{release_path}"
-      sudo(copy_repository_cache)
-
-      sudo("chown -R #{user}:#{group} #{deploy_to}")
-
-      callback(:before_migrate)
+      copy_repository_cache
       bundle
-      migrate
-      callback(:before_symlink)
-      puts "~> symlinking code"
       symlink
-      callback(:before_restart)
+      migrate
       restart
-      callback(:after_restart)
       cleanup
+
       puts "~> finalizing deploy"
     end
 
     # task, default
     def symlink_only
-      puts "~> symlink deploy"
-      Dir.chdir deploy_to
+      puts "~> Starting symlink deploy"
+      Dir.chdir c.deploy_to
 
-      puts "~> application received"
-
-      puts "~> ensuring proper ownership"
-      sudo("chown -R #{user}:#{group} #{deploy_to}")
-
-      puts "~> copying to #{release_path}"
-      sudo(copy_repository_cache)
-
-      sudo("chown -R #{user}:#{group} #{deploy_to}")
-
+      copy_repository_cache
       bundle
-      puts "~> symlinking code"
       symlink
       cleanup
+
       puts "~> finalizing deploy"
     end
 
-
     # task
     def restart
-      restart = case EY.node['environment']['stack']
+      restart_command = case c.stack
       when "nginx_unicorn"
-        "/etc/init.d/unicorn_#{app} restart"
+        "/etc/init.d/unicorn_#{c.app} restart"
       when "nginx_mongrel"
-        "monit restart all -g #{app}"
+        "monit restart all -g #{c.app}"
       when "nginx_passenger", "apache_passenger"
-        "touch #{latest_release}/tmp/restart.txt"
+        "touch #{c.latest_release}/tmp/restart.txt"
       end
-      if restart
-        puts "~> restarting app: #{latest_release}"
-        sudo("cd #{current_path} && INLINEDIR=/tmp #{framework_envs} #{restart}")
+      if restart_command
+        puts "~> restarting app: #{c.latest_release}"
+        sudo("cd #{c.current_path} && INLINEDIR=/tmp #{c.framework_envs} #{restart_command}")
       end
+      callback(:after_restart)
     end
 
     # task
     def bundle
-      if File.exist?("#{latest_release}/Gemfile")
+      if File.exist?("#{c.latest_release}/Gemfile")
         puts "~> Gemfile detected, bundling gems"
-        Dir.chdir(latest_release) do
+        Dir.chdir(c.latest_release) do
           system("bundle install")
         end
       end
@@ -88,148 +61,134 @@ module EY
 
     # task
     def cleanup
-      while all_releases.size >= 3
-        puts "~> cleaning up old releases"
-        FileUtils.rm_rf oldest_release
+      puts "~> cleaning up old releases"
+      releases = c.all_releases
+      3.times {releases.shift}
+      releases.each do |rel|
+        FileUtils.rm_rf rel
       end
     end
 
     # task
     def rollback
       puts "~> rolling back to previous release"
-      symlink(previous_release)
-      FileUtils.rm_rf latest_release
+      symlink(c.previous_release)
+      FileUtils.rm_rf c.latest_release
       puts "~> restarting with previous release"
       restart
     end
 
     # task
     def migrate
-      if migrate?
-        sudo "ln -nfs #{shared_path}/config/database.yml #{latest_release}/config/database.yml"
-        sudo "ln -nfs #{shared_path}/log #{latest_release}/log"
-        puts "~> Migrating: cd #{latest_release} && sudo -u #{user} #{framework_envs} #{migration_command}"
-        sudo("chown -R #{user}:#{group} #{latest_release}")
-        sudo("cd #{latest_release} && sudo -u #{user} #{framework_envs} #{migration_command}")
+      if c.migrate?
+        callback(:before_restart)
+        sudo "ln -nfs #{c.shared_path}/config/database.yml #{c.latest_release}/config/database.yml"
+        sudo "ln -nfs #{c.shared_path}/log #{c.latest_release}/log"
+        puts "~> Migrating: cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}"
+        sudo("chown -R #{c.user}:#{c.group} #{c.latest_release}")
+        sudo("cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}")
+      end
+    end
+
+    # task
+    def copy_repository_cache
+      puts "~> copying to #{c.release_path}"
+      sudo("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/* #{c.release_path}")
+
+      puts "~> ensuring proper ownership"
+      sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
+    end
+
+    # task
+    def symlink(release_to_link=c.latest_release)
+      callback(:before_symlink)
+      puts "~> symlinking code"
+      symlink = false
+      begin
+        sudo [ "chmod -R g+w #{release_to_link}",
+          "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
+          "mkdir -p #{release_to_link}/tmp",
+          "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
+          "mkdir -p #{release_to_link}/public",
+          "mkdir -p #{release_to_link}/config",
+          "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
+          "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
+          "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
+          "chown -R #{c.user}:#{c.group} #{release_to_link}"
+          ].join(" && ")
+
+        symlink = true
+        sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
+      rescue => e
+        sudo "rm -f #{c.current_path} && ln -nfs #{c.previous_release(release_to_link)} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}" if symlink
+        sudo "rm -rf #{release_to_link}"
+        raise e
       end
     end
 
     # before_symlink
     # before_restart
     def callback(what)
-      if File.exist?("#{latest_release}/deploy/#{what}.rb")
-        Dir.chdir(latest_release) do
+      if File.exist?("#{c.latest_release}/deploy/#{what}.rb")
+        Dir.chdir(c.latest_release) do
           puts "~> running deploy hook: deploy/#{what}.rb"
-          instance_eval(IO.read("#{latest_release}/deploy/#{what}.rb"))
+          instance_eval(IO.read("#{c.latest_release}/deploy/#{what}.rb"))
         end
       end
     end
 
-    def latest_release
-      all_releases.last
-    end
+    def initialize(*args)
+      super
+      class << config
+        def latest_release
+          all_releases.last
+        end
 
-    def previous_release(current=latest_release)
-      index = all_releases.index(current)
-      all_releases[index-1]
-    end
+        def previous_release(current=latest_release)
+          index = all_releases.index(current)
+          all_releases[index-1]
+        end
 
-    def oldest_release
-      all_releases.first
-    end
+        def oldest_release
+          all_releases.first
+        end
 
-    def all_releases
-      `ls #{release_dir}`.split("\n").sort.map{|r| File.join(release_dir, r)}
-    end
+        def all_releases
+          Dir.glob("#{release_dir}/*").sort
+        end
 
+        def framework_envs
+          "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
+        end
 
-    def framework_envs
-      "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
-    end
+        def current_path
+          File.join(deploy_to, "current")
+        end
 
-    def user
-      EY.node['users'].first['username'] || 'nobody'
-    end
-    alias :group :user
+        def shared_path
+          File.join(deploy_to, "shared")
+        end
 
-    def role
-      EY.node['instance_role']
-    end
+        def release_dir
+          File.join(deploy_to, "releases")
+        end
 
-    def environment
-      EY.node['environment']['framework_env']
-    end
+        def release_path
+          @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
+        end
 
-    def current_path
-      File.join(deploy_to, "current")
-    end
-
-    def shared_path
-      File.join(deploy_to, "shared")
-    end
-
-    def release_dir
-      File.join(deploy_to, "releases")
-    end
-
-    def release_path
-      @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
-    end
-
-    def symlink(release_to_link=latest_release)
-      symlink = false
-      begin
-        sudo [ "chmod -R g+w #{release_to_link}",
-          "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
-          "mkdir -p #{release_to_link}/tmp",
-          "ln -nfs #{shared_path}/log #{release_to_link}/log",
-          "mkdir -p #{release_to_link}/public",
-          "mkdir -p #{release_to_link}/config",
-          "ln -nfs #{shared_path}/system #{release_to_link}/public/system",
-          "ln -nfs #{shared_path}/pids #{release_to_link}/tmp/pids",
-          "ln -nfs #{shared_path}/config/database.yml #{release_to_link}/config/database.yml",
-          "chown -R #{user}:#{group} #{release_to_link}"
-          ].join(" && ")
-
-        symlink = true
-        sudo "rm -f #{current_path} && ln -nfs #{release_to_link} #{current_path} && chown -R #{user}:#{group} #{current_path}"
-      rescue => e
-        sudo "rm -f #{current_path} && ln -nfs #{previous_release(release_to_link)} #{current_path} && chown -R #{user}:#{group} #{current_path}" if symlink
-        sudo "rm -rf #{release_to_link}"
-        raise e
+        def exclusions
+          copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
+        end
       end
     end
+  end
 
-    def run(cmd)
-      res = `sudo -u #{user} sh -c "#{cmd} 2>&1"`
-      unless $? == 0
-        puts res
-        exit 1
-      end
-      res
-    end
-
-    def sudo(cmd)
-      res = `sh -c "#{cmd} 2>&1"`
-      unless $? == 0
-        puts res
-        exit 1
-      end
-      res
-    end
-
-  private
-
-    def copy_repository_cache
-      "mkdir -p #{release_path} && rsync -aq #{exclusions} #{repository_cache}/* #{release_path}"
-    end
-
-    def copy_exclude
-      @copy_exclude ||= Array(configuration.fetch("copy_exclude", []))
-    end
-
-    def exclusions
-      copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
+  class Deploy < DeployBase
+    def self.run(opts={})
+      dep = new(EY::Deploy::Configuration.new(opts))
+      dep.require_custom_tasks
+      dep.send(opts["default_task"])
     end
   end
 end

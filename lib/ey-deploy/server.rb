@@ -57,16 +57,16 @@ module EY
     def push_code
       return if local?
       run "mkdir -p #{repository_cache}"
-      puts `rsync -aq -e "#{ssh_command}" #{repository_cache}/ #{hostname}:#{repository_cache}`
+      system(%|rsync -aq -e "#{ssh_command}" #{repository_cache}/ #{hostname}:#{repository_cache}|)
     end
 
     def run(command)
       if local?
         puts "Running command locally"
-        puts `#{command.gsub(/\\"/, '"')}`
+        system("#{command.gsub(/\\"/, '"')}")
       else
         puts "Running command remotely"
-        puts `#{ssh_command} #{hostname} #{command}`
+        system("#{ssh_command} #{hostname} #{command}")
       end
     end
 

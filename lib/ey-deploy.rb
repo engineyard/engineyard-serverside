@@ -8,6 +8,7 @@ require 'server'
 require 'deploy'
 require 'update'
 require 'cli'
+require 'configuration'
 
 module EY
   def self.node

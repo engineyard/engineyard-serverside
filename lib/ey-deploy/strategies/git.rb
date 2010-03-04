@@ -6,9 +6,9 @@ module EY
           klass = Module.nesting[1]
 
           strategy = klass.new(
-            :repository_cache => repository_cache,
-            :repo => repo,
-            :branch => branch
+            :repository_cache => c.repository_cache,
+            :repo => c.repo,
+            :branch => c.branch
           )
 
           strategy.fetch

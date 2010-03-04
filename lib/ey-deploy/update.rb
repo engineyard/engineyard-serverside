@@ -1,20 +1,10 @@
 module EY
-  class Update < Task
-    def self.run(opts={})
-      new(DEFAULT_CONFIG.merge!(opts)).send(opts["default_task"])
-    end
-
-    def self.new(opts={})
-      # include the correct fetch strategy
-      include EY::Strategies.const_get(opts["strategy"])::Helpers
-      super
-    end
+  class UpdateBase < Task
 
     # default task
     def update
-      EY::Server.repository_cache = repository_cache
       update_repository_cache
-
+      require_custom_tasks
       push_code
       deploy
     end
@@ -35,16 +25,30 @@ module EY
     end
 
     def deploy_command(server)
-      "eysd deploy #{server.default_task} -a #{app} #{migrate_option}"
+      "eysd deploy #{server.default_task} -a #{c.app} #{migrate_option}"
     end
 
     def migrate_option
-      if migrate?
-        %|--migrate \\"#{migration_command}\\"|
+      if c.migrate?
+        %|--migrate \\"#{c.migration_command}\\"|
       else
         "--no-migrate"
       end
     end
 
+  end
+
+  class Update < UpdateBase
+    def self.new(opts={})
+      # include the correct fetch strategy
+      include EY::Strategies.const_get(opts.strategy)::Helpers
+      super
+    end
+
+    def self.run(opts={})
+      conf = EY::Deploy::Configuration.new(opts)
+      EY::Server.repository_cache = conf.repository_cache
+      update = new(conf).send(opts["default_task"])
+    end
   end
 end
