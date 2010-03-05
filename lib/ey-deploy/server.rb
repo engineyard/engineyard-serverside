@@ -1,5 +1,5 @@
 module EY
-  class Server < Struct.new(:hostname, :role)
+  class Server < Struct.new(:hostname, :role, :name)
     def self.repository_cache=(repo_cache)
       @@repository_cache = repo_cache
     end
@@ -9,6 +9,15 @@ module EY
     end
 
     attr_writer :default_task
+
+    def self.from_roles(*roles)
+      roles = roles.flatten.compact!
+      return all if !roles || roles.include?(:all) || roles.empty?
+
+      all.select do |s|
+        roles.include?(s.role) || roles.include?(s.name)
+      end
+    end
 
     def self.all
       @servers ||= (app_slaves << db_master << db_slaves << utils << current).flatten.compact.uniq
@@ -20,7 +29,7 @@ module EY
 
     def self.app_slaves
       @app_slaves ||= Array(EY.node["members"]).map do |slave|
-        new(slave, :app_slave)
+        new(slave, :app)
       end
     end
 
@@ -41,7 +50,7 @@ module EY
 
     def self.utils
       EY.node["utility_instances"].map{|util| util["hostname"]}.each do |server|
-        new(server, :util)
+        new(server["hostname"], :util, server["name"])
       end
     end
 
@@ -51,7 +60,7 @@ module EY
     def ==(other); eql?(other); end
 
     def local?
-      [:master, :solo].include?(role)
+      [:app_master, :solo].include?(role)
     end
 
     def push_code
@@ -62,24 +71,14 @@ module EY
 
     def run(command)
       if local?
-        puts "Running command locally"
-        system("#{command.gsub(/\\"/, '"')}")
+        system(command)
       else
-        puts "Running command remotely"
         system("#{ssh_command} #{hostname} #{command}")
       end
     end
 
     def ssh_command
       "ssh -i /root/.ssh/internal"
-    end
-
-    def default_task
-      if [:master, :solo, :app_slave].include?(role)
-        "deploy"
-      else
-        "symlink_only"
-      end
     end
   end
 end

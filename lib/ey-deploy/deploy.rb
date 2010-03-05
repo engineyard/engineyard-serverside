@@ -4,10 +4,13 @@ require 'json'
 
 module EY
   class DeployBase < Task
-    # task, default
+    # default task
     def deploy
+      update_repository_cache
+      require_custom_tasks
+      push_code
+
       puts "~> Starting full deploy"
-      Dir.chdir c.deploy_to
 
       copy_repository_cache
       bundle
@@ -19,34 +22,30 @@ module EY
       puts "~> finalizing deploy"
     end
 
-    # task, default
-    def symlink_only
-      puts "~> Starting symlink deploy"
-      Dir.chdir c.deploy_to
-
-      copy_repository_cache
-      bundle
-      symlink
-      cleanup
-
-      puts "~> finalizing deploy"
+    # task
+    def push_code
+      EY::Server.all.each do |server|
+        server.push_code
+      end
     end
 
     # task
     def restart
-      restart_command = case c.stack
-      when "nginx_unicorn"
-        "/etc/init.d/unicorn_#{c.app} restart"
-      when "nginx_mongrel"
-        "monit restart all -g #{c.app}"
-      when "nginx_passenger", "apache_passenger"
-        "touch #{c.latest_release}/tmp/restart.txt"
+      roles :app_master, :app, :solo do
+        restart_command = case c.stack
+        when "nginx_unicorn"
+          "/etc/init.d/unicorn_#{c.app} restart"
+        when "nginx_mongrel"
+          "monit restart all -g #{c.app}"
+        when "nginx_passenger", "apache_passenger"
+          "touch #{c.latest_release}/tmp/restart.txt"
+        end
+        if restart_command
+          puts "~> restarting app: #{c.latest_release}"
+          sudo("cd #{c.current_path} && INLINEDIR=/tmp #{c.framework_envs} #{restart_command}")
+        end
+        callback(:after_restart)
       end
-      if restart_command
-        puts "~> restarting app: #{c.latest_release}"
-        sudo("cd #{c.current_path} && INLINEDIR=/tmp #{c.framework_envs} #{restart_command}")
-      end
-      callback(:after_restart)
     end
 
     # task
@@ -80,13 +79,15 @@ module EY
 
     # task
     def migrate
-      if c.migrate?
-        callback(:before_restart)
-        sudo "ln -nfs #{c.shared_path}/config/database.yml #{c.latest_release}/config/database.yml"
-        sudo "ln -nfs #{c.shared_path}/log #{c.latest_release}/log"
-        puts "~> Migrating: cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}"
-        sudo("chown -R #{c.user}:#{c.group} #{c.latest_release}")
-        sudo("cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}")
+      roles :app_master, :solo do
+        if c.migrate?
+          callback(:before_restart)
+          sudo "ln -nfs #{c.shared_path}/config/database.yml #{c.latest_release}/config/database.yml"
+          sudo "ln -nfs #{c.shared_path}/log #{c.latest_release}/log"
+          puts "~> Migrating: cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}"
+          sudo("chown -R #{c.user}:#{c.group} #{c.latest_release}")
+          sudo("cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}")
+        end
       end
     end
 
@@ -137,56 +138,20 @@ module EY
       end
     end
 
-    def initialize(*args)
-      super
-      class << config
-        def latest_release
-          all_releases.last
-        end
-
-        def previous_release(current=latest_release)
-          index = all_releases.index(current)
-          all_releases[index-1]
-        end
-
-        def oldest_release
-          all_releases.first
-        end
-
-        def all_releases
-          Dir.glob("#{release_dir}/*").sort
-        end
-
-        def framework_envs
-          "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
-        end
-
-        def current_path
-          File.join(deploy_to, "current")
-        end
-
-        def shared_path
-          File.join(deploy_to, "shared")
-        end
-
-        def release_dir
-          File.join(deploy_to, "releases")
-        end
-
-        def release_path
-          @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
-        end
-
-        def exclusions
-          copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
-        end
-      end
-    end
   end
 
   class Deploy < DeployBase
+    def self.new(opts={})
+      # include the correct fetch strategy
+      include EY::Strategies.const_get(opts.strategy)::Helpers
+      super
+    end
+
     def self.run(opts={})
-      dep = new(EY::Deploy::Configuration.new(opts))
+      conf = EY::Deploy::Configuration.new(opts)
+      EY::Server.repository_cache = conf.repository_cache
+
+      dep = new(conf)
       dep.require_custom_tasks
       dep.send(opts["default_task"])
     end

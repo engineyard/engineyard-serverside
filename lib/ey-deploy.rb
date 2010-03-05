@@ -6,7 +6,6 @@ require 'strategies/git'
 require 'task'
 require 'server'
 require 'deploy'
-require 'update'
 require 'cli'
 require 'configuration'
 

@@ -6,6 +6,7 @@ module EY
 
     def initialize(conf)
       @config = conf
+      @roles = :all
     end
 
     def require_custom_tasks
@@ -15,22 +16,27 @@ module EY
       require File.join(c.repository_cache, deploy_file) if deploy_file
     end
 
-    def run(cmd)
-      res = `sudo -u #{c.user} sh -c "#{cmd} 2>&1"`
-      unless $? == 0
-        puts res
-        exit 1
+    def roles(*task_roles)
+      raise "Roles must be passed a block" unless block_given?
+
+      begin
+        @roles = task_roles
+        yield
+      ensure
+        @roles = :all
       end
-      res
+    end
+
+    def run(cmd)
+      EY::Server.from_roles(@roles).each do |server|
+        server.run %|sudo -u #{c.user} sh -c "#{cmd} 2>&1"|
+      end
     end
 
     def sudo(cmd)
-      res = `sh -c "#{cmd} 2>&1"`
-      unless $? == 0
-        puts res
-        exit 1
+      EY::Server.from_roles(@roles).each do |server|
+        server.run %|sh -c "#{cmd} 2>&1"|
       end
-      res
     end
   end
 end

@@ -71,5 +71,46 @@ module EY
       EY.node['environment']['framework_env']
     end
 
+    def latest_release
+      all_releases.last
+    end
+
+    def previous_release(current=latest_release)
+      index = all_releases.index(current)
+      all_releases[index-1]
+    end
+
+    def oldest_release
+      all_releases.first
+    end
+
+    def all_releases
+      Dir.glob("#{release_dir}/*").sort
+    end
+
+    def framework_envs
+      "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
+    end
+
+    def current_path
+      File.join(deploy_to, "current")
+    end
+
+    def shared_path
+      File.join(deploy_to, "shared")
+    end
+
+    def release_dir
+      File.join(deploy_to, "releases")
+    end
+
+    def release_path
+      @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
+    end
+
+    def exclusions
+      copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
+    end
+
   end
 end
