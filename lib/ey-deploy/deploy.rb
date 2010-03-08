@@ -61,11 +61,7 @@ module EY
     # task
     def cleanup
       puts "~> cleaning up old releases"
-      releases = c.all_releases
-      3.times {releases.pop}
-      releases.each do |rel|
-        sudo "rm -rf #{rel}"
-      end
+      sudo "ls #{c.release_dir} | head -n -3 | xargs -I{} rm -rf #{c.release_dir}/{}"
     end
 
     # task
