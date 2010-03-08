@@ -1,3 +1,5 @@
+require 'json'
+
 module EY
   class Deploy::Configuration
     DEFAULT_CONFIG = {
@@ -8,26 +10,19 @@ module EY
     }
 
     attr_reader :configuration
+    alias :c :configuration
 
     def initialize(opts={})
-      @configuration = DEFAULT_CONFIG.merge(opts)
+      config = JSON.parse(opts["config"] || "{}")
+      @configuration = DEFAULT_CONFIG.merge(config).merge(opts)
     end
 
     # Delegate to the configuration objects
     def method_missing(meth, *args, &blk)
-      if configuration.key?(meth.to_s)
-        configuration[meth.to_s]
-      else
-        super
-      end
+      c.key?(meth.to_s) ? c[meth.to_s] : super
     end
-
     def respond_to?(meth)
-      if configuration.key?(meth.to_s)
-        true
-      else
-        super
-      end
+      c.key?(meth.to_s) ? true : super
     end
 
     def repository_cache
@@ -47,7 +42,7 @@ module EY
     end
 
     def migration_command
-      configuration['migrate']
+      configuration['migrate'] == "migrate" ? DEFAULT_CONFIG["migrate"] : configuration['migrate']
     end
 
     def user

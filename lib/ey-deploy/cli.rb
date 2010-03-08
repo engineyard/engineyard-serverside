@@ -5,12 +5,10 @@ require 'thor'
 module EY
   class CLI < Thor
     method_option :migrate, :type     => :string,
-                            :default  => "rake db:migrate",
                             :desc     => "Run migrations with this deploy",
                             :aliases  => ["-m"]
 
     method_option :branch,  :type     => :string,
-                            :default  => "master",
                             :desc     => "Branch to deploy from, defaults to master",
                             :aliases  => ["-b"]
 
@@ -22,6 +20,10 @@ module EY
                             :required => true,
                             :desc     => "Application to deploy",
                             :aliases  => ["-a"]
+
+    method_option :config,  :type     => :string,
+                            :desc     => "Additional configuration"
+
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
       EY::Deploy.run(options.merge("default_task" => default_task))
