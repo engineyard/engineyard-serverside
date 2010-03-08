@@ -1,3 +1,5 @@
+require 'open-uri'
+
 module EY
   class Server < Struct.new(:hostname, :role, :name)
     def self.repository_cache=(repo_cache)
@@ -11,7 +13,7 @@ module EY
     attr_writer :default_task
 
     def self.from_roles(*roles)
-      roles = roles.flatten.compact!
+      roles = roles.flatten.compact
       return all if !roles || roles.include?(:all) || roles.empty?
 
       all.select do |s|
@@ -20,16 +22,18 @@ module EY
     end
 
     def self.all
-      @servers ||= (app_slaves << db_master << db_slaves << utils << current).flatten.compact.uniq
+      @servers ||= ([current] << app_slaves << db_master << db_slaves << utils).flatten.compact
     end
 
     def self.current
-      @current ||= new("localhost", EY.node["instance_role"].to_sym)
+      @current ||= new(open("http://169.254.169.254/latest/meta-data/local-hostname").read, EY.node["instance_role"].to_sym)
     end
 
     def self.app_slaves
       @app_slaves ||= Array(EY.node["members"]).map do |slave|
         new(slave, :app)
+      end.reject do |server|
+        server.hostname == current.hostname
       end
     end
 
@@ -43,21 +47,16 @@ module EY
     end
 
     def self.db_slaves
-      EY.node["db_slaves"].each do |slave|
+      EY.node["db_slaves"].map do |slave|
         new(slave, :db_slave)
       end
     end
 
     def self.utils
-      EY.node["utility_instances"].map{|util| util["hostname"]}.each do |server|
+      EY.node["utility_instances"].map do |server|
         new(server["hostname"], :util, server["name"])
       end
     end
-
-    # For the purpose of making uniq ignore roles
-    def eql?(other); hostname == other.hostname; end
-    def hash; hostname.hash; end
-    def ==(other); eql?(other); end
 
     def local?
       [:app_master, :solo].include?(role)
@@ -71,9 +70,9 @@ module EY
 
     def run(command)
       if local?
-        system(command)
+        system(command.gsub(/\\"/, '"'))
       else
-        system("#{ssh_command} #{hostname} #{command}")
+        system(%|#{ssh_command} #{hostname} "#{command}"|)
       end
     end
 
@@ -82,3 +81,4 @@ module EY
     end
   end
 end
+

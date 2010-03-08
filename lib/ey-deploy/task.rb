@@ -29,13 +29,13 @@ module EY
 
     def run(cmd)
       EY::Server.from_roles(@roles).each do |server|
-        server.run %|sudo -u #{c.user} sh -c "#{cmd} 2>&1"|
+        server.run %|sudo -u #{c.user} sh -c \\"#{cmd} 2>&1\\"|
       end
     end
 
     def sudo(cmd)
       EY::Server.from_roles(@roles).each do |server|
-        server.run %|sh -c "#{cmd} 2>&1"|
+        server.run %|sh -c \\"#{cmd} 2>&1\\"|
       end
     end
   end
