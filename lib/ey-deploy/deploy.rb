@@ -52,9 +52,7 @@ module EY
     def bundle
       if File.exist?("#{c.latest_release}/Gemfile")
         puts "~> Gemfile detected, bundling gems"
-        Dir.chdir(c.latest_release) do
-          system("bundle install")
-        end
+        run %|cd #{c.latest_release} && bundle install|
       end
     end
 

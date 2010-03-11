@@ -11,6 +11,6 @@ require 'configuration'
 
 module EY
   def self.node
-    @node ||= JSON.parse(File.read("/etc/chef/dna.json"))
+    @node ||= JSON.parse(`sudo cat /etc/chef/dna.json`)
   end
 end
