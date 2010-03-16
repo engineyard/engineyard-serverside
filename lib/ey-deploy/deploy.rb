@@ -143,7 +143,7 @@ module EY
 
     def self.run(opts={})
       conf = EY::Deploy::Configuration.new(opts)
-      EY::Server.repository_cache = conf.repository_cache
+      EY::Server.config = conf
 
       dep = new(conf)
       dep.require_custom_tasks

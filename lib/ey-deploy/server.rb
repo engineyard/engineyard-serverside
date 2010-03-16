@@ -2,12 +2,12 @@ require 'open-uri'
 
 module EY
   class Server < Struct.new(:hostname, :role, :name)
-    def self.repository_cache=(repo_cache)
-      @@repository_cache = repo_cache
+    def self.config=(config)
+      @@config = config
     end
 
-    def repository_cache
-      @@repository_cache
+    def config
+      @@config
     end
 
     attr_writer :default_task
@@ -65,19 +65,19 @@ module EY
     def push_code
       return if local?
       run "mkdir -p #{repository_cache}"
-      system(%|rsync -aq -e "#{ssh_command}" #{repository_cache}/ #{hostname}:#{repository_cache}|)
+      system(%|rsync -aq -e "#{ssh_command}" #{config.repository_cache}/ #{config.user}@#{hostname}:#{repository_cache}|)
     end
 
     def run(command)
       if local?
         system(command.gsub(/\\"/, '"'))
       else
-        system(%|#{ssh_command} #{hostname} "#{command}"|)
+        system(%|#{ssh_command} #{config.user}@#{hostname} "#{command}"|)
       end
     end
 
     def ssh_command
-      "ssh -i /root/.ssh/internal"
+      "ssh -i ~/.ssh/internal"
     end
   end
 end
