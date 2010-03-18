@@ -64,8 +64,8 @@ module EY
 
     def push_code
       return if local?
-      run "mkdir -p #{repository_cache}"
-      system(%|rsync -aq -e "#{ssh_command}" #{config.repository_cache}/ #{config.user}@#{hostname}:#{repository_cache}|)
+      run "mkdir -p #{config.repository_cache}"
+      system(%|rsync -aq -e "#{ssh_command}" #{config.repository_cache}/ #{config.user}@#{hostname}:#{config.repository_cache}|)
     end
 
     def run(command)
@@ -77,7 +77,7 @@ module EY
     end
 
     def ssh_command
-      "ssh -i ~/.ssh/internal"
+      "ssh -i /home/#{config.user}/.ssh/internal"
     end
   end
 end
