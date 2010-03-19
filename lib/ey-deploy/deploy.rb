@@ -50,9 +50,11 @@ module EY
 
     # task
     def bundle
-      if File.exist?("#{c.latest_release}/Gemfile")
-        puts "~> Gemfile detected, bundling gems"
-        run %|cd #{c.latest_release} && bundle install|
+      roles :app_master, :app, :solo do
+        if File.exist?("#{c.latest_release}/Gemfile")
+          puts "~> Gemfile detected, bundling gems"
+          run %|cd #{c.latest_release} && bundle install|
+        end
       end
     end
 
