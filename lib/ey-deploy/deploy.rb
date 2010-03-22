@@ -14,8 +14,9 @@ module EY
 
       copy_repository_cache
       bundle
-      symlink
+      symlink_configs
       migrate
+      symlink
       restart
       cleanup
 
@@ -24,6 +25,7 @@ module EY
 
     # task
     def push_code
+      puts "~> Pushing code to all servers"
       EY::Server.all.each do |server|
         server.push_code
       end
@@ -31,6 +33,7 @@ module EY
 
     # task
     def restart
+      puts "~> Restarting app servers"
       roles :app_master, :app, :solo do
         restart_command = case c.stack
         when "nginx_unicorn"
@@ -77,12 +80,11 @@ module EY
     def migrate
       roles :app_master, :solo do
         if c.migrate?
-          callback(:before_restart)
-          sudo "ln -nfs #{c.shared_path}/config/database.yml #{c.latest_release}/config/database.yml"
-          sudo "ln -nfs #{c.shared_path}/log #{c.latest_release}/log"
-          puts "~> Migrating: cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}"
-          sudo("chown -R #{c.user}:#{c.group} #{c.latest_release}")
-          sudo("cd #{c.latest_release} && sudo -u #{c.user} #{c.framework_envs} #{c.migration_command}")
+          callback(:before_migrate)
+          puts "~> migrating"
+          cmd = "cd #{c.latest_release} && #{c.framework_envs} #{c.migration_command}"
+          puts "~> Migrating: #{cmd}"
+          run(cmd)
         end
       end
     end
@@ -96,28 +98,29 @@ module EY
       sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
     end
 
+    def symlink_configs(release_to_link=c.latest_release)
+      puts "~> Symlinking configs"
+      sudo [ "chmod -R g+w #{release_to_link}",
+        "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
+        "mkdir -p #{release_to_link}/tmp",
+        "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
+        "mkdir -p #{release_to_link}/public",
+        "mkdir -p #{release_to_link}/config",
+        "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
+        "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
+        "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
+        "chown -R #{c.user}:#{c.group} #{release_to_link}"
+        ].join(" && ")
+    end
+
     # task
     def symlink(release_to_link=c.latest_release)
       callback(:before_symlink)
       puts "~> symlinking code"
-      symlink = false
       begin
-        sudo [ "chmod -R g+w #{release_to_link}",
-          "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
-          "mkdir -p #{release_to_link}/tmp",
-          "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
-          "mkdir -p #{release_to_link}/public",
-          "mkdir -p #{release_to_link}/config",
-          "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
-          "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
-          "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
-          "chown -R #{c.user}:#{c.group} #{release_to_link}"
-          ].join(" && ")
-
-        symlink = true
         sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
       rescue => e
-        sudo "rm -f #{c.current_path} && ln -nfs #{c.previous_release(release_to_link)} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}" if symlink
+        sudo "rm -f #{c.current_path} && ln -nfs #{c.previous_release(release_to_link)} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
         sudo "rm -rf #{release_to_link}"
         raise e
       end
