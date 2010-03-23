@@ -41,7 +41,7 @@ module EY
         exit(1)
       end
 
-      system("gem install ey-deploy -v '#{server_requirement}' > /dev/null 2>&1")
+      system("sudo gem install ey-deploy -v '#{server_requirement}' > /dev/null 2>&1")
       case $?.exitstatus
       when 2
         puts "Incompatible server component detected"
