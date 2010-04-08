@@ -34,18 +34,15 @@ module EY
     # task
     def restart
       puts "~> Restarting app servers"
+      puts "~> restarting app: #{c.latest_release}"
       roles :app_master, :app, :solo do
         restart_command = case c.stack
         when "nginx_unicorn"
-          "/etc/init.d/unicorn_#{c.app} restart"
+          sudo("/etc/init.d/unicorn_#{c.app} deploy")
         when "nginx_mongrel"
-          "monit restart all -g #{c.app}"
+          sudo("monit restart all -g #{c.app}")
         when "nginx_passenger", "apache_passenger"
-          "touch #{c.latest_release}/tmp/restart.txt"
-        end
-        if restart_command
-          puts "~> restarting app: #{c.latest_release}"
-          sudo("cd #{c.current_path} && INLINEDIR=/tmp #{c.framework_envs} #{restart_command}")
+          sudo("touch #{c.latest_release}/tmp/restart.txt")
         end
         callback(:after_restart)
       end
@@ -109,6 +106,7 @@ module EY
         "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
         "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
         "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
+        "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
         "chown -R #{c.user}:#{c.group} #{release_to_link}"
         ].join(" && ")
     end
