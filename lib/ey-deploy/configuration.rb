@@ -3,7 +3,6 @@ require 'json'
 module EY
   class Deploy::Configuration
     DEFAULT_CONFIG = {
-      "migrate"      => "rake db:migrate",
       "branch"       => "master",
       "copy_exclude" => ".git",
       "strategy"     => "Git",
