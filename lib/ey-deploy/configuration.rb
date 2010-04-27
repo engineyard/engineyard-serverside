@@ -24,12 +24,16 @@ module EY
       c.key?(meth.to_s) ? true : super
     end
 
+    def node
+      EY.node
+    end
+
     def repository_cache
       configuration['repository_cache'] || File.join(deploy_to, "/shared/cached-copy")
     end
 
     def repo
-      configuration['repo'] || EY.node["applications"][app]["repository_name"]
+      configuration['repo'] || node["applications"][app]["repository_name"]
     end
 
     def deploy_to
@@ -45,12 +49,12 @@ module EY
     end
 
     def user
-      EY.node['users'].first['username'] || 'nobody'
+      node['users'].first['username'] || 'nobody'
     end
     alias :group :user
 
     def role
-      EY.node['instance_role']
+      node['instance_role']
     end
 
     def copy_exclude
@@ -58,11 +62,11 @@ module EY
     end
 
     def stack
-      EY.node['environment']['stack']
+      node['environment']['stack']
     end
 
     def environment
-      EY.node['environment']['framework_env']
+      node['environment']['framework_env']
     end
 
     def latest_release
