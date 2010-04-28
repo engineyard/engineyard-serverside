@@ -1,10 +1,7 @@
 source 'http://gemcutter.org'
 
 gem 'rake'
-
-group :runtime do
-  gem 'json'
-end
+gem 'json'
 
 group :test do
   gem 'fakefs'
