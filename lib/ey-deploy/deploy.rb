@@ -36,6 +36,7 @@ module EY
       puts "~> Restarting app servers"
       puts "~> restarting app: #{c.latest_release}"
       roles :app_master, :app, :solo do
+        callback(:before_restart)
         restart_command = case c.stack
         when "nginx_unicorn"
           sudo("/etc/init.d/unicorn_#{c.app} deploy")
