@@ -4,7 +4,6 @@ module EY
   class Deploy::Configuration
     DEFAULT_CONFIG = {
       "branch"       => "master",
-      "copy_exclude" => ".git",
       "strategy"     => "Git",
     }
 

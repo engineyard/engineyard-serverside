@@ -91,7 +91,7 @@ module EY
     # task
     def copy_repository_cache
       puts "~> copying to #{c.release_path}"
-      sudo("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/* #{c.release_path}")
+      sudo("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
 
       puts "~> ensuring proper ownership"
       sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
