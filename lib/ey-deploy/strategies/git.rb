@@ -3,17 +3,22 @@ module EY
     class Git
       module Helpers
         def update_repository_cache
-          klass = Module.nesting[1]
+          strategy.fetch
+          strategy.checkout
+        end
 
-          strategy = klass.new(
+        def create_revision_file
+          strategy.create_revision_file(c.release_path)
+        end
+
+        def strategy
+          klass = Module.nesting[1]
+          klass.new(
             :repository_cache => c.repository_cache,
             :app => c.app,
             :repo => c.repo,
             :branch => c.branch
-          )
-
-          strategy.fetch
-          strategy.checkout
+            )
         end
       end
 
@@ -34,6 +39,10 @@ module EY
 
       def checkout
         `#{git} reset --hard origin/#{opts[:branch]}`
+      end
+
+      def create_revision_file(dir)
+        `#{git} show --pretty=format:"%H" | head -1 > "#{dir}/REVISION"`
       end
 
     private

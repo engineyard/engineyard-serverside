@@ -13,6 +13,7 @@ module EY
       puts "~> Starting full deploy"
 
       copy_repository_cache
+      create_revision_file
       bundle
       symlink_configs
       migrate
