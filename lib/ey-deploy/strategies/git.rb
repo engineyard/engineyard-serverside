@@ -1,3 +1,5 @@
+require 'ey-deploy/verbose_system'
+
 module EY
   module Strategies
     class Git
@@ -17,10 +19,12 @@ module EY
             :repository_cache => c.repository_cache,
             :app => c.app,
             :repo => c.repo,
-            :branch => c.branch
-            )
+            :ref => c.branch
+          )
         end
       end
+
+      include VerboseSystem
 
       attr_reader :opts
 
@@ -31,14 +35,20 @@ module EY
 
       def fetch
         if File.directory?(File.join(opts[:repository_cache], ".git"))
-          `#{git} fetch origin`
+          system("#{git} fetch origin")
         else
-          `git clone #{opts[:repo]} #{opts[:repository_cache]}`
+          system("git clone #{opts[:repo]} #{opts[:repository_cache]}")
         end
       end
 
       def checkout
-        `#{git} reset --hard origin/#{opts[:branch]}`
+        to_checkout = if branch?(opts[:ref])
+                        "origin/#{opts[:ref]}"
+                      else
+                        opts[:ref]
+                      end
+
+        system("#{git} checkout '#{to_checkout}'") || system("#{git} reset --hard '#{to_checkout}'")
       end
 
       def create_revision_file(dir)
@@ -48,6 +58,10 @@ module EY
     private
       def git
         "git --git-dir #{opts[:repository_cache]}/.git --work-tree #{opts[:repository_cache]}"
+      end
+
+      def branch?(ref)
+        `#{git} branch -r`.map { |x| x.strip }.include?("origin/#{ref}")
       end
 
       def set_up_git_ssh(app)

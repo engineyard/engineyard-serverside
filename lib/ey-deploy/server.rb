@@ -1,7 +1,10 @@
 require 'open-uri'
+require 'ey-deploy/verbose_system'
 
 module EY
   class Server < Struct.new(:hostname, :role, :name)
+    include VerboseSystem
+
     def self.config=(config)
       @@config = config
     end
