@@ -73,9 +73,9 @@ module EY
 
     def run(command)
       if local?
-        system(command.gsub(/\\"/, '"'))
+        system(command)
       else
-        system(%|#{ssh_command} #{config.user}@#{hostname} "#{command}"|)
+        system(ssh_command + " " + Escape.shell_command(["#{config.user}@#{hostname}", command]))
       end
     end
 

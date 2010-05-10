@@ -1,3 +1,5 @@
+require 'escape'
+
 $LOAD_PATH.push(File.expand_path("ey-deploy", File.dirname(__FILE__)))
 
 require 'version'
@@ -6,6 +8,7 @@ require 'strategies/git'
 require 'task'
 require 'server'
 require 'deploy'
+require 'deploy_hook'
 require 'cli'
 require 'configuration'
 

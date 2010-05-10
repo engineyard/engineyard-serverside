@@ -1,0 +1,39 @@
+--- 
+dependencies: 
+  rake: 
+    group: 
+    - :default
+    version: ">= 0"
+  fakefs: 
+    group: 
+    - :test
+    version: ">= 0"
+  escape: 
+    group: 
+    - :default
+    version: ">= 0.0.4"
+  rspec: 
+    group: 
+    - :test
+    version: ">= 0"
+    require: 
+    - spec
+  json: 
+    group: 
+    - :default
+    version: ">= 0"
+specs: 
+- rake: 
+    version: 0.8.7
+- escape: 
+    version: 0.0.4
+- fakefs: 
+    version: 0.2.1
+- json: 
+    version: 1.4.3
+- rspec: 
+    version: 1.3.0
+hash: b1e01ca7106096a1c03669ffa9612671ccb0eeea
+sources: 
+- Rubygems: 
+    uri: http://gemcutter.org

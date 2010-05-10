@@ -126,46 +126,14 @@ module EY
       end
     end
 
-    # before_symlink
-    # before_restart
-
-    class CallbackContext
-      def initialize(deploy)
-        @deploy = deploy
-      end
-
-      def method_missing(meth, *args, &blk)
-        if @deploy.respond_to?(meth)
-          @deploy.send(meth, *args, &blk)
-        elsif @deploy.config.respond_to?(meth)
-          @deploy.config.send(meth, *args, &blk)
-        else
-          super
-        end
-      end
-
-      def respond_to(meth)
-        if @deploy.respond_to?(meth) || @deploy.config.respond_to?(meth)
-          true
-        else
-          super
-        end
-      end
-    end
-
-    def callback_context
-      @context ||= CallbackContext.new(self)
-    end
-
-    def callback(what)
+    def callback(what, roles=@roles)
       if File.exist?("#{c.latest_release}/deploy/#{what}.rb")
-        Dir.chdir(c.latest_release) do
-          puts "~> running deploy hook: deploy/#{what}.rb"
-          callback_context.instance_eval(IO.read("#{c.latest_release}/deploy/#{what}.rb"))
+        eysd_path = $0   # invoke others just like we were invoked
+        EY::Server.from_roles(roles).each do |server|
+          server.run("#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}")
         end
       end
     end
-
   end
 
   class Deploy < DeployBase

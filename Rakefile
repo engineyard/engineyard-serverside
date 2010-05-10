@@ -6,7 +6,10 @@ end
 task :default => :spec
 
 require 'rake/rdoctask'
-require File.expand_path("../lib/ey-deploy", __FILE__)
+
+$LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
+require 'ey-deploy'
+
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "ey-deploy #{EY::VERSION}"

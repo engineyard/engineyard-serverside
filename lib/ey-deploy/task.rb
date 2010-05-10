@@ -29,14 +29,22 @@ module EY
 
     def run(cmd)
       EY::Server.from_roles(@roles).each do |server|
-        server.run %|sh -c \\"#{cmd} 2>&1\\"|
+        server.run prepare_run(cmd)
       end
     end
 
     def sudo(cmd)
       EY::Server.from_roles(@roles).each do |server|
-        server.run %|sudo sh -c \\"#{cmd} 2>&1\\"|
+        server.run prepare_sudo(cmd)
       end
+    end
+
+    def prepare_run(command)
+      Escape.shell_command ["sh", "-l", "-c", command]
+    end
+
+    def prepare_sudo(command)
+      Escape.shell_command ["sudo", "sh", "-l", "-c", command]
     end
   end
 end
