@@ -23,19 +23,19 @@ module EY
 
     class CallbackContext
       def initialize(hook_runner, config)
-        @hook_runner, @config = hook_runner, config
+        @hook_runner, @configuration = hook_runner, config
       end
 
       def method_missing(meth, *args, &blk)
-        if @config.respond_to?(meth)
-          @config.send(meth, *args, &blk)
+        if @configuration.respond_to?(meth)
+          @configuration.send(meth, *args, &blk)
         else
           super
         end
       end
 
-      def respond_to?(meth)
-        @config.respond_to?(meth) || super
+      def respond_to?(meth, include_private=false)
+        @configuration.respond_to?(meth, include_private) || super
       end
 
       def run(cmd)

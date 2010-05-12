@@ -1,11 +1,12 @@
 require 'json'
+require 'thor'
 
 module EY
   class Deploy::Configuration
-    DEFAULT_CONFIG = {
+    DEFAULT_CONFIG = Thor::CoreExt::HashWithIndifferentAccess.new({
       "branch"       => "master",
       "strategy"     => "Git",
-    }
+    })
 
     attr_reader :configuration
     alias :c :configuration
@@ -20,12 +21,33 @@ module EY
     def method_missing(meth, *args, &blk)
       c.key?(meth.to_s) ? c[meth.to_s] : super
     end
-    def respond_to?(meth)
+
+    def respond_to?(meth, include_private=false)
       c.key?(meth.to_s) ? true : super
+    end
+
+    def [](key)
+      if respond_to?(key.to_sym)
+        send(key.to_sym)
+      else
+        c[key]
+      end
+    end
+
+    def has_key?(key)
+      if respond_to?(key.to_sym)
+        true
+      else
+        c.has_key?(key)
+      end
     end
 
     def node
       EY.node
+    end
+
+    def revision
+      IO.read(File.join(latest_release, 'REVISION'))
     end
 
     def repository_cache
