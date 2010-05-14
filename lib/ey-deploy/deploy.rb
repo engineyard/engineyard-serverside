@@ -99,7 +99,7 @@ module EY
 
     def symlink_configs(release_to_link=c.latest_release)
       puts "~> Symlinking configs"
-      sudo [ "chmod -R g+w #{release_to_link}",
+      [ "chmod -R g+w #{release_to_link}",
         "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
         "mkdir -p #{release_to_link}/tmp",
         "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
@@ -109,8 +109,12 @@ module EY
         "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
         "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
         "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
-        "chown -R #{c.user}:#{c.group} #{release_to_link}"
-        ].join(" && ")
+        "chown -R #{c.user}:#{c.group} #{release_to_link}",
+        "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi",
+
+      ].each do |cmd|
+        sudo cmd
+      end
     end
 
     # task
