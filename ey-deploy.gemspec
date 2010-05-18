@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 lib = File.expand_path('../lib/', __FILE__)
 $:.unshift lib unless $:.include?(lib)
 require 'bundler'
@@ -13,7 +12,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://engineyard.com"
   s.summary = "A gem that deploys ruby applications on EY Cloud instances"
 
-  s.files = Dir.glob("{bin,lib}/**/*") + %w(LICENSE README.rdoc)
+  s.files = Dir.glob("{bin,lib}/**/*") + %w(LICENSE)
   s.executables = ["eysd"]
   s.default_executable = "eysd"
   s.require_path = 'lib'
