@@ -16,9 +16,19 @@ module EY
       create_revision_file
       bundle
       symlink_configs
+
+      callback(:before_migrate)
       migrate
+      callback(:after_migrate)
+
+      callback(:before_symlink)
       symlink
+      callback(:after_symlink)
+
+      callback(:before_restart)
       restart
+      callback(:after_restart)
+
       cleanup
 
       puts "~> finalizing deploy"
@@ -37,7 +47,6 @@ module EY
       puts "~> Restarting app servers"
       puts "~> restarting app: #{c.latest_release}"
       roles :app_master, :app, :solo do
-        callback(:before_restart)
         restart_command = case c.stack
         when "nginx_unicorn"
           sudo("/etc/init.d/unicorn_#{c.app} deploy")
@@ -46,7 +55,6 @@ module EY
         when "nginx_passenger", "apache_passenger"
           sudo("touch #{c.latest_release}/tmp/restart.txt")
         end
-        callback(:after_restart)
       end
     end
 
@@ -79,7 +87,6 @@ module EY
     def migrate
       roles :app_master, :solo do
         if c.migrate?
-          callback(:before_migrate)
           puts "~> migrating"
           cmd = "cd #{c.latest_release} && #{c.framework_envs} #{c.migration_command}"
           puts "~> Migrating: #{cmd}"
@@ -119,7 +126,6 @@ module EY
 
     # task
     def symlink(release_to_link=c.latest_release)
-      callback(:before_symlink)
       puts "~> symlinking code"
       begin
         sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
@@ -130,10 +136,10 @@ module EY
       end
     end
 
-    def callback(what, roles=@roles)
+    def callback(what)
       if File.exist?("#{c.latest_release}/deploy/#{what}.rb")
         eysd_path = $0   # invoke others just like we were invoked
-        EY::Server.from_roles(roles).each do |server|
+        EY::Server.all.each do |server|
           server.run("#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}")
         end
       end
