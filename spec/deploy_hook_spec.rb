@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-describe "deploy hook's context" do
+describe "the deploy-hook API" do
   before(:all) do
     module EY
       def self.dna_json=(j) @dna_json = j; @node = nil end
@@ -27,7 +27,7 @@ describe "deploy hook's context" do
     @callback_context.instance_eval(&blk)
   end
 
-  context "the #run method" do
+  context "#run" do
     it "is available" do
       run_hook { respond_to?(:run) }.should be_true
     end
@@ -47,7 +47,7 @@ describe "deploy hook's context" do
     end
   end
 
-  context "the #sudo method" do
+  context "#sudo" do
     it "is available" do
       run_hook { respond_to?(:sudo) }.should be_true
     end
@@ -127,5 +127,77 @@ describe "deploy hook's context" do
         run_hook { @configuration.has_key?(attribute) }.should be_true
       end
     end
+  end
+
+  context "has methods to run code only on certain instances" do
+    def scenarios
+      [
+        {:instance_role => 'solo'},
+        {:instance_role => 'app_master'},
+        {:instance_role => 'app'},
+        {:instance_role => 'db_master'},
+        {:instance_role => 'db_slave'},
+        {:instance_role => 'util', :name => "alpha"},
+        {:instance_role => 'util', :name => "beta"},
+        {:instance_role => 'util', :name => "gamma"},
+      ]
+    end
+
+    def where_code_runs_with(method, *args)
+      scenarios.map do |s|
+        EY.dna_json = s.to_json
+
+        if run_hook { send(method, *args) { 'ran!'} } == 'ran!'
+          result = s[:instance_role]
+          result << "_#{s[:name]}" if s[:name]
+          result
+        end
+      end.compact
+    end
+
+    it "#on_app_master runs on app masters and solos" do
+      where_code_runs_with(:on_app_master).should == %w(solo app_master)
+    end
+
+    it "#on_app_servers runs on app masters, app slaves, and solos" do
+      where_code_runs_with(:on_app_servers).should == %w(solo app_master app)
+    end
+
+    it "#on_db_master runs on DB masters and solos" do
+      where_code_runs_with(:on_db_master).should == %w(solo db_master)
+    end
+
+    it "#on_db_slaves runs on DB slaves only (not solos or masters)" do
+      where_code_runs_with(:on_db_slaves).should == %w(db_slave)
+    end
+
+    it "#on_db_servers runs on DB masters, DB slaves, and solos" do
+      where_code_runs_with(:on_db_servers).should == %w(solo db_master db_slave)
+    end
+
+    it "#on_app_servers_and_utilities does what it says on the tin" do
+      where_code_runs_with(:on_app_servers_and_utilities).should ==
+        %w(solo app_master app util_alpha util_beta util_gamma)
+    end
+
+    it "#on_utilities() runs on all utility instances" do
+      where_code_runs_with(:on_utilities).should ==
+        %w(util_alpha util_beta util_gamma)
+    end
+
+    it "#on_utilities('sometype') runs on only utilities of type 'sometype'" do
+      where_code_runs_with(:on_utilities, 'alpha').should == %w(util_alpha)
+    end
+
+    it "#on_utilities('type1', 'type2') runs on utilities of both types" do
+      where_code_runs_with(:on_utilities, 'alpha', 'beta').should ==
+        %w(util_alpha util_beta)
+    end
+
+    it "#on_utilities can be invoked with (['a', 'b']) or ('a', 'b')" do
+      where_code_runs_with(:on_utilities, %w[alpha beta]).should ==
+        where_code_runs_with(:on_utilities, 'alpha', 'beta')
+    end
+
   end
 end
