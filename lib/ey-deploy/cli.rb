@@ -93,7 +93,7 @@ module EY
               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
             ]))
         server.run("sudo #{gem_binary} uninstall -a -x ey-deploy 2>/dev/null")
-        server.run("sudo #{gem_binary} install '#{remote_gem_file}'")
+        server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
       end
     end
   end
