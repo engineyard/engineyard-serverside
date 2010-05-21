@@ -1,6 +1,13 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
 describe "deploy hook's context" do
+  before(:all) do
+    module EY
+      def self.dna_json=(j) @dna_json = j; @node = nil end
+    end
+    EY.dna_json = {}.to_json
+  end
+
   before(:each) do
     @hook_runner = EY::DeployHook.new(options)
     @callback_context = EY::DeployHook::CallbackContext.new(@hook_runner, @hook_runner.config)
@@ -61,6 +68,35 @@ describe "deploy hook's context" do
       run_hook { respond_to?(:shared_path)      }.should be_true
       run_hook { respond_to?(:release_dir)      }.should be_true
       run_hook { respond_to?(:release_path)     }.should be_true
+    end
+  end
+
+  context "the @node ivar" do
+    before(:each) do
+      EY.dna_json = {
+        'instance_role' => 'solo',
+        'applications' => {
+          'myapp' => {
+            'type' => 'rails',
+            'branch' => 'master',
+          }
+        }
+      }.to_json
+    end
+
+    it "is available" do
+      run_hook { @node.nil? }.should be_false
+    end
+
+    it "has indifferent access" do
+      run_hook { @node[:instance_role]  }.should == 'solo'
+      run_hook { @node['instance_role'] }.should == 'solo'
+    end
+
+    it "has deep indifferent access" do
+      run_hook { @node['applications']['myapp']['type'] }.should == 'rails'
+      run_hook { @node[:applications]['myapp'][:type]   }.should == 'rails'
+      run_hook { @node[:applications][:myapp][:type]    }.should == 'rails'
     end
   end
 

@@ -24,6 +24,7 @@ module EY
     class CallbackContext
       def initialize(hook_runner, config)
         @hook_runner, @configuration = hook_runner, config
+        @node = node
       end
 
       def method_missing(meth, *args, &blk)
