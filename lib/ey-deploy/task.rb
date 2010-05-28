@@ -10,10 +10,19 @@ module EY
     end
 
     def require_custom_tasks
-      deploy_file = ["config/eydeploy.rb", "eydeploy.rb"].detect do |file|
-        File.exists?(File.join(c.repository_cache, file))
+      deploy_file = ["config/eydeploy.rb", "eydeploy.rb"].map do |short_file|
+        File.join(c.repository_cache, short_file)
+      end.detect do |file|
+        File.exist?(file)
       end
-      require File.join(c.repository_cache, deploy_file) if deploy_file
+
+      if deploy_file
+        puts "~> Loading deployment task overrides from #{deploy_file}"
+        instance_eval(File.read(deploy_file))
+        true
+      else
+        false
+      end
     end
 
     def roles(*task_roles)

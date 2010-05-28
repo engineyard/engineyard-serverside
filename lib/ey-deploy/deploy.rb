@@ -156,10 +156,7 @@ module EY
     def self.run(opts={})
       conf = EY::Deploy::Configuration.new(opts)
       EY::Server.config = conf
-
-      dep = new(conf)
-      dep.require_custom_tasks
-      dep.send(opts["default_task"])
+      new(conf).send(opts["default_task"])
     end
   end
 end
