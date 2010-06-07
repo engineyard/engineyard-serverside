@@ -3,8 +3,11 @@ require File.dirname(__FILE__) + '/spec_helper'
 describe "the EY::Deploy API" do
   it "calls tasks in the right order" do
     class TestDeploy < EY::Deploy
-      # cheat a bit; we don't actually want to do these things
+      # This happens before require_custom_tasks, so it's not
+      # overrideable. That's why it's not in @call_order.
       def update_repository_cache() end
+
+      # cheat a bit; we don't actually want to do these things
       def require_custom_tasks() end
       def callback(*_) end
       def puts(*_) 'stfu' end
