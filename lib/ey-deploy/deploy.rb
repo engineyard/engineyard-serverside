@@ -17,21 +17,19 @@ module EY
       bundle
       symlink_configs
 
-      callback(:before_migrate)
-      migrate
-      callback(:after_migrate)
-
-      callback(:before_symlink)
-      symlink
-      callback(:after_symlink)
-
-      callback(:before_restart)
-      restart
-      callback(:after_restart)
+      run_with_callbacks(:migrate)
+      run_with_callbacks(:symlink)
+      run_with_callbacks(:restart)
 
       cleanup
 
       puts "~> finalizing deploy"
+    end
+
+    def run_with_callbacks(task, *args)
+      callback(:"before_#{task}")
+      send(task, *args)
+      callback(:"after_#{task}")
     end
 
     # task
@@ -77,10 +75,11 @@ module EY
     # task
     def rollback
       puts "~> rolling back to previous release"
-      symlink(c.previous_release)
+      run_with_callbacks(:symlink, c.previous_release)
       FileUtils.rm_rf c.latest_release
+      bundle
       puts "~> restarting with previous release"
-      restart
+      run_with_callbacks(:restart)
     end
 
     # task
