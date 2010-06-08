@@ -17,13 +17,36 @@ module EY
       bundle
       symlink_configs
 
+      install_maintenance_page
       run_with_callbacks(:migrate)
       run_with_callbacks(:symlink)
       run_with_callbacks(:restart)
+      remove_maintenance_page
 
       cleanup
 
       puts "~> finalizing deploy"
+    end
+
+    def install_maintenance_page
+      if c.migrate? || c.stack == "nginx_mongrel"
+        # put in the maintenance page
+        maintenance_file = ["public/maintenance.html.custom", "public/maintenance.html.tmp", "public/maintenance.html", "public/system/maintenance.html.default"].detect do |file|
+          File.exists?(File.join(c.current_path, file))
+        end
+
+        if maintenance_file
+          roles :app_master, :app, :solo do
+            run "cp #{File.join(c.current_path, maintenance_file)} #{File.join(c.shared_path, "system", "maintenance.html")}"
+          end
+        end
+      end
+    end
+
+    def remove_maintenance_page
+      roles :app_master, :app, :solo do
+        run "rm -f #{File.join(c.shared_path, "system", "maintenance.html")}"
+      end
     end
 
     def run_with_callbacks(task, *args)
