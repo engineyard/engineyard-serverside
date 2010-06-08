@@ -11,6 +11,8 @@ module EY
     attr_reader :configuration
     alias :c :configuration
 
+    attr_writer :release_path
+
     def initialize(opts={})
       @release_path = opts[:release_path]
       config = JSON.parse(opts["config"] || "{}")

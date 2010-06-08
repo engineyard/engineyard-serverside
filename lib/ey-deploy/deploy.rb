@@ -75,6 +75,7 @@ module EY
     # task
     def rollback
       puts "~> rolling back to previous release"
+      c.release_path = c.previous_release
       run_with_callbacks(:symlink, c.previous_release)
       FileUtils.rm_rf c.latest_release
       bundle
