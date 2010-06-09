@@ -28,7 +28,7 @@ module EY
       puts "~> finalizing deploy"
     end
 
-    def install_maintenance_page
+    def enable_maintenance_page
       if c.migrate? || c.stack == "nginx_mongrel"
         # put in the maintenance page
         maintenance_file = ["public/maintenance.html.custom", "public/maintenance.html.tmp", "public/maintenance.html", "public/system/maintenance.html.default"].detect do |file|
@@ -43,7 +43,7 @@ module EY
       end
     end
 
-    def remove_maintenance_page
+    def disable_maintenance_page
       roles :app_master, :app, :solo do
         run "rm -f #{File.join(c.shared_path, "system", "maintenance.html")}"
       end

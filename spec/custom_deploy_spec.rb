@@ -27,8 +27,8 @@ describe "the EY::Deploy API" do
       def symlink()                  @call_order << 'symlink'                  end
       def restart()                  @call_order << 'restart'                  end
       def cleanup()                  @call_order << 'cleanup'                  end
-      def install_maintenance_page() @call_order << 'install_maintenance_page' end
-      def remove_maintenance_page()  @call_order << 'remove_maintenance_page'  end
+      def enable_maintenance_page()  @call_order << 'enable_maintenance_page'  end
+      def disable_maintenance_page() @call_order << 'disable_maintenance_page' end
     end
 
     td = TestDeploy.new(EY::Deploy::Configuration.new)
@@ -39,11 +39,11 @@ describe "the EY::Deploy API" do
       create_revision_file
       bundle
       symlink_configs
-      install_maintenance_page
+      enable_maintenance_page
       migrate
       symlink
       restart
-      remove_maintenance_page
+      disable_maintenance_page
       cleanup)
   end
 
