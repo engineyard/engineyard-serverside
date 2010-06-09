@@ -17,11 +17,11 @@ module EY
       bundle
       symlink_configs
 
-      install_maintenance_page
-      run_with_callbacks(:migrate)
-      run_with_callbacks(:symlink)
-      run_with_callbacks(:restart)
-      remove_maintenance_page
+      with_maintenance_page do
+        run_with_callbacks(:migrate)
+        run_with_callbacks(:symlink)
+        run_with_callbacks(:restart)
+      end
 
       cleanup
 
@@ -103,7 +103,7 @@ module EY
       FileUtils.rm_rf c.latest_release
       bundle
       puts "~> restarting with previous release"
-      run_with_callbacks(:restart)
+      with_maintenance_page { run_with_callbacks(:restart) }
     end
 
     # task
@@ -166,6 +166,14 @@ module EY
           server.run("#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}")
         end
       end
+    end
+
+    protected
+
+    def with_maintenance_page
+      enable_maintenance_page
+      yield if block_given?
+      disable_maintenance_page
     end
   end
 
