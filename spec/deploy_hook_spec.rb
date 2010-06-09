@@ -1,13 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
 describe "the deploy-hook API" do
-  before(:all) do
-    module EY
-      def self.dna_json=(j) @dna_json = j; @node = nil end
-    end
-    EY.dna_json = {}.to_json
-  end
-
   before(:each) do
     @hook_runner = EY::DeployHook.new(options)
     @callback_context = EY::DeployHook::CallbackContext.new(@hook_runner, @hook_runner.config)

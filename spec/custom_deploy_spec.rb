@@ -18,20 +18,33 @@ describe "the EY::Deploy API" do
         @call_order = []
       end
 
-      def push_code()             @call_order << 'push_code'             end
-      def copy_repository_cache() @call_order << 'copy_repository_cache' end
-      def create_revision_file()  @call_order << 'create_revision_file'  end
-      def bundle()                @call_order << 'bundle'                end
-      def symlink_configs()       @call_order << 'symlink_configs'       end
-      def migrate()               @call_order << 'migrate'               end
-      def symlink()               @call_order << 'symlink'               end
-      def restart()               @call_order << 'restart'               end
-      def cleanup()               @call_order << 'cleanup'               end
+      def push_code()                @call_order << 'push_code'                end
+      def copy_repository_cache()    @call_order << 'copy_repository_cache'    end
+      def create_revision_file()     @call_order << 'create_revision_file'     end
+      def bundle()                   @call_order << 'bundle'                   end
+      def symlink_configs()          @call_order << 'symlink_configs'          end
+      def migrate()                  @call_order << 'migrate'                  end
+      def symlink()                  @call_order << 'symlink'                  end
+      def restart()                  @call_order << 'restart'                  end
+      def cleanup()                  @call_order << 'cleanup'                  end
+      def install_maintenance_page() @call_order << 'install_maintenance_page' end
+      def remove_maintenance_page()  @call_order << 'remove_maintenance_page'  end
     end
 
     td = TestDeploy.new(EY::Deploy::Configuration.new)
     td.deploy
-    td.call_order.should == %w[push_code copy_repository_cache create_revision_file bundle symlink_configs migrate symlink restart cleanup]
+    td.call_order.should == %w(
+      push_code
+      copy_repository_cache
+      create_revision_file
+      bundle
+      symlink_configs
+      install_maintenance_page
+      migrate
+      symlink
+      restart
+      remove_maintenance_page
+      cleanup)
   end
 
   describe "task overrides" do
