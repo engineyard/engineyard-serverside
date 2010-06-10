@@ -32,12 +32,12 @@ module EY
       if c.migrate? || c.stack == "nginx_mongrel"
         # put in the maintenance page
         maintenance_file = ["public/maintenance.html.custom", "public/maintenance.html.tmp", "public/maintenance.html", "public/system/maintenance.html.default"].detect do |file|
-          File.exists?(File.join(c.current_path, file))
+          File.exists?(File.join(c.latest_release, file))
         end
 
         if maintenance_file
           roles :app_master, :app, :solo do
-            run "cp #{File.join(c.current_path, maintenance_file)} #{File.join(c.shared_path, "system", "maintenance.html")}"
+            run "cp #{File.join(c.latest_release, maintenance_file)} #{File.join(c.shared_path, "system", "maintenance.html")}"
           end
         end
       end
