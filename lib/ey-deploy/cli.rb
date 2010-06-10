@@ -4,6 +4,12 @@ require 'thor'
 
 module EY
   class CLI < Thor
+    def self.start(*)
+      super
+    rescue RemoteFailure
+      exit(1)
+    end
+
     method_option :migrate, :type     => :string,
                             :desc     => "Run migrations with this deploy",
                             :aliases  => ["-m"]

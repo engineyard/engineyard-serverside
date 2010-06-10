@@ -11,21 +11,28 @@ module EY
       push_code
 
       puts "~> Starting full deploy"
-
       copy_repository_cache
-      create_revision_file
-      bundle
-      symlink_configs
 
-      with_maintenance_page do
+      with_failed_release_cleanup do
+        create_revision_file
+        bundle
+        symlink_configs
+        enable_maintenance_page
         run_with_callbacks(:migrate)
-        run_with_callbacks(:symlink)
-        run_with_callbacks(:restart)
+        callback(:before_symlink)
+        symlink
       end
 
-      cleanup
+      callback(:after_symlink)
+      run_with_callbacks(:restart)
+      disable_maintenance_page
+
+      cleanup_old_releases
 
       puts "~> finalizing deploy"
+    rescue Exception
+      puts_deploy_failure
+      raise
     end
 
     def enable_maintenance_page
@@ -36,6 +43,7 @@ module EY
         end
 
         if maintenance_file
+          @maintenance_up = true
           roles :app_master, :app, :solo do
             run "cp #{File.join(c.latest_release, maintenance_file)} #{File.join(c.shared_path, "system", "maintenance.html")}"
           end
@@ -44,6 +52,7 @@ module EY
     end
 
     def disable_maintenance_page
+      @maintenance_up = false
       roles :app_master, :app, :solo do
         run "rm -f #{File.join(c.shared_path, "system", "maintenance.html")}"
       end
@@ -65,6 +74,7 @@ module EY
 
     # task
     def restart
+      @restart_failed = true
       puts "~> Restarting app servers"
       puts "~> restarting app: #{c.latest_release}"
       roles :app_master, :app, :solo do
@@ -77,6 +87,7 @@ module EY
           sudo("touch #{c.latest_release}/tmp/restart.txt")
         end
       end
+      @restart_failed = false
     end
 
     # task
@@ -84,15 +95,17 @@ module EY
       roles :app_master, :app, :solo do
         if File.exist?("#{c.latest_release}/Gemfile")
           puts "~> Gemfile detected, bundling gems"
-          run %|cd #{c.latest_release} && bundle install|
+          run "cd #{c.latest_release} && bundle install"
         end
       end
     end
 
     # task
-    def cleanup
+    def cleanup_old_releases
+      @cleanup_failed = true
       puts "~> cleaning up old releases"
       sudo "ls #{c.release_dir} | head -n -3 | xargs -I{} rm -rf #{c.release_dir}/{}"
+      @cleanup_failed = false
     end
 
     # task
@@ -108,13 +121,13 @@ module EY
 
     # task
     def migrate
+      return unless c.migrate?
+      @migrations_reached = true
       roles :app_master, :solo do
-        if c.migrate?
-          puts "~> migrating"
-          cmd = "cd #{c.latest_release} && #{c.framework_envs} #{c.migration_command}"
-          puts "~> Migrating: #{cmd}"
-          run(cmd)
-        end
+        puts "~> migrating"
+        cmd = "cd #{c.latest_release} && #{c.framework_envs} #{c.migration_command}"
+        puts "~> Migrating: #{cmd}"
+        run(cmd)
       end
     end
 
@@ -150,30 +163,57 @@ module EY
     # task
     def symlink(release_to_link=c.latest_release)
       puts "~> symlinking code"
-      begin
-        sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
-      rescue => e
-        sudo "rm -f #{c.current_path} && ln -nfs #{c.previous_release(release_to_link)} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
-        sudo "rm -rf #{release_to_link}"
-        raise e
-      end
+      sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
+      @symlink_changed = true
+    rescue Exception
+      sudo "rm -f #{c.current_path} && ln -nfs #{c.previous_release(release_to_link)} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
+      @symlink_changed = false
+      raise
     end
 
     def callback(what)
+      @callbacks_reached ||= true
       if File.exist?("#{c.latest_release}/deploy/#{what}.rb")
         eysd_path = $0   # invoke others just like we were invoked
-        EY::Server.all.each do |server|
-          server.run("#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}")
-        end
+        run "#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}"
       end
     end
 
     protected
 
+    def puts_deploy_failure
+      if @cleanup_failed
+        puts "~> [Relax] Your site is running new code, but cleaning up old deploys failed"
+      elsif @maintenance_up
+        puts "~> [Attention] Maintenance page still up, consider the following before removing:"
+        puts " * any deploy hooks ran, be careful if they were destructive" if @callbacks_reached
+        puts " * any migrations ran, be careful if they were destructive" if @migrations_reached
+        if @symlink_changed
+          puts " * your new code is symlinked as current"
+        else
+          puts " * your old code is still symlinked as current"
+        end
+        puts " * application servers failed to restart" if @restart_failed
+      else
+        puts "~> [Relax] Your site is still running old code, and nothing destructive could have occured"
+      end
+    end
+
     def with_maintenance_page
       enable_maintenance_page
       yield if block_given?
       disable_maintenance_page
+    end
+
+    def with_failed_release_cleanup
+      yield
+    rescue Exception
+      cleanup_latest_release
+      raise
+    end
+
+    def cleanup_latest_release
+      sudo "rm -rf #{c.latest_release}"
     end
   end
 

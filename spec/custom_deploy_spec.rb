@@ -26,7 +26,7 @@ describe "the EY::Deploy API" do
       def migrate()                  @call_order << 'migrate'                  end
       def symlink()                  @call_order << 'symlink'                  end
       def restart()                  @call_order << 'restart'                  end
-      def cleanup()                  @call_order << 'cleanup'                  end
+      def cleanup_old_releases()     @call_order << 'cleanup_old_releases'     end
       def enable_maintenance_page()  @call_order << 'enable_maintenance_page'  end
       def disable_maintenance_page() @call_order << 'disable_maintenance_page' end
     end
@@ -44,7 +44,7 @@ describe "the EY::Deploy API" do
       symlink
       restart
       disable_maintenance_page
-      cleanup)
+      cleanup_old_releases)
   end
 
   describe "task overrides" do

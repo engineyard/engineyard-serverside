@@ -20,6 +20,8 @@ module EY
     @dna_json ||= `sudo cat /etc/chef/dna.json`
   end
 
+  RemoteFailure = Class.new StandardError
+
   private
   def self.deep_indifferentize(thing)
     if thing.kind_of?(Hash)
