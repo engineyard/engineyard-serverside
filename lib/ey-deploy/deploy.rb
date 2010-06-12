@@ -117,7 +117,7 @@ module EY
       puts "~> rolling back to previous release"
       c.release_path = c.previous_release
       run_with_callbacks(:symlink, c.previous_release)
-      FileUtils.rm_rf c.latest_release
+      cleanup_latest_release
       bundle
       puts "~> restarting with previous release"
       with_maintenance_page { run_with_callbacks(:restart) }
