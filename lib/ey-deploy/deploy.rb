@@ -195,7 +195,7 @@ module EY
         end
         puts " * application servers failed to restart" if @restart_failed
       else
-        puts "~> [Relax] Your site is still running old code, and nothing destructive could have occured"
+        puts "~> [Relax] Your site is still running old code and nothing destructive could have occurred"
       end
     end
 
