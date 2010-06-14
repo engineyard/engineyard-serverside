@@ -17,7 +17,7 @@ module EY
         create_revision_file
         bundle
         symlink_configs
-        enable_maintenance_page
+        conditionally_enable_maintenance_page
         run_with_callbacks(:migrate)
         callback(:before_symlink)
         symlink
@@ -36,18 +36,22 @@ module EY
     end
 
     def enable_maintenance_page
-      if c.migrate? || c.stack == "nginx_mongrel"
-        # put in the maintenance page
-        maintenance_file = ["public/maintenance.html.custom", "public/maintenance.html.tmp", "public/maintenance.html", "public/system/maintenance.html.default"].detect do |file|
-          File.exists?(File.join(c.latest_release, file))
-        end
+      # put in the maintenance page
+      maintenance_file = ["public/maintenance.html.custom", "public/maintenance.html.tmp", "public/maintenance.html", "public/system/maintenance.html.default"].detect do |file|
+        File.exists?(File.join(c.latest_release, file))
+      end
 
-        if maintenance_file
-          @maintenance_up = true
-          roles :app_master, :app, :solo do
-            run "cp #{File.join(c.latest_release, maintenance_file)} #{File.join(c.shared_path, "system", "maintenance.html")}"
-          end
+      if maintenance_file
+        @maintenance_up = true
+        roles :app_master, :app, :solo do
+          run "cp #{File.join(c.latest_release, maintenance_file)} #{File.join(c.shared_path, "system", "maintenance.html")}"
         end
+      end
+    end
+
+    def conditionally_enable_maintenance_page
+      if c.migrate? || c.stack == "nginx_mongrel"
+        enable_maintenance_page
       end
     end
 
@@ -200,7 +204,7 @@ module EY
     end
 
     def with_maintenance_page
-      enable_maintenance_page
+      conditionally_enable_maintenance_page
       yield if block_given?
       disable_maintenance_page
     end
