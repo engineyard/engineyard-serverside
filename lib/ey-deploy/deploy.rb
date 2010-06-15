@@ -36,16 +36,30 @@ module EY
     end
 
     def enable_maintenance_page
-      # put in the maintenance page
-      maintenance_file = ["public/maintenance.html.custom", "public/maintenance.html.tmp", "public/maintenance.html", "public/system/maintenance.html.default"].detect do |file|
-        File.exists?(File.join(c.latest_release, file))
+      maintenance_page_candidates = [
+        "public/maintenance.html.custom",
+        "public/maintenance.html.tmp",
+        "public/maintenance.html",
+        "public/system/maintenance.html.default",
+      ].map do |file|
+        File.join(c.latest_release, file)
       end
 
-      if maintenance_file
-        @maintenance_up = true
-        roles :app_master, :app, :solo do
-          run "cp #{File.join(c.latest_release, maintenance_file)} #{File.join(c.shared_path, "system", "maintenance.html")}"
-        end
+      # this one is guaranteed to exist
+      maintenance_page_candidates <<  File.expand_path(
+        "default_maintenance_page.html",
+        File.dirname(__FILE__)
+        )
+
+      # put in the maintenance page
+      maintenance_file = maintenance_page_candidates.detect do |file|
+        File.exists?(file)
+      end
+
+      @maintenance_up = true
+      roles :app_master, :app, :solo do
+        visible_maint_page = File.join(c.shared_path, "system", "maintenance.html")
+        run "cp '#{maintenance_file}' '#{visible_maint_page}'"
       end
     end
 
