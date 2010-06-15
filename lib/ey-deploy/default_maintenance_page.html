@@ -1,20 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-
+<!DOCTYPE html >
+<html>
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-  <title>Down For Maintenance</title>
+  <title>Undergoing Maintenance</title>
+
+  <style type="text/css">
+    body{font-size: 75%;font-family: Helvetica,Arial,sans-serif;color:#333;background:#FDFDFD;}
+    .container{font-size:1.1em;width:700px;text-align:center;margin:80px auto;}
+    .message{background:#FFF;border:1px solid #EEE;padding:30px;}
+    h1{margin:0 0 0.5em;font-weight:normal;}
+    p{margin:0;line-height:1.75em;}
+    .foot{color:#999;margin-top:30px}
+    .foot a{color:#666;text-decoration:none}
+  </style>
 </head>
 
 <body>
-  <div class="dialog">
-    <h1>Down For Maintenance</h1>
-    <p>This application is currently undergoing maintenance. Please
-    check back soon.</p>
-    <p>Application Owner: To have a custom maintenance page, place it
-    in public/maintenance.html.custom in your Git repository.</p>
+  <div class="container">
+    <div class="message">
+      <h1>This site is currently undergoing some maintenance.</h1>
+      <p>Customize this maintenance page by updating the file located at: /public/maintenance.html</p>
+    </div>
+    <div class="foot">
+      Hosted by <a href="http://www.engineyard.com">Engine Yard</a>
+    </div>
   </div>
 </body>
+
 </html>
