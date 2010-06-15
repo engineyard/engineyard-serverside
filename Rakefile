@@ -26,7 +26,7 @@ task :install_on, [:instance] do |t, args|
   gem = Dir["*.gem"].last   # hopefully true
   abort "Failed to build gem; aborting!" unless gem
   system("scp #{gem} #{instance}:")
-  system("ssh #{instance} 'sudo /usr/local/ey_resin/ruby/bin/gem uninstall -a -x ey-deploy; sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gem}'")
+  system("ssh #{instance} 'sudo /usr/local/ey_resin/ruby/bin/gem uninstall -a -x ey-deploy; sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gem} --no-rdoc --no-ri'")
 end
 
 task :bump do
