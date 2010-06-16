@@ -10,28 +10,32 @@ module EY
       exit(1)
     end
 
-    method_option :migrate, :type     => :string,
-                            :desc     => "Run migrations with this deploy",
-                            :aliases  => ["-m"]
+    method_option :migrate,   :type     => :string,
+                              :desc     => "Run migrations with this deploy",
+                              :aliases  => ["-m"]
 
-    method_option :branch,  :type     => :string,
-                            :desc     => "Branch to deploy from, defaults to master",
-                            :aliases  => ["-b"]
+    method_option :branch,    :type     => :string,
+                              :desc     => "Branch to deploy from, defaults to master",
+                              :aliases  => ["-b"]
 
-    method_option :repo,    :type     => :string,
-                            :desc     => "Remote repo to deploy",
-                            :aliases  => ["-r"]
+    method_option :repo,      :type     => :string,
+                              :desc     => "Remote repo to deploy",
+                              :aliases  => ["-r"]
 
-    method_option :app,     :type     => :string,
-                            :required => true,
-                            :desc     => "Application to deploy",
-                            :aliases  => ["-a"]
+    method_option :app,       :type     => :string,
+                              :required => true,
+                              :desc     => "Application to deploy",
+                              :aliases  => ["-a"]
 
-    method_option :config,  :type     => :string,
-                            :desc     => "Additional configuration"
+    method_option :config,    :type     => :string,
+                              :desc     => "Additional configuration"
+
+    method_option :instances, :type     => :array,
+                              :desc     => "Instances in cluster"
 
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
+      EY::Server.all = parse_instances(options[:instances])
       invoke :propagate
       EY::Deploy.run(options.merge("default_task" => default_task))
     end
@@ -77,5 +81,12 @@ module EY
         server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
       end
     end
+
+    private
+
+    def parse_instances(instance_strings)
+      instance_strings.map{|s| s.split(/,/)}
+    end
+
   end
 end

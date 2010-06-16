@@ -25,40 +25,15 @@ module EY
     end
 
     def self.all
-      @servers ||= ([current] << app_slaves << db_master << db_slaves << utils).flatten.compact
+      @all
+    end
+
+    def self.all=(servers)
+      @all = servers.map { |s| new(*s) }
     end
 
     def self.current
-      @current ||= new(open("http://169.254.169.254/latest/meta-data/local-hostname").read, EY.node["instance_role"].to_sym)
-    end
-
-    def self.app_slaves
-      @app_slaves ||= Array(EY.node["members"]).map do |slave|
-        new(slave, :app)
-      end.reject do |server|
-        server.hostname == current.hostname
-      end
-    end
-
-    def self.db_master
-      return @db_master if @db_master
-      if EY.node["instance_role"] == "solo"
-        @db_master = nil
-      else
-        @db_master = EY.node["db_host"] && new(EY.node["db_host"], :db_master)
-      end
-    end
-
-    def self.db_slaves
-      EY.node["db_slaves"].map do |slave|
-        new(slave, :db_slave)
-      end
-    end
-
-    def self.utils
-      EY.node["utility_instances"].map do |server|
-        new(server["hostname"], :util, server["name"])
-      end
+      all.find {|s| s.local? }
     end
 
     def local?
