@@ -1,5 +1,6 @@
 require 'json'
 require 'thor'
+require 'etc'
 
 module EY
   class Deploy::Configuration
@@ -73,7 +74,7 @@ module EY
     end
 
     def user
-      node['users'].first['username'] || 'nobody'
+      Etc.getlogin
     end
     alias :group :user
 
