@@ -80,7 +80,7 @@ module EY
     end
 
     def ssh_command
-      "ssh -i /home/#{config.user}/.ssh/internal"
+      "ssh -i /home/#{config.user}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
     end
   end
 end
