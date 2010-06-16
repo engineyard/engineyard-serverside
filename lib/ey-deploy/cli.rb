@@ -92,7 +92,10 @@ module EY
     private
 
     def parse_instances(instance_strings)
-      instance_strings.map{|s| s.split(/,/)}
+      instance_strings.map do |s|
+        tuple = s.split(/,/)
+        {:hostname => tuple[0], :role => tuple[1], :name => tuple[2]}
+      end
     end
 
   end

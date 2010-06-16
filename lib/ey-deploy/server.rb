@@ -24,12 +24,16 @@ module EY
       end
     end
 
+    def self.from_hash(h)
+      new(h[:hostname], h[:role], h[:name])
+    end
+
     def self.all
       @all
     end
 
-    def self.all=(servers)
-      @all = servers.map { |s| new(*s) }
+    def self.all=(server_hashes)
+      @all = server_hashes.map { |s| from_hash(s) }
     end
 
     def self.current
