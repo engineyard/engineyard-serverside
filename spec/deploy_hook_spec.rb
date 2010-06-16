@@ -2,14 +2,14 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe "the deploy-hook API" do
   before(:each) do
-    @hook_runner = EY::DeployHook.new(options)
-    @callback_context = EY::DeployHook::CallbackContext.new(@hook_runner, @hook_runner.config)
+    hook = EY::DeployHook.new(options)
+    @callback_context = EY::DeployHook::CallbackContext.new(hook.config)
   end
 
   def run_hook(options={}, &blk)
     raise ArgumentError unless block_given?
     options.each do |k, v|
-      @hook_runner.config.configuration[k] = v    # ugh
+      @callback_context.configuration[k] = v
     end
 
     # The hooks on the filesystem are run by passing a string to
@@ -138,7 +138,8 @@ describe "the deploy-hook API" do
 
     def where_code_runs_with(method, *args)
       scenarios.map do |s|
-        EY.dna_json = s.to_json
+        @callback_context.configuration[:current_role] = s[:instance_role]
+        @callback_context.configuration[:current_name] = s[:name]
 
         if run_hook { send(method, *args) { 'ran!'} } == 'ran!'
           result = s[:instance_role]

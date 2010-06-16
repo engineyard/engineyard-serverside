@@ -48,6 +48,13 @@ module EY
     method_option :release_path, :type => :string,
                                  :desc => "Value for #release_path in hooks (mostly for internal coordination)",
                                  :aliases => ["-r"]
+
+    method_option :current_role, :type => :string,
+                                 :desc => "Value for #current_role in hooks"
+
+    method_option :current_name, :type => :string,
+                                 :desc => "Value for #current_name in hooks"
+
     desc "hook [NAME]", "Run a particular deploy hook"
     def hook(hook_name)
       EY::DeployHook.new(options).run(hook_name)

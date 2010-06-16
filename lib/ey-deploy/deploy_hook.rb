@@ -9,7 +9,7 @@ module EY
     end
 
     def callback_context
-      @context ||= CallbackContext.new(self, config)
+      @context ||= CallbackContext.new(config)
     end
 
     def run(hook)
@@ -22,8 +22,8 @@ module EY
     end
 
     class CallbackContext
-      def initialize(hook_runner, config)
-        @hook_runner, @configuration = hook_runner, config
+      def initialize(config)
+        @configuration = config
         @node = node
       end
 
@@ -40,11 +40,11 @@ module EY
       end
 
       def run(cmd)
-        system(@hook_runner.prepare_run(cmd))
+        system(Escape.shell_command(["sh", "-l", "-c", cmd]))
       end
 
       def sudo(cmd)
-        system(@hook_runner.prepare_sudo(cmd))
+        system(Escape.shell_command(["sudo", "sh", "-l", "-c", cmd]))
       end
 
       # convenience functions for running on certain instance types
@@ -67,13 +67,6 @@ module EY
         yield if desired_roles.include?(current_role.to_s)
       end
 
-      def current_role
-        node[:instance_role]
-      end
-
-      def current_name
-        node[:name]
-      end
     end
 
   end

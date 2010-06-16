@@ -198,7 +198,11 @@ module EY
       @callbacks_reached ||= true
       if File.exist?("#{c.latest_release}/deploy/#{what}.rb")
         eysd_path = $0   # invoke others just like we were invoked
-        run "#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}"
+        run "#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}" do |server, cmd|
+          cmd << " --current-role '#{server.role}'"
+          cmd << " --current-name '#{server.name}'" if server.name
+          cmd
+        end
       end
     end
 

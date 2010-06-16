@@ -36,12 +36,12 @@ module EY
       end
     end
 
-    def run(cmd)
-      run_on_roles(prepare_run(cmd))
+    def run(cmd, &blk)
+      run_on_roles(cmd, &blk)
     end
 
-    def sudo(cmd)
-      run_on_roles(prepare_sudo(cmd))
+    def sudo(cmd, &blk)
+      run_on_roles(cmd, %w[sudo sh -l -c], &blk)
     end
 
     def prepare_run(command)
@@ -54,9 +54,10 @@ module EY
 
     private
 
-    def run_on_roles(cmd)
+    def run_on_roles(cmd, wrapper=%w[sh -l -c])
       EY::Server.from_roles(@roles).inject(false) do |acc, server|
-        failure = !server.run(cmd)
+        cmd = yield(server, cmd) if block_given?
+        failure = !server.run(Escape.shell_command(wrapper << cmd))
         acc || failure
       end && raise(EY::RemoteFailure)
     end
