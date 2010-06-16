@@ -56,8 +56,8 @@ module EY
 
     def run_on_roles(cmd, wrapper=%w[sh -l -c])
       EY::Server.from_roles(@roles).inject(false) do |acc, server|
-        cmd = yield(server, cmd) if block_given?
-        failure = !server.run(Escape.shell_command(wrapper << cmd))
+        to_run = block_given? ? yield(server, cmd.dup) : cmd
+        failure = !server.run(Escape.shell_command(wrapper + [to_run]))
         acc || failure
       end && raise(EY::RemoteFailure)
     end
