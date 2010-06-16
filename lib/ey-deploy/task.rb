@@ -37,11 +37,11 @@ module EY
     end
 
     def run(cmd)
-      run_on_roles { prepare_run cmd }
+      run_on_roles(prepare_run(cmd))
     end
 
     def sudo(cmd)
-      run_on_roles { prepare_sudo cmd }
+      run_on_roles(prepare_sudo(cmd))
     end
 
     def prepare_run(command)
@@ -54,8 +54,7 @@ module EY
 
     private
 
-    def run_on_roles
-      cmd = yield
+    def run_on_roles(cmd)
       EY::Server.from_roles(@roles).inject(false) do |acc, server|
         failure = !server.run(cmd)
         acc || failure
