@@ -29,6 +29,7 @@ task :install_on, [:instance] do |t, args|
   system("ssh #{instance} 'sudo /usr/local/ey_resin/ruby/bin/gem uninstall -a -x ey-deploy; sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gem} --no-rdoc --no-ri'")
 end
 
+desc "Bump version of this gem"
 task :bump do
   version_file = "module EY\n  VERSION = '_VERSION_GOES_HERE_'\nend\n"
 
