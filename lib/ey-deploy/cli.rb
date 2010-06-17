@@ -73,7 +73,7 @@ module EY
       EY::Server.all.find_all do |server|
         !server.local?            # of course this machine has it
       end.find_all do |server|
-        has_gem_cmd = "/usr/local/ey_resin/ruby/bin/gem list ey-deploy | grep -q '(#{VERSION})'"
+        has_gem_cmd = "#{gem_binary} list ey-deploy | grep -q '(#{VERSION})'"
         !server.run(has_gem_cmd)  # doesn't have only this exact version
       end.each do |server|
         puts "~> Installing ey-deploy on #{server.hostname}"
