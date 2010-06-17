@@ -58,7 +58,7 @@ module EY
     end
 
     def repo
-      configuration['repo'] || node["applications"][app]["repository_name"]
+      configuration['repo']
     end
 
     def deploy_to
