@@ -5,6 +5,11 @@ module EY
   class Server < Struct.new(:hostname, :role, :name)
     include VerboseSystem
 
+    def initialize(*fields)
+      super
+      self.role = self.role.to_sym
+    end
+
     def self.config=(config)
       @@config = config
     end
