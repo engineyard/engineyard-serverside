@@ -33,10 +33,15 @@ module EY
         set_up_git_ssh(@opts[:app])
       end
 
+      def usable_repository?
+        File.directory?(opts[:repository_cache]) && `#{git} remote -v | grep origin`[opts[:repo]]
+      end
+
       def fetch
-        if File.directory?(File.join(opts[:repository_cache], ".git"))
+        if usable_repository?
           system("#{git} fetch origin")
         else
+          FileUtils.rm_rf(opts[:repository_cache])
           system("git clone #{opts[:repo]} #{opts[:repository_cache]}")
         end
       end
