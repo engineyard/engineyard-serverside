@@ -30,6 +30,9 @@ module EY
     method_option :config,    :type     => :string,
                               :desc     => "Additional configuration"
 
+    method_option :stack,     :type     => :string,
+                              :desc     => "Web stack (so we can restart it correctly)"
+
     method_option :instances, :type     => :array,
                               :desc     => "Instances in cluster"
 

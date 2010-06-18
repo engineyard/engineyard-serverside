@@ -57,10 +57,6 @@ module EY
       configuration['repository_cache'] || File.join(deploy_to, "/shared/cached-copy")
     end
 
-    def repo
-      configuration['repo']
-    end
-
     def deploy_to
       configuration['deploy_to'] || "/data/#{app}"
     end
@@ -84,10 +80,6 @@ module EY
 
     def copy_exclude
       @copy_exclude ||= Array(configuration.fetch("copy_exclude", []))
-    end
-
-    def stack
-      node['environment']['stack']
     end
 
     def environment
