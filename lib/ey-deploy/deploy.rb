@@ -101,8 +101,10 @@ module EY
           sudo("/etc/init.d/unicorn_#{c.app} deploy")
         when "nginx_mongrel"
           sudo("monit restart all -g #{c.app}")
-        when "nginx_passenger", "apache_passenger"
+        when "nginx_passenger"
           sudo("touch #{c.latest_release}/tmp/restart.txt")
+        else
+          raise "Unknown stack #{c.stack}; restart failed!"
         end
       end
       @restart_failed = false
