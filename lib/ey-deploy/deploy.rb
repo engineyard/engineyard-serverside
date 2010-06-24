@@ -129,7 +129,7 @@ module EY
 
           sudo "#{$0} install_bundler #{bundler_version}"
 
-          run "cd #{c.latest_release} && bundle _#{bundler_version}_ install"
+          run "cd #{c.latest_release} && bundle _#{bundler_version}_ install --without=development --without=test"
         end
       end
     end
