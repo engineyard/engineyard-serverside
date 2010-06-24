@@ -115,22 +115,20 @@ module EY
 
     # task
     def bundle
-      roles :app_master, :app, :solo do
-        if File.exist?("#{c.latest_release}/Gemfile")
-          puts "~> Gemfile detected, bundling gems"
-          lockfile = File.join(c.latest_release, "Gemfile.lock")
+      if File.exist?("#{c.latest_release}/Gemfile")
+        puts "~> Gemfile detected, bundling gems"
+        lockfile = File.join(c.latest_release, "Gemfile.lock")
 
-          bundler_version = if File.exist?(lockfile)
-                              get_bundler_version(lockfile)
-                            else
-                              warn_about_missing_lockfile
-                              DEFAULT_09_BUNDLER
-                            end
+        bundler_version = if File.exist?(lockfile)
+                            get_bundler_version(lockfile)
+                          else
+                            warn_about_missing_lockfile
+                            DEFAULT_09_BUNDLER
+                          end
 
-          sudo "#{$0} install_bundler #{bundler_version}"
+        sudo "#{$0} install_bundler #{bundler_version}"
 
-          run "cd #{c.latest_release} && bundle _#{bundler_version}_ install --without=development --without=test"
-        end
+        run "cd #{c.latest_release} && bundle _#{bundler_version}_ install --without=development --without=test"
       end
     end
 
