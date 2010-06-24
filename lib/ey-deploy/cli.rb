@@ -91,8 +91,11 @@ module EY
       EY::Server.all.find_all do |server|
         !server.local?            # of course this machine has it
       end.find_all do |server|
-        has_gem_cmd = "#{gem_binary} list ey-deploy | grep -q '(#{VERSION})'"
-        !server.run(has_gem_cmd)  # doesn't have only this exact version
+        egrep_escaped_version = VERSION.gsub(/\./, '\.')
+        # the [,$] is to stop us from looking for e.g. 0.5.1, seeing
+        # 0.5.11, and mistakenly thinking 0.5.1 is there
+        has_gem_cmd = "#{gem_binary} list ey-deploy | grep \"ey-deploy \" | egrep -q '#{egrep_escaped_version}[,)]'"
+        !server.run(has_gem_cmd)  # doesn't have this exact version
       end.each do |server|
         puts "~> Installing ey-deploy on #{server.hostname}"
 
@@ -102,7 +105,6 @@ module EY
               local_gem_file,
               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
             ]))
-        server.run("sudo #{gem_binary} uninstall -a -x ey-deploy 2>/dev/null")
         server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
       end
     end

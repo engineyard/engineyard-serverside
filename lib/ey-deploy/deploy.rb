@@ -126,7 +126,7 @@ module EY
                             DEFAULT_09_BUNDLER
                           end
 
-        sudo "#{$0} install_bundler #{bundler_version}"
+        sudo "#{$0} _#{VERSION}_ install_bundler #{bundler_version}"
 
         run "cd #{c.latest_release} && bundle _#{bundler_version}_ install --without=development --without=test"
       end
@@ -212,7 +212,7 @@ module EY
       @callbacks_reached ||= true
       if File.exist?("#{c.latest_release}/deploy/#{what}.rb")
         eysd_path = $0   # invoke others just like we were invoked
-        run "#{eysd_path} hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}" do |server, cmd|
+        run "#{eysd_path} _#{VERSION}_ hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}" do |server, cmd|
           cmd << " --current-role '#{server.role}'"
           cmd << " --current-name '#{server.name}'" if server.name
           cmd
