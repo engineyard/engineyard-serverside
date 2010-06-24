@@ -65,7 +65,17 @@ module EY
 
     desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
     def install_bundler(version)
-      EY::BundlerInstaller.new.install(version)
+      egrep_escaped_version = version.gsub(/\./, '\.')
+      # the grep "bundler " is so that gems like bundler08 don't get
+      # their versions considered too
+      #
+      # the [,$] is to stop us from looking for e.g. 0.9.2, seeing
+      # 0.9.22, and mistakenly thinking 0.9.2 is there
+      has_bundler_cmd = "gem list bundler | grep \"bundler \" | egrep -q '#{egrep_escaped_version}[,)]'"
+
+      unless system(has_bundler_cmd)
+        system("gem install bundler -q --no-rdoc --no-ri -v '#{version}'")
+      end
     end
 
     desc "propagate", "Propagate the ey-deploy gem to the other instances in the cluster. This will install exactly version #{VERSION} and remove other versions if found."
