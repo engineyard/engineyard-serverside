@@ -92,7 +92,7 @@ module EY
         !server.local?            # of course this machine has it
       end.find_all do |server|
         egrep_escaped_version = VERSION.gsub(/\./, '\.')
-        # the [,$] is to stop us from looking for e.g. 0.5.1, seeing
+        # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
         # 0.5.11, and mistakenly thinking 0.5.1 is there
         has_gem_cmd = "#{gem_binary} list ey-deploy | grep \"ey-deploy \" | egrep -q '#{egrep_escaped_version}[,)]'"
         !server.run(has_gem_cmd)  # doesn't have this exact version
