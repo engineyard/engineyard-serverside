@@ -10,6 +10,7 @@ require 'deploy'
 require 'deploy_hook'
 require 'cli'
 require 'configuration'
+require 'bundler_installer'
 
 module EY
   def self.node

@@ -1,6 +1,8 @@
 # stolen wholesale from capistrano, thanks Jamis!
+require 'base64'
 require 'fileutils'
 require 'json'
+require 'yaml'
 
 module EY
   class DeployBase < Task
@@ -116,7 +118,18 @@ module EY
       roles :app_master, :app, :solo do
         if File.exist?("#{c.latest_release}/Gemfile")
           puts "~> Gemfile detected, bundling gems"
-          run "cd #{c.latest_release} && bundle install"
+          lockfile = File.join(c.latest_release, "Gemfile.lock")
+
+          bundler_version = if File.exist?(lockfile)
+                              get_bundler_version(lockfile)
+                            else
+                              warn_about_missing_lockfile
+                              DEFAULT_09_BUNDLER
+                            end
+
+          sudo "#{$0} install_bundler #{bundler_version}"
+
+          run "cd #{c.latest_release} && bundle _#{bundler_version}_ install"
         end
       end
     end
@@ -245,7 +258,55 @@ module EY
     def cleanup_latest_release
       sudo "rm -rf #{c.latest_release}"
     end
-  end
+
+    def safe_yaml_load(loadable)
+      YAML.load(loadable)
+    rescue ArgumentError   # not yaml
+      nil
+    end
+
+    DEFAULT_09_BUNDLER = '0.9.26'
+    DEFAULT_10_BUNDLER = '1.0.0.beta.1'
+
+    def warn_about_missing_lockfile
+      puts "!>"
+      puts "!> WARNING: Gemfile.lock is missing!"
+      puts "!> You can get different gems in production than what you tested with."
+      puts "!> You can get different gems on every deployment even if your Gemfile hasn't changed."
+      puts "!> Deploying may take a long time."
+      puts "!>"
+      puts "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
+      puts "!> If you don't have a Gemfile.lock, run \"bundle lock\" to create one."
+      puts "!>"
+      puts "!> This deployment will use bundler #{DEFAULT_09_BUNDLER} to run 'bundle install'."
+      puts "!>"
+    end
+
+    def get_bundler_version(lockfile)
+      contents = File.open(lockfile, 'r') { |f| f.read }
+      from_yaml = safe_yaml_load(contents)
+
+      if from_yaml                        # 0.9
+        from_yaml['specs'].map do |spec|
+          # spec is a one-element hash: the key is the gem name, and
+          # the value is {"version" => the-version}.
+          if spec.keys.first == "bundler"
+            spec.values.first["version"]
+          end
+        end.compact.first || DEFAULT_09_BUNDLER
+      else                                # 1.0 or bust
+        gem_section = contents.scan(/GEM\s*\n(.*?)\n\S/m).first
+        unless gem_section
+          raise "Couldn't parse #{lockfile}; exiting"
+          exit(1)
+        end
+        result = gem_section.first.scan(/^\s*bundler\s*\((\S+)\)/).first
+        result ? result.first : DEFAULT_10_BUNDLER
+      end
+    end
+    public :get_bundler_version
+
+  end   # DeployBase
 
   class Deploy < DeployBase
     def self.new(opts={})

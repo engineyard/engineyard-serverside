@@ -60,6 +60,11 @@ module EY
       EY::DeployHook.new(options).run(hook_name)
     end
 
+    desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
+    def install_bundler(version)
+      EY::BundlerInstaller.new.install(version)
+    end
+
     desc "propagate", "Propagate the ey-deploy gem to the other instances in the cluster. This will install exactly version #{VERSION} and remove other versions if found."
     def propagate
       config          = EY::Deploy::Configuration.new

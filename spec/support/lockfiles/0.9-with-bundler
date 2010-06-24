@@ -1,0 +1,117 @@
+---
+dependencies:
+  ruby-debug:
+    group:
+    - :test
+    version: ">= 0"
+  fakeweb:
+    group:
+    - :test
+    version: ">= 0"
+  termios:
+    group:
+    - :default
+    version: ">= 0"
+  fakefs:
+    group:
+    - :test
+    version: ">= 0"
+  highline:
+    group:
+    - :default
+    version: ~> 1.5.2
+  rake:
+    group:
+    - :test
+    version: ">= 0"
+  realweb:
+    group:
+    - :test
+    version: ~> 0.1.6
+  escape:
+    group:
+    - :default
+    version: ~> 0.0.4
+  thor:
+    group:
+    - :default
+    version: ~> 0.13.6
+  rspec:
+    group:
+    - :test
+    version: ">= 0"
+    require:
+    - spec
+  sinatra:
+    group:
+    - :test
+    version: ">= 0"
+  json:
+    group:
+    - :default
+    version: ~> 1.4.0
+  rest-client:
+    group:
+    - :default
+    version: ~> 1.4
+    require:
+    - rest_client
+  bundler:
+    group:
+    - :test
+    version: ">= 0"
+  fakeweb-matcher:
+    group:
+    - :test
+    version: ">= 0"
+  open4:
+    group:
+    - :test
+    version: ">= 0"
+specs:
+- rake:
+    version: 0.8.7
+- bundler:
+    version: 0.9.24
+- columnize:
+    version: 0.3.1
+- escape:
+    version: 0.0.4
+- fakefs:
+    version: 0.2.1
+- fakeweb:
+    version: 1.2.8
+- rspec:
+    version: 1.3.0
+- fakeweb-matcher:
+    version: 1.1.0
+- highline:
+    version: 1.5.2
+- json:
+    version: 1.4.3
+- linecache:
+    version: "0.43"
+- mime-types:
+    version: "1.16"
+- open4:
+    version: 1.0.1
+- rack:
+    version: 1.2.1
+- realweb:
+    version: 0.1.6
+- rest-client:
+    version: 1.5.1
+- ruby-debug-base:
+    version: 0.10.3
+- ruby-debug:
+    version: 0.10.3
+- sinatra:
+    version: "1.0"
+- termios:
+    version: 0.9.4
+- thor:
+    version: 0.13.6
+hash: fbfa26af5a1ec9a59367fdd0ea866373166d06f0
+sources:
+- Rubygems:
+    uri: http://gemcutter.org
