@@ -44,7 +44,7 @@ module EY
     def logged_system(cmd)
       File.open(logfile, 'a') do |log|
         out = verbose? ? Tee.new($stdout, log) : log
-        err = verbose? ? Tee.new($stderr, log) : log  # XXX always tee?
+        err = Tee.new($stderr, log)    # we always want to see errors
 
         out <<  ":: running #{cmd}\n"
 
