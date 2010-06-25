@@ -1,9 +1,9 @@
 require 'open-uri'
-require 'ey-deploy/verbose_system'
+require 'ey-deploy/logged_output'
 
 module EY
   class Server < Struct.new(:hostname, :role, :name)
-    include VerboseSystem
+    include LoggedOutput
 
     def initialize(*fields)
       super
@@ -52,14 +52,14 @@ module EY
     def push_code
       return if local?
       run "mkdir -p #{config.repository_cache}"
-      system(%|rsync --delete -aq -e "#{ssh_command}" #{config.repository_cache}/ #{config.user}@#{hostname}:#{config.repository_cache}|)
+      logged_system(%|rsync --delete -aq -e "#{ssh_command}" #{config.repository_cache}/ #{config.user}@#{hostname}:#{config.repository_cache}|)
     end
 
     def run(command)
       if local?
-        system(command)
+        logged_system(command)
       else
-        system(ssh_command + " " + Escape.shell_command(["#{config.user}@#{hostname}", command]))
+        logged_system(ssh_command + " " + Escape.shell_command(["#{config.user}@#{hostname}", command]))
       end
     end
 

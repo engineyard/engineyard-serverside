@@ -1,5 +1,3 @@
-$:.unshift File.expand_path('../vendor/thor/lib', File.dirname(__FILE__))
-
 require 'thor'
 
 module EY
@@ -36,9 +34,16 @@ module EY
     method_option :instances, :type     => :array,
                               :desc     => "Instances in cluster"
 
+    method_option :verbose,   :type     => :boolean,
+                              :default  => false,
+                              :desc     => "Verbose output"
+
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
       EY::Server.all = parse_instances(options[:instances])
+      EY::LoggedOutput.verbose = options[:verbose]
+      EY::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-deploy.log")
+
       invoke :propagate
       EY::Deploy.run(options.merge("default_task" => default_task))
     end

@@ -1,4 +1,4 @@
-require 'ey-deploy/verbose_system'
+require 'ey-deploy/logged_output'
 
 module EY
   module Strategies
@@ -24,7 +24,7 @@ module EY
         end
       end
 
-      include VerboseSystem
+      include LoggedOutput
 
       attr_reader :opts
 
@@ -39,10 +39,10 @@ module EY
 
       def fetch
         if usable_repository?
-          system("#{git} fetch origin")
+          logged_system("#{git} fetch origin")
         else
           FileUtils.rm_rf(opts[:repository_cache])
-          system("git clone #{opts[:repo]} #{opts[:repository_cache]}")
+          logged_system("git clone #{opts[:repo]} #{opts[:repository_cache]}")
         end
       end
 
@@ -53,7 +53,7 @@ module EY
                         opts[:ref]
                       end
 
-        system("#{git} checkout '#{to_checkout}'") || system("#{git} reset --hard '#{to_checkout}'")
+        logged_system("#{git} checkout '#{to_checkout}'") || logged_system("#{git} reset --hard '#{to_checkout}'")
       end
 
       def create_revision_file(dir)

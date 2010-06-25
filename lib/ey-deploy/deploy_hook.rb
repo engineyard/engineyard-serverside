@@ -1,9 +1,5 @@
-require 'ey-deploy/verbose_system'
-
 module EY
   class DeployHook < Task
-    include VerboseSystem
-
     def initialize(options)
       super(EY::Deploy::Configuration.new(options))
     end
