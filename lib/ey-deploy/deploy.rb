@@ -31,7 +31,7 @@ module EY
 
       cleanup_old_releases
 
-      puts "~> finalizing deploy"
+      puts "~> Finalizing deploy"
     rescue Exception
       puts_deploy_failure
       raise
@@ -134,7 +134,7 @@ module EY
     # task
     def cleanup_old_releases
       @cleanup_failed = true
-      puts "~> cleaning up old releases"
+      puts "~> Cleaning up old releases"
       sudo "ls #{c.release_dir} | head -n -3 | xargs -I{} rm -rf #{c.release_dir}/{}"
       @cleanup_failed = false
     end
@@ -142,12 +142,12 @@ module EY
     # task
     def rollback
       if c.all_releases.size > 1
-        puts "~> rolling back to previous release"
+        puts "~> Rolling back to previous release"
         c.release_path = c.previous_release
         run_with_callbacks(:symlink, c.previous_release)
         cleanup_latest_release
         bundle
-        puts "~> restarting with previous release"
+        puts "~> Restarting with previous release"
         with_maintenance_page { run_with_callbacks(:restart) }
       else
         puts "~> Already at oldest release, nothing to roll back to"
@@ -168,10 +168,10 @@ module EY
 
     # task
     def copy_repository_cache
-      puts "~> copying to #{c.release_path}"
+      puts "~> Copying to #{c.release_path}"
       sudo("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
 
-      puts "~> ensuring proper ownership"
+      puts "~> Ensuring proper ownership"
       sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
     end
 
@@ -197,7 +197,7 @@ module EY
 
     # task
     def symlink(release_to_link=c.latest_release)
-      puts "~> symlinking code"
+      puts "~> Symlinking code"
       sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
       @symlink_changed = true
     rescue Exception
