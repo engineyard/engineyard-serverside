@@ -36,7 +36,8 @@ module EY
 
     method_option :verbose,   :type     => :boolean,
                               :default  => false,
-                              :desc     => "Verbose output"
+                              :desc     => "Verbose output",
+                              :aliases  => ["-v"]
 
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
