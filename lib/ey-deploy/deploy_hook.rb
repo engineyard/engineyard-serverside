@@ -13,12 +13,23 @@ module EY
     end
 
     def run(hook)
-      if File.exist?("#{c.latest_release}/deploy/#{hook}.rb")
+      hook_path = "#{c.latest_release}/deploy/#{hook}.rb"
+      if File.exist?(hook_path)
         Dir.chdir(c.latest_release) do
           puts "~> running deploy hook: deploy/#{hook}.rb"
-          callback_context.instance_eval(IO.read("#{c.latest_release}/deploy/#{hook}.rb"))
+          if desc = syntax_error(hook_path)
+            hook_name = File.basename(hook_path)
+            abort "*** [Error] Invalid Ruby syntax in hook: #{hook_name} ***\n*** #{desc.chomp} ***"
+          else
+            callback_context.instance_eval(IO.read(hook_path))
+          end
         end
       end
+    end
+
+    def syntax_error(file)
+      valid = Kernel.system("ruby -c #{file} 2>/tmp/ey_invalid_deploy_hook | grep 'Syntax OK' --quiet")
+      File.new("/tmp/ey_invalid_deploy_hook").gets unless valid
     end
 
     class CallbackContext

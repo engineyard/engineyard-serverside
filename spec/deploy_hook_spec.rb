@@ -2,8 +2,8 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe "the deploy-hook API" do
   before(:each) do
-    hook = EY::DeployHook.new(options)
-    @callback_context = EY::DeployHook::CallbackContext.new(hook.config)
+    @hook = EY::DeployHook.new(options)
+    @callback_context = EY::DeployHook::CallbackContext.new(@hook.config)
   end
 
   def run_hook(options={}, &blk)
@@ -193,5 +193,19 @@ describe "the deploy-hook API" do
         where_code_runs_with(:on_utilities, 'alpha', 'beta')
     end
 
+  end
+
+  context "#syntax_error" do
+    it "returns nil for hook files containing valid Ruby syntax" do
+      hook_path = File.expand_path('../fixtures/valid_hook.rb', __FILE__)
+      @hook.syntax_error(hook_path).should be_nil
+    end
+
+    it "returns a brief problem description for hook files containing valid Ruby syntax" do
+      hook_path = File.expand_path('../fixtures/invalid_hook.rb', __FILE__)
+      desc = "spec/fixtures/invalid_hook.rb:1: syntax error, unexpected '^'"
+      match = /\A.*#{Regexp.escape desc}\Z/
+      @hook.syntax_error(hook_path).should =~ match
+    end
   end
 end
