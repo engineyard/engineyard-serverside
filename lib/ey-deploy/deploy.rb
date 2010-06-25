@@ -96,7 +96,6 @@ module EY
     def restart
       @restart_failed = true
       puts "~> Restarting app servers"
-      puts "~> restarting app: #{c.latest_release}"
       roles :app_master, :app, :solo do
         restart_command = case c.stack
         when "nginx_unicorn"
@@ -161,7 +160,6 @@ module EY
       return unless c.migrate?
       @migrations_reached = true
       roles :app_master, :solo do
-        puts "~> migrating"
         cmd = "cd #{c.latest_release} && #{c.framework_envs} #{c.migration_command}"
         puts "~> Migrating: #{cmd}"
         run(cmd)
