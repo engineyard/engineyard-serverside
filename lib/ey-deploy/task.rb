@@ -44,14 +44,6 @@ module EY
       run_on_roles(cmd, %w[sudo sh -l -c], &blk)
     end
 
-    def prepare_run(command)
-      Escape.shell_command ["sh", "-l", "-c", command]
-    end
-
-    def prepare_sudo(command)
-      Escape.shell_command ["sudo", "sh", "-l", "-c", command]
-    end
-
     private
 
     def run_on_roles(cmd, wrapper=%w[sh -l -c])
