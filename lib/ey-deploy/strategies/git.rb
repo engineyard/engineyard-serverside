@@ -42,7 +42,7 @@ module EY
           logged_system("#{git} fetch -q origin")
         else
           FileUtils.rm_rf(opts[:repository_cache])
-          logged_system("git clone -q {opts[:repo]} #{opts[:repository_cache]}")
+          logged_system("git clone -q #{opts[:repo]} #{opts[:repository_cache]}")
         end
       end
 
