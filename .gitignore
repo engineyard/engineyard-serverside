@@ -1,3 +1,4 @@
 pkg
 .bundle
 *.gem
+spec/fixtures/gitrepo

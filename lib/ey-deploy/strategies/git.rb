@@ -6,7 +6,9 @@ module EY
       module Helpers
         def update_repository_cache
           strategy.fetch
-          strategy.checkout
+          unless strategy.checkout
+            abort "*** [Error] Git could not checkout (#{strategy.to_checkout}) ***"
+          end
         end
 
         def create_revision_file
@@ -56,14 +58,18 @@ module EY
       end
 
       def checkout
-        to_checkout = if branch?(opts[:ref])
-                        "origin/#{opts[:ref]}"
-                      else
-                        opts[:ref]
-                      end
-
         info "~> Deploying revision #{short_log_message(to_checkout)}"
         logged_system("#{git} checkout -q '#{to_checkout}'") || logged_system("#{git} reset -q --hard '#{to_checkout}'")
+      end
+
+      def to_checkout
+        return @to_checkout if @opts_ref == opts[:ref]
+        @opts_ref = opts[:ref]
+        @to_checkout = if branch?(opts[:ref])
+          "origin/#{opts[:ref]}"
+        else
+          opts[:ref]
+        end
       end
 
       def create_revision_file(dir)
