@@ -3,7 +3,9 @@ require 'escape'
 $LOAD_PATH.push(File.expand_path("ey-deploy", File.dirname(__FILE__)))
 $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/open4/lib', File.dirname(__FILE__))
+$LOAD_PATH.unshift File.expand_path('vendor/dataflow', File.dirname(__FILE__))
 
+require 'dataflow'
 require 'version'
 require 'strategies/git'
 require 'task'

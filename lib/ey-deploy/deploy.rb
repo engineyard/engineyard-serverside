@@ -87,9 +87,9 @@ module EY
     # task
     def push_code
       puts "~> Pushing code to all servers"
-      EY::Server.all.each do |server|
-        server.push_code
-      end
+      barrier *(EY::Server.all.map do |server|
+        need_later { server.push_code }
+      end)
     end
 
     # task

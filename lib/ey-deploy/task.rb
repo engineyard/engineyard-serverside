@@ -1,5 +1,6 @@
 module EY
   class Task
+    include Dataflow
 
     attr_reader :config
     alias :c :config
@@ -47,11 +48,12 @@ module EY
     private
 
     def run_on_roles(cmd, wrapper=%w[sh -l -c])
-      EY::Server.from_roles(@roles).inject(false) do |acc, server|
+      results = EY::Server.from_roles(@roles).map do |server|
         to_run = block_given? ? yield(server, cmd.dup) : cmd
-        failure = !server.run(Escape.shell_command(wrapper + [to_run]))
-        acc || failure
-      end && raise(EY::RemoteFailure)
+        need_later { server.run(Escape.shell_command(wrapper + [to_run])) }
+      end
+      barrier *results
+      results.all? || raise(EY::RemoteFailure)
     end
   end
 end

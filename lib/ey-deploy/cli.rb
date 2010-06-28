@@ -2,6 +2,8 @@ require 'thor'
 
 module EY
   class CLI < Thor
+    include Dataflow
+
     def self.start(*)
       super
     rescue RemoteFailure
@@ -94,25 +96,28 @@ module EY
 
       EY::Server.config = config
 
-      EY::Server.all.find_all do |server|
+      barrier(*(EY::Server.all.find_all do |server|
         !server.local?            # of course this machine has it
-      end.find_all do |server|
-        egrep_escaped_version = VERSION.gsub(/\./, '\.')
-        # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
-        # 0.5.11, and mistakenly thinking 0.5.1 is there
-        has_gem_cmd = "#{gem_binary} list ey-deploy | grep \"ey-deploy \" | egrep -q '#{egrep_escaped_version}[,)]'"
-        !server.run(has_gem_cmd)  # doesn't have this exact version
-      end.each do |server|
-        puts "~> Installing ey-deploy on #{server.hostname}"
+      end.map do |server|
+        need_later do
+          egrep_escaped_version = VERSION.gsub(/\./, '\.')
+          # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
+          # 0.5.11, and mistakenly thinking 0.5.1 is there
+          has_gem_cmd = "#{gem_binary} list ey-deploy | grep \"ey-deploy \" | egrep -q '#{egrep_escaped_version}[,)]'"
 
-        system(Escape.shell_command([
+          if !server.run(has_gem_cmd)  # doesn't have this exact version
+            puts "~> Installing ey-deploy on #{server.hostname}"
+
+            system(Escape.shell_command([
               'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
               "-o", "StrictHostKeyChecking=no",
               local_gem_file,
-              "#{config.user}@#{server.hostname}:#{remote_gem_file}",
+             "#{config.user}@#{server.hostname}:#{remote_gem_file}",
             ]))
-        server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
-      end
+            server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
+          end
+        end
+      end))
     end
 
     private
