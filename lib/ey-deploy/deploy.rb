@@ -99,7 +99,9 @@ module EY
       roles :app_master, :app, :solo do
         restart_command = case c.stack
         when "nginx_unicorn"
-          sudo(%Q{if [ ! -d /proc/`cat /var/run/engineyard/unicorn_#{c.app}.pid` ]; then rm -f /var/run/engineyard/unicorn_#{c.app}.pid; fi})
+          pidfile = "/var/run/engineyard/unicorn_#{c.app}.pid"
+          condition = "[ -e #{pidfile} ] && [ ! -d /proc/`cat #{pidfile}` ]"
+          sudo("if #{condition}; then rm -f #{pidfile}; fi")
           sudo("/etc/init.d/unicorn_#{c.app} deploy")
         when "nginx_mongrel"
           sudo("monit restart all -g #{c.app}")
