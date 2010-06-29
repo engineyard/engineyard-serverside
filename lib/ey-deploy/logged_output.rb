@@ -9,7 +9,10 @@ module EY
       end
 
       def <<(output)
-        @streams.each { |s| s << output }
+        @streams.each do |s|
+          s << output
+          s.flush
+        end
         self
       end
     end # Tee
@@ -39,6 +42,10 @@ module EY
 
     def logfile
       EY::LoggedOutput.logfile
+    end
+
+    def tee_stdout
+      Tee.new($stdout, File.open(logfile, 'a'))
     end
 
     def logged_system(cmd)
