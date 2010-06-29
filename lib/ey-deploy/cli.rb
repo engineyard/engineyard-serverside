@@ -10,36 +10,41 @@ module EY
       exit(1)
     end
 
-    method_option :migrate,   :type     => :string,
-                              :desc     => "Run migrations with this deploy",
-                              :aliases  => ["-m"]
+    method_option :migrate,       :type     => :string,
+                                  :desc     => "Run migrations with this deploy",
+                                  :aliases  => ["-m"]
 
-    method_option :branch,    :type     => :string,
-                              :desc     => "Branch to deploy from, defaults to master",
-                              :aliases  => ["-b"]
+    method_option :branch,        :type     => :string,
+                                  :desc     => "Branch to deploy from, defaults to master",
+                                  :aliases  => ["-b"]
 
-    method_option :repo,      :type     => :string,
-                              :desc     => "Remote repo to deploy",
-                              :aliases  => ["-r"]
+    method_option :repo,          :type     => :string,
+                                  :desc     => "Remote repo to deploy",
+                                  :aliases  => ["-r"]
 
-    method_option :app,       :type     => :string,
-                              :required => true,
-                              :desc     => "Application to deploy",
-                              :aliases  => ["-a"]
+    method_option :app,           :type     => :string,
+                                  :required => true,
+                                  :desc     => "Application to deploy",
+                                  :aliases  => ["-a"]
 
-    method_option :config,    :type     => :string,
-                              :desc     => "Additional configuration"
+    method_option :framework_env, :type     => :string,
+                                  :required => true,
+                                  :desc     => "Ruby web framework environment",
+                                  :aliases  => ["-e"]
 
-    method_option :stack,     :type     => :string,
-                              :desc     => "Web stack (so we can restart it correctly)"
+    method_option :config,        :type     => :string,
+                                  :desc     => "Additional configuration"
 
-    method_option :instances, :type     => :array,
-                              :desc     => "Instances in cluster"
+    method_option :stack,         :type     => :string,
+                                  :desc     => "Web stack (so we can restart it correctly)"
 
-    method_option :verbose,   :type     => :boolean,
-                              :default  => false,
-                              :desc     => "Verbose output",
-                              :aliases  => ["-v"]
+    method_option :instances,     :type     => :array,
+                                  :desc     => "Instances in cluster"
+
+    method_option :verbose,       :type     => :boolean,
+                                  :default  => false,
+                                  :desc     => "Verbose output",
+                                  :aliases  => ["-v"]
 
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
@@ -51,20 +56,25 @@ module EY
       EY::Deploy.run(options.merge("default_task" => default_task))
     end
 
-    method_option :app,          :type     => :string,
-                                 :required => true,
-                                 :desc     => "Which application's hooks to run",
-                                 :aliases  => ["-a"]
+    method_option :app,           :type     => :string,
+                                  :required => true,
+                                  :desc     => "Which application's hooks to run",
+                                  :aliases  => ["-a"]
 
-    method_option :release_path, :type => :string,
-                                 :desc => "Value for #release_path in hooks (mostly for internal coordination)",
-                                 :aliases => ["-r"]
+    method_option :release_path,  :type     => :string,
+                                  :desc     => "Value for #release_path in hooks (mostly for internal coordination)",
+                                  :aliases  => ["-r"]
 
-    method_option :current_role, :type => :string,
-                                 :desc => "Value for #current_role in hooks"
+    method_option :current_role,  :type     => :string,
+                                  :desc     => "Value for #current_role in hooks"
 
-    method_option :current_name, :type => :string,
-                                 :desc => "Value for #current_name in hooks"
+    method_option :framework_env, :type     => :string,
+                                  :required => true,
+                                  :desc     => "Ruby web framework environment",
+                                  :aliases  => ["-e"]
+
+    method_option :current_name,  :type     => :string,
+                                  :desc     => "Value for #current_name in hooks"
 
     desc "hook [NAME]", "Run a particular deploy hook"
     def hook(hook_name)

@@ -83,7 +83,7 @@ module EY
     end
 
     def environment
-      node['environment']['framework_env']
+      configuration['framework_env']
     end
 
     def latest_release
