@@ -13,13 +13,22 @@ module EY
           strategy.create_revision_file(c.release_path)
         end
 
+        def short_log_message(revision)
+          strategy.short_log_message(revision)
+        end
+
         def strategy
           klass = Module.nesting[1]
+          # Use [] to access attributes instead of calling methods so
+          # that we get nils instead of NoMethodError.
+          #
+          # Rollback doesn't know about the repository location (nor
+          # should it need to), but it would like to use #short_log_message.
           klass.new(
-            :repository_cache => c.repository_cache,
-            :app => c.app,
-            :repo => c.repo,
-            :ref => c.branch
+            :repository_cache => c[:repository_cache],
+            :app => c[:app],
+            :repo => c[:repo],
+            :ref => c[:branch]
           )
         end
       end
@@ -53,15 +62,16 @@ module EY
                         opts[:ref]
                       end
 
-        tee_stdout <<
-          "~> Deploying revision " <<
-          `#{git} log --pretty=oneline --abbrev-commit '#{to_checkout}^..#{to_checkout}'`
-
+        tee_stdout << "~> Deploying revision #{short_log_message(to_checkout)}"
         logged_system("#{git} checkout -q '#{to_checkout}'") || logged_system("#{git} reset -q --hard '#{to_checkout}'")
       end
 
       def create_revision_file(dir)
         `#{git} show --pretty=format:"%H" | head -1 > "#{dir}/REVISION"`
+      end
+
+      def short_log_message(rev)
+        `#{git} log --pretty=oneline --abbrev-commit '#{rev}^..#{rev}'`
       end
 
     private

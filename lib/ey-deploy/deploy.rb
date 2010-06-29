@@ -144,8 +144,11 @@ module EY
     # task
     def rollback
       if c.all_releases.size > 1
-        puts "~> Rolling back to previous release"
         c.release_path = c.previous_release
+
+        revision = File.read(File.join(c.release_path, 'REVISION')).strip
+        puts "~> Rolling back to previous release: #{short_log_message(revision)}"
+
         run_with_callbacks(:symlink, c.previous_release)
         cleanup_latest_release
         bundle
