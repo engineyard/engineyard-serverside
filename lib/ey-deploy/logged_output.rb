@@ -40,16 +40,14 @@ module EY
       EY::LoggedOutput.verbose?
     end
 
-    def logfile
-      EY::LoggedOutput.logfile
-    end
-
-    def tee_stdout
-      Tee.new($stdout, File.open(logfile, 'a'))
+    def info(msg)
+      with_logfile do |log|
+        Tee.new($stdout, log) << (msg + "\n")
+      end
     end
 
     def logged_system(cmd)
-      File.open(logfile, 'a') do |log|
+      with_logfile do |log|
         out = verbose? ? Tee.new($stdout, log) : log
         err = Tee.new($stderr, log)    # we always want to see errors
 
@@ -59,6 +57,15 @@ module EY
         status = Open4.spawn cmd, 0 => '', 1 => out, 2 => err, :quiet => true
         status.exitstatus == 0
       end
+    end
+
+    private
+    def with_logfile
+      File.open(logfile, 'a') {|f| yield f }
+    end
+
+    def logfile
+      EY::LoggedOutput.logfile
     end
 
   end

@@ -6,13 +6,15 @@ require 'yaml'
 
 module EY
   class DeployBase < Task
+    include LoggedOutput
+
     # default task
     def deploy
       update_repository_cache
       require_custom_tasks
       push_code
 
-      puts "~> Starting full deploy"
+      info "~> Starting full deploy"
       copy_repository_cache
 
       with_failed_release_cleanup do
@@ -31,7 +33,7 @@ module EY
 
       cleanup_old_releases
 
-      puts "~> Finalizing deploy"
+      info "~> Finalizing deploy"
     rescue Exception
       puts_deploy_failure
       raise
@@ -86,7 +88,7 @@ module EY
 
     # task
     def push_code
-      puts "~> Pushing code to all servers"
+      info "~> Pushing code to all servers"
       barrier *(EY::Server.all.map do |server|
         need_later { server.push_code }
       end)
@@ -95,7 +97,7 @@ module EY
     # task
     def restart
       @restart_failed = true
-      puts "~> Restarting app servers"
+      info "~> Restarting app servers"
       roles :app_master, :app, :solo do
         restart_command = case c.stack
         when "nginx_unicorn"
@@ -117,7 +119,7 @@ module EY
     # task
     def bundle
       if File.exist?("#{c.latest_release}/Gemfile")
-        puts "~> Gemfile detected, bundling gems"
+        info "~> Gemfile detected, bundling gems"
         lockfile = File.join(c.latest_release, "Gemfile.lock")
 
         bundler_version = if File.exist?(lockfile)
@@ -136,7 +138,7 @@ module EY
     # task
     def cleanup_old_releases
       @cleanup_failed = true
-      puts "~> Cleaning up old releases"
+      info "~> Cleaning up old releases"
       sudo "ls #{c.release_dir} | head -n -3 | xargs -I{} rm -rf #{c.release_dir}/{}"
       @cleanup_failed = false
     end
@@ -147,15 +149,15 @@ module EY
         c.release_path = c.previous_release
 
         revision = File.read(File.join(c.release_path, 'REVISION')).strip
-        puts "~> Rolling back to previous release: #{short_log_message(revision)}"
+        info "~> Rolling back to previous release: #{short_log_message(revision)}"
 
         run_with_callbacks(:symlink, c.previous_release)
         cleanup_latest_release
         bundle
-        puts "~> Restarting with previous release"
+        info "~> Restarting with previous release"
         with_maintenance_page { run_with_callbacks(:restart) }
       else
-        puts "~> Already at oldest release, nothing to roll back to"
+        info "~> Already at oldest release, nothing to roll back to"
         exit(1)
       end
     end
@@ -166,22 +168,22 @@ module EY
       @migrations_reached = true
       roles :app_master, :solo do
         cmd = "cd #{c.latest_release} && #{c.framework_envs} #{c.migration_command}"
-        puts "~> Migrating: #{cmd}"
+        info "~> Migrating: #{cmd}"
         run(cmd)
       end
     end
 
     # task
     def copy_repository_cache
-      puts "~> Copying to #{c.release_path}"
+      info "~> Copying to #{c.release_path}"
       sudo("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
 
-      puts "~> Ensuring proper ownership"
+      info "~> Ensuring proper ownership"
       sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
     end
 
     def symlink_configs(release_to_link=c.latest_release)
-      puts "~> Symlinking configs"
+      info "~> Symlinking configs"
       [ "chmod -R g+w #{release_to_link}",
         "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
         "mkdir -p #{release_to_link}/tmp",
@@ -202,7 +204,7 @@ module EY
 
     # task
     def symlink(release_to_link=c.latest_release)
-      puts "~> Symlinking code"
+      info "~> Symlinking code"
       sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
       @symlink_changed = true
     rescue Exception
@@ -228,19 +230,19 @@ module EY
 
     def puts_deploy_failure
       if @cleanup_failed
-        puts "~> [Relax] Your site is running new code, but cleaning up old deploys failed"
+        info "~> [Relax] Your site is running new code, but cleaning up old deploys failed"
       elsif @maintenance_up
-        puts "~> [Attention] Maintenance page still up, consider the following before removing:"
-        puts " * any deploy hooks ran, be careful if they were destructive" if @callbacks_reached
-        puts " * any migrations ran, be careful if they were destructive" if @migrations_reached
+        info "~> [Attention] Maintenance page still up, consider the following before removing:"
+        info " * any deploy hooks ran, be careful if they were destructive" if @callbacks_reached
+        info " * any migrations ran, be careful if they were destructive" if @migrations_reached
         if @symlink_changed
-          puts " * your new code is symlinked as current"
+          info " * your new code is symlinked as current"
         else
-          puts " * your old code is still symlinked as current"
+          info " * your old code is still symlinked as current"
         end
-        puts " * application servers failed to restart" if @restart_failed
+        info " * application servers failed to restart" if @restart_failed
       else
-        puts "~> [Relax] Your site is still running old code and nothing destructive could have occurred"
+        info "~> [Relax] Your site is still running old code and nothing destructive could have occurred"
       end
     end
 
@@ -271,17 +273,17 @@ module EY
     DEFAULT_10_BUNDLER = '1.0.0.beta.1'
 
     def warn_about_missing_lockfile
-      puts "!>"
-      puts "!> WARNING: Gemfile.lock is missing!"
-      puts "!> You can get different gems in production than what you tested with."
-      puts "!> You can get different gems on every deployment even if your Gemfile hasn't changed."
-      puts "!> Deploying may take a long time."
-      puts "!>"
-      puts "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
-      puts "!> If you don't have a Gemfile.lock, run \"bundle lock\" to create one."
-      puts "!>"
-      puts "!> This deployment will use bundler #{DEFAULT_09_BUNDLER} to run 'bundle install'."
-      puts "!>"
+      info "!>"
+      info "!> WARNING: Gemfile.lock is missing!"
+      info "!> You can get different gems in production than what you tested with."
+      info "!> You can get different gems on every deployment even if your Gemfile hasn't changed."
+      info "!> Deploying may take a long time."
+      info "!>"
+      info "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
+      info "!> If you don't have a Gemfile.lock, run \"bundle lock\" to create one."
+      info "!>"
+      info "!> This deployment will use bundler #{DEFAULT_09_BUNDLER} to run 'bundle install'."
+      info "!>"
     end
 
     def get_bundler_version(lockfile)

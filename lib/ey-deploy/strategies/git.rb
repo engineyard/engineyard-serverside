@@ -62,7 +62,7 @@ module EY
                         opts[:ref]
                       end
 
-        tee_stdout << "~> Deploying revision #{short_log_message(to_checkout)}"
+        info "~> Deploying revision #{short_log_message(to_checkout)}"
         logged_system("#{git} checkout -q '#{to_checkout}'") || logged_system("#{git} reset -q --hard '#{to_checkout}'")
       end
 
@@ -71,7 +71,7 @@ module EY
       end
 
       def short_log_message(rev)
-        `#{git} log --pretty=oneline --abbrev-commit '#{rev}^..#{rev}'`
+        `#{git} log --pretty=oneline --abbrev-commit '#{rev}^..#{rev}'`.strip
       end
 
     private
