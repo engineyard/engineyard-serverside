@@ -64,7 +64,7 @@ module EY
     end
 
     def ssh_command
-      "ssh -i /home/#{config.user}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
+      "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
     end
   end
 end
