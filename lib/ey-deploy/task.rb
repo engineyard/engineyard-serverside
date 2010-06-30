@@ -53,7 +53,10 @@ module EY
         need_later { server.run(Escape.shell_command(wrapper + [to_run])) }
       end
       barrier *results
-      results.all? || raise(EY::RemoteFailure)
+      # MRI's truthiness check is an internal C thing that does not call
+      # any methods... so Dataflow cannot proxy it & we must "x == true"
+      # Rubinius, wherefore art thou!?
+      results.all?{|x| x == true } || raise(EY::RemoteFailure)
     end
   end
 end
