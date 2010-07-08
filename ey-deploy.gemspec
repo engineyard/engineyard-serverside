@@ -13,8 +13,8 @@ Gem::Specification.new do |s|
   s.summary = "A gem that deploys ruby applications on EY Cloud instances"
 
   s.files = Dir.glob("{bin,lib}/**/*") + %w(LICENSE)
-  s.executables = ["eysd"]
-  s.default_executable = "eysd"
+  s.executables = ["ey-deploy"]
+  s.default_executable = "ey-deploy"
   s.require_path = 'lib'
 
   s.rubygems_version = %q{1.3.6}
