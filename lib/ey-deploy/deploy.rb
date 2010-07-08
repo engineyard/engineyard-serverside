@@ -46,7 +46,7 @@ module EY
         "public/maintenance.html",
         "public/system/maintenance.html.default",
       ].map do |file|
-        File.join(c.latest_release, file)
+        File.join(c.release_path, file)
       end
 
       # this one is guaranteed to exist
@@ -108,7 +108,7 @@ module EY
         when "nginx_mongrel"
           sudo("monit restart all -g #{c.app}")
         when "nginx_passenger"
-          sudo("touch #{c.latest_release}/tmp/restart.txt")
+          sudo("touch #{c.current_path}/tmp/restart.txt")
         else
           raise "Unknown stack #{c.stack}; restart failed!"
         end
@@ -118,9 +118,9 @@ module EY
 
     # task
     def bundle
-      if File.exist?("#{c.latest_release}/Gemfile")
+      if File.exist?("#{c.release_path}/Gemfile")
         info "~> Gemfile detected, bundling gems"
-        lockfile = File.join(c.latest_release, "Gemfile.lock")
+        lockfile = File.join(c.release_path, "Gemfile.lock")
 
         bundler_version = if File.exist?(lockfile)
                             get_bundler_version(lockfile)
@@ -131,7 +131,7 @@ module EY
 
         sudo "#{$0} _#{VERSION}_ install_bundler #{bundler_version}"
 
-        run "cd #{c.latest_release} && bundle _#{bundler_version}_ install --without=development --without=test"
+        run "cd #{c.release_path} && bundle _#{bundler_version}_ install --without=development --without=test"
       end
     end
 
@@ -152,7 +152,7 @@ module EY
         info "~> Rolling back to previous release: #{short_log_message(revision)}"
 
         run_with_callbacks(:symlink, c.previous_release)
-        cleanup_latest_release
+        cleanup_current_release
         bundle
         info "~> Restarting with previous release"
         with_maintenance_page { run_with_callbacks(:restart) }
@@ -167,7 +167,7 @@ module EY
       return unless c.migrate?
       @migrations_reached = true
       roles :app_master, :solo do
-        cmd = "cd #{c.latest_release} && #{c.framework_envs} #{c.migration_command}"
+        cmd = "cd #{c.release_path} && #{c.framework_envs} #{c.migration_command}"
         info "~> Migrating: #{cmd}"
         run(cmd)
       end
@@ -182,7 +182,7 @@ module EY
       sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
     end
 
-    def symlink_configs(release_to_link=c.latest_release)
+    def symlink_configs(release_to_link=c.release_path)
       info "~> Symlinking configs"
       [ "chmod -R g+w #{release_to_link}",
         "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
@@ -203,7 +203,7 @@ module EY
     end
 
     # task
-    def symlink(release_to_link=c.latest_release)
+    def symlink(release_to_link=c.release_path)
       info "~> Symlinking code"
       sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
       @symlink_changed = true
@@ -255,12 +255,12 @@ module EY
     def with_failed_release_cleanup
       yield
     rescue Exception
-      cleanup_latest_release
+      cleanup_current_release
       raise
     end
 
-    def cleanup_latest_release
-      sudo "rm -rf #{c.latest_release}"
+    def cleanup_current_release
+      sudo "rm -rf #{c.release_path}"
     end
 
     def safe_yaml_load(loadable)
