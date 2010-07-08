@@ -9,9 +9,9 @@ module EY
     end
 
     def run(hook)
-      hook_path = "#{c.latest_release}/deploy/#{hook}.rb"
+      hook_path = "#{c.release_path}/deploy/#{hook}.rb"
       if File.exist?(hook_path)
-        Dir.chdir(c.latest_release) do
+        Dir.chdir(c.release_path) do
           puts "~> running deploy hook: deploy/#{hook}.rb"
           if desc = syntax_error(hook_path)
             hook_name = File.basename(hook_path)
