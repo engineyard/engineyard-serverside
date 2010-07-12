@@ -32,8 +32,6 @@ module EY
       disable_maintenance_page
 
       cleanup_old_releases
-
-      info "~> Finalizing deploy"
     rescue Exception
       puts_deploy_failure
       raise
