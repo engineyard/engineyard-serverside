@@ -46,7 +46,7 @@ module EY
         "public/maintenance.html",
         "public/system/maintenance.html.default",
       ].map do |file|
-        File.join(c.release_path, file)
+        File.join(c.latest_release, file)
       end
 
       # this one is guaranteed to exist
