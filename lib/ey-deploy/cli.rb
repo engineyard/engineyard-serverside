@@ -15,8 +15,8 @@ module EY
                                   :aliases  => ["-m"]
 
     method_option :branch,        :type     => :string,
-                                  :desc     => "Branch to deploy from, defaults to master",
-                                  :aliases  => ["-b"]
+                                  :desc     => "Git ref to deploy, defaults to master. May be a branch, a tag, or a SHA",
+                                  :aliases  => %w[-b --ref --tag]
 
     method_option :repo,          :type     => :string,
                                   :desc     => "Remote repo to deploy",
