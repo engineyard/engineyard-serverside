@@ -8,29 +8,17 @@ dependencies:
     group: 
     - :default
     version: ">= 0"
-  escape: 
-    group: 
-    - :default
-    version: ">= 0.0.4"
   rspec: 
     group: 
     - :test
     version: ">= 0"
     require: 
     - spec
-  json_pure: 
-    group: 
-    - :default
-    version: ">= 0"
 specs: 
 - rake: 
     version: 0.8.7
 - columnize: 
     version: 0.3.1
-- escape: 
-    version: 0.0.4
-- json_pure: 
-    version: 1.4.3
 - linecache: 
     version: "0.43"
 - rspec: 
@@ -39,7 +27,7 @@ specs:
     version: 0.10.3
 - ruby-debug: 
     version: 0.10.3
-hash: 9e6507d5ebfcf554f130b4362eb5d46a6c597c2b
+hash: fbc2d7b2674c73ca31cd786390d940dcba442c27
 sources: 
 - Rubygems: 
     uri: http://gemcutter.org

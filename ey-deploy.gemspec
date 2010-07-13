@@ -19,6 +19,4 @@ Gem::Specification.new do |s|
 
   s.rubygems_version = %q{1.3.6}
   s.test_files = Dir.glob("spec/**/*")
-
-  s.add_bundler_dependencies
 end
