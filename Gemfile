@@ -1,7 +1,7 @@
 source 'http://gemcutter.org'
 
 gem 'rake'
-gem 'json'
+gem 'json_pure'
 gem 'escape', ">= 0.0.4"
 
 group :test do
