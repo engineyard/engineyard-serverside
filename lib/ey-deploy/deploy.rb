@@ -213,7 +213,7 @@ module EY
 
     def callback(what)
       @callbacks_reached ||= true
-      if File.exist?("#{c.release_release}/deploy/#{what}.rb")
+      if File.exist?("#{c.release_path}/deploy/#{what}.rb")
         eydeploy_path = $0   # invoke others just like we were invoked
         run "#{eydeploy_path} _#{VERSION}_ hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}" do |server, cmd|
           cmd << " --framework-env '#{c.environment}'"
