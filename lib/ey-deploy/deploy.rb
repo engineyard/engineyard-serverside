@@ -183,6 +183,10 @@ module EY
       sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
     end
 
+    def create_revision_file
+      run create_revision_file_command
+    end
+
     def symlink_configs(release_to_link=c.release_path)
       info "~> Symlinking configs"
       [ "chmod -R g+w #{release_to_link}",

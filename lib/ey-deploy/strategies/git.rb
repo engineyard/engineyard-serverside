@@ -11,8 +11,8 @@ module EY
           end
         end
 
-        def create_revision_file
-          strategy.create_revision_file(c.release_path)
+        def create_revision_file_command
+          strategy.create_revision_file_command(c.release_path)
         end
 
         def short_log_message(revision)
@@ -72,8 +72,8 @@ module EY
         end
       end
 
-      def create_revision_file(dir)
-        `#{git} show --pretty=format:"%H" | head -1 > "#{dir}/REVISION"`
+      def create_revision_file_command(dir)
+        %Q{#{git} show --pretty=format:"%H" | head -1 > "#{dir}/REVISION"}
       end
 
       def short_log_message(rev)
