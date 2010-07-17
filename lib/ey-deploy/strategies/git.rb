@@ -98,6 +98,7 @@ module EY
         @config.write "StrictHostKeyChecking no\n"
         @config.write "CheckHostIP no\n"
         @config.write "PasswordAuthentication no\n"
+        @config.write "LogLevel DEBUG\n"
         @config.write "IdentityFile ~/.ssh/#{app}-deploy-key\n"
         @config.chmod(0600)
         @config.close
