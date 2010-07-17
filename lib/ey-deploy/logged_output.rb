@@ -46,6 +46,12 @@ module EY
       end
     end
 
+    def debug(msg)
+      with_logfile do |log|
+        log << "#{msg}\n"
+      end
+    end
+
     def logged_system(cmd)
       with_logfile do |log|
         out = verbose? ? Tee.new($stdout, log) : log

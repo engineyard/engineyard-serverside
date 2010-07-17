@@ -10,6 +10,7 @@ module EY
 
     # default task
     def deploy
+      debug "Starting deploy at #{Time.now.asctime}"
       update_repository_cache
       require_custom_tasks
       push_code
@@ -32,7 +33,9 @@ module EY
       disable_maintenance_page
 
       cleanup_old_releases
+      debug "Finished deploy at #{Time.now.asctime}"
     rescue Exception
+      debug "Finished failing to deploy at #{Time.now.asctime}"
       puts_deploy_failure
       raise
     end
