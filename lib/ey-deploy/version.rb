@@ -1,3 +1,3 @@
 module EY
-  VERSION = '0.9.2.pre'
+  VERSION = '1.0.0'
 end
