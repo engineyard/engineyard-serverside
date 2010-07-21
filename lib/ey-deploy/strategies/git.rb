@@ -50,10 +50,10 @@ module EY
 
       def fetch
         if usable_repository?
-          logged_system("#{git} fetch -q origin")
+          logged_system("#{git} fetch -q origin 2>&1")
         else
           FileUtils.rm_rf(opts[:repository_cache])
-          logged_system("git clone -q #{opts[:repo]} #{opts[:repository_cache]}")
+          logged_system("git clone -q #{opts[:repo]} #{opts[:repository_cache]} 2>&1")
         end
       end
 
