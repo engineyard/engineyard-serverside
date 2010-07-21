@@ -73,6 +73,9 @@ module EY
                                   :desc     => "Ruby web framework environment",
                                   :aliases  => ["-e"]
 
+    method_option :config,        :type     => :string,
+                                  :desc     => "Additional configuration"
+
     method_option :current_name,  :type     => :string,
                                   :desc     => "Value for #current_name in hooks"
 

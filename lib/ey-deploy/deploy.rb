@@ -226,6 +226,7 @@ module EY
           cmd << " --framework-env '#{c.environment}'"
           cmd << " --current-role '#{server.role}'"
           cmd << " --current-name '#{server.name}'" if server.name
+          cmd << " --config '#{c.config}'" if c.config
           cmd
         end
       end
