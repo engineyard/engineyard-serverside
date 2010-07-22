@@ -29,8 +29,7 @@ task :install_on, [:instance] do |t, args|
   system("ssh #{instance} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gem} --no-rdoc --no-ri'")
 end
 
-desc "Bump version of this gem"
-task :bump do
+def bump
   version_file = "module EY\n  VERSION = '_VERSION_GOES_HERE_'\nend\n"
 
   new_version = if EY::VERSION =~ /\.pre$/
@@ -41,9 +40,35 @@ task :bump do
                   digits.join('.') + ".pre"
                 end
 
-  puts "New version is #{new_version}"
   File.open('lib/ey-deploy/version.rb', 'w') do |f|
     f.write version_file.gsub(/_VERSION_GOES_HERE_/, new_version)
   end
+  new_version
+end
 
+desc "Bump version of this gem"
+task :bump do
+  ver = bump
+  puts "New version is #{ver}"
+end
+
+desc "Release gem"
+task :release do
+  new_version = bump
+  system("git add lib/ey-deploy/version.rb")
+  system("git commit -m 'Bump version for release #{new_version}'")
+  system("git tag v#{new_version}")
+
+  system("gem build ey-deploy.gemspec")
+
+  load 'lib/ey-deploy/version.rb'
+  bump
+  system("git add lib/ey-deploy/version.rb")
+  system("git commit -m 'Add .pre for next release'")
+
+  puts '********************************************************************************'
+  puts
+  puts "Don't forget to `gem push` and `git push --tags`!"
+  puts
+  puts '********************************************************************************'
 end
