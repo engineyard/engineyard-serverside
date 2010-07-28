@@ -2,7 +2,6 @@
 require 'base64'
 require 'fileutils'
 require 'json'
-require 'yaml'
 
 module EY
   class DeployBase < Task
@@ -269,12 +268,6 @@ module EY
       sudo "rm -rf #{c.release_path}"
     end
 
-    def safe_yaml_load(loadable)
-      YAML.load(loadable)
-    rescue ArgumentError   # not yaml
-      nil
-    end
-
     DEFAULT_09_BUNDLER = '0.9.26'
     DEFAULT_10_BUNDLER = '1.0.0.beta.5'
 
@@ -293,37 +286,15 @@ module EY
     end
 
     def get_bundler_version(lockfile)
-      contents = File.open(lockfile, 'r') { |f| f.read }
-      from_yaml = safe_yaml_load(contents)
-
-      if from_yaml                        # 0.9
-        from_yaml['specs'].map do |spec|
-          # spec is a one-element hash: the key is the gem name, and
-          # the value is {"version" => the-version}.
-          if spec.keys.first == "bundler"
-            spec.values.first["version"]
-          end
-        end.compact.first || DEFAULT_09_BUNDLER
-      else                                # 1.0 or bust
-        dep_section = ""
-        in_dependencies_section = false
-        contents.each_line do |line|
-          if line =~ /^DEPENDENCIES/
-            in_dependencies_section = true
-          elsif line =~ /^\S/
-            in_dependencies_section = false
-          elsif in_dependencies_section
-            dep_section << line
-          end
-        end
-
-        unless dep_section.length > 0
-          raise "Couldn't parse #{lockfile}; exiting"
-          exit(1)
-        end
-
-        result = dep_section.scan(/^\s*bundler\s*\(=\s*([^\)]+)\)/).first
-        result ? result.first : DEFAULT_10_BUNDLER
+      parser = LockfileParser.new(File.read(lockfile))
+      return parser.bundler_version if parser.bundler_version
+      case parser.lockfile_version
+      when :bundler09
+        DEFAULT_09_BUNDLER
+      when :bundler10
+        DEFAULT_10_BUNDLER
+      else
+        raise "Unknown lockfile version #{parser.lockfile_version}"
       end
     end
     public :get_bundler_version
