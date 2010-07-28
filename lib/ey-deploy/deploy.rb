@@ -305,12 +305,24 @@ module EY
           end
         end.compact.first || DEFAULT_09_BUNDLER
       else                                # 1.0 or bust
-        gem_section = contents.scan(/GEM\s*\n(.*?)\n\S/m).first
-        unless gem_section
+        dep_section = ""
+        in_dependencies_section = false
+        contents.each_line do |line|
+          if line =~ /^DEPENDENCIES/
+            in_dependencies_section = true
+          elsif line =~ /^\S/
+            in_dependencies_section = false
+          elsif in_dependencies_section
+            dep_section << line
+          end
+        end
+
+        unless dep_section.length > 0
           raise "Couldn't parse #{lockfile}; exiting"
           exit(1)
         end
-        result = gem_section.first.scan(/^\s*bundler\s*\((\S+)\)/).first
+
+        result = dep_section.scan(/^\s*bundler\s*\(=\s*([^\)]+)\)/).first
         result ? result.first : DEFAULT_10_BUNDLER
       end
     end
