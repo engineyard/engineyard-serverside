@@ -269,7 +269,7 @@ module EY
     end
 
     DEFAULT_09_BUNDLER = '0.9.26'
-    DEFAULT_10_BUNDLER = '1.0.0.beta.5'
+    DEFAULT_10_BUNDLER = '1.0.0.rc.1'
 
     def warn_about_missing_lockfile
       info "!>"
