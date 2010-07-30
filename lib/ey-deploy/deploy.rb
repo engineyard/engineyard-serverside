@@ -122,16 +122,16 @@ module EY
         info "~> Gemfile detected, bundling gems"
         lockfile = File.join(c.release_path, "Gemfile.lock")
 
-        bundler_version = if File.exist?(lockfile)
-                            get_bundler_version(lockfile)
-                          else
-                            warn_about_missing_lockfile
-                            DEFAULT_09_BUNDLER
-                          end
+        bundler_installer = if File.exist?(lockfile)
+                              get_bundler_installer(lockfile)
+                            else
+                              warn_about_missing_lockfile
+                              DEFAULT_09_BUNDLER
+                            end
 
-        sudo "#{$0} _#{VERSION}_ install_bundler #{bundler_version}"
+        sudo "#{$0} _#{VERSION}_ install_bundler #{bundler_installer.version}"
 
-        run "cd #{c.release_path} && bundle _#{bundler_version}_ install --without=development --without=test"
+        run "cd #{c.release_path} && bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
       end
     end
 
@@ -269,7 +269,7 @@ module EY
     end
 
     DEFAULT_09_BUNDLER = '0.9.26'
-    DEFAULT_10_BUNDLER = '1.0.0.rc.1'
+    DEFAULT_10_BUNDLER = '1.0.0.rc.2'
 
     def warn_about_missing_lockfile
       info "!>"
@@ -285,19 +285,23 @@ module EY
       info "!>"
     end
 
-    def get_bundler_version(lockfile)
+    def get_bundler_installer(lockfile)
       parser = LockfileParser.new(File.read(lockfile))
-      return parser.bundler_version if parser.bundler_version
       case parser.lockfile_version
       when :bundler09
-        DEFAULT_09_BUNDLER
+        BundleInstaller.new(
+          parser.bundler_version || DEFAULT_09_BUNDLER,
+          "--without=development --without=test")
       when :bundler10
-        DEFAULT_10_BUNDLER
+        BundleInstaller.new(
+          parser.bundler_version || DEFAULT_10_BUNDLER,
+          "--production --path #{c.shared_path}/bundled_gems"
+          )
       else
         raise "Unknown lockfile version #{parser.lockfile_version}"
       end
     end
-    public :get_bundler_version
+    public :get_bundler_installer
 
   end   # DeployBase
 

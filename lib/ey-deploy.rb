@@ -16,6 +16,7 @@ require 'server'
 require 'deploy'
 require 'deploy_hook'
 require 'lockfile_parser'
+require 'bundle_installer'
 require 'cli'
 require 'configuration'
 
