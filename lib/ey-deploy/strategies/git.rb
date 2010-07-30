@@ -59,7 +59,11 @@ module EY
 
       def checkout
         info "~> Deploying revision #{short_log_message(to_checkout)}"
-        logged_system("#{git} checkout -q '#{to_checkout}'") || logged_system("#{git} reset -q --hard '#{to_checkout}'")
+        in_git_work_tree do
+          (logged_system("git checkout -q '#{to_checkout}'") ||
+            logged_system("git reset -q --hard '#{to_checkout}'")) &&
+            logged_system("git submodule update --init")
+        end
       end
 
       def to_checkout
@@ -81,8 +85,16 @@ module EY
       end
 
     private
+      def in_git_work_tree
+        Dir.chdir(git_work_tree) { yield }
+      end
+
+      def git_work_tree
+        opts[:repository_cache]
+      end
+
       def git
-        "git --git-dir #{opts[:repository_cache]}/.git --work-tree #{opts[:repository_cache]}"
+        "git --git-dir #{git_work_tree}/.git --work-tree #{git_work_tree}"
       end
 
       def branch?(ref)
