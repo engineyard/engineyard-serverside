@@ -16,6 +16,7 @@ require 'task'
 require 'server'
 require 'deploy'
 require 'deploy_hook'
+require 'lockfile_parser'
 require 'cli'
 require 'configuration'
 

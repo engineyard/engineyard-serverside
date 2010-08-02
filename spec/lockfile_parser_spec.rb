@@ -18,8 +18,9 @@ describe "the bundler version retrieved from the lockfile" do
     get_version('1.0-no-bundler').should == EY::DeployBase::DEFAULT_10_BUNDLER
   end
 
-  it "gets the version from a 1.0 lockfile with a bundler dependency" do
-    get_version('1.0-with-bundler').should == '1.0.0.beta.1'
+  it "gets the version from a 1.0.0.rc.1 lockfile w/dependency on 1.0.0.rc.1" do
+    # This is a real, customer-generated lockfile
+    get_version('1.0.0.rc.1-with-bundler').should == '1.0.0.rc.1'
   end
 
   it "raises an error if it can't parse the file" do
