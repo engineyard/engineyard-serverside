@@ -4,8 +4,9 @@ require 'thor'
 module EY
   class Deploy::Configuration
     DEFAULT_CONFIG = Thor::CoreExt::HashWithIndifferentAccess.new({
-      "branch"       => "master",
-      "strategy"     => "Git",
+      "branch"         => "master",
+      "strategy"       => "Git",
+      "infrastructure" => "appcloud"
     })
 
     attr_reader :configuration
@@ -44,8 +45,12 @@ module EY
       end
     end
 
+    def metadata
+      @metadata ||= EY::Metadata.for(configuration['infrastructure'])
+    end
+
     def node
-      EY.node
+      metadata.raw
     end
 
     def revision
@@ -74,7 +79,7 @@ module EY
     alias :group :user
 
     def role
-      node['instance_role']
+      metadata.role
     end
 
     def copy_exclude
