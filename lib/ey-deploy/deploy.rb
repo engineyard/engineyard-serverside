@@ -158,7 +158,7 @@ module EY
       roles(*c.stack.roles_for(:migrate)) do
         cmd = "cd #{c.release_path} && #{c.framework_envs} #{c.migration_command}"
         info "~> Migrating: #{cmd}"
-        run_once(cmd)
+        run(cmd)
       end
     end
 
