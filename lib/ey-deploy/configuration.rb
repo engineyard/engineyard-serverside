@@ -45,6 +45,10 @@ module EY
       end
     end
 
+    def stack
+      @stack ||= EY::Stack.use(configuration['infrastructure'], configuration['stack'])
+    end
+
     def metadata
       @metadata ||= EY::Metadata.for(configuration['infrastructure'])
     end

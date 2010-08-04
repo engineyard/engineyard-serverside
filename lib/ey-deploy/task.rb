@@ -45,10 +45,20 @@ module EY
       run_on_roles(cmd, %w[sudo sh -l -c], &blk)
     end
 
+    def run_once(cmd, &blk)
+      run_on_roles(cmd, nil, true, &blk)
+    end
+
+    def sudo_once(cmd, &blk)
+      run_on_roles(cmd, %w[sudo sh -l -c], true, &blk)
+    end
+
     private
 
-    def run_on_roles(cmd, wrapper=%w[sh -l -c])
-      results = EY::Server.from_roles(@roles).map do |server|
+    def run_on_roles(cmd, wrapper=%w[sh -l -c], once=false)
+      servers = EY::Server.from_roles(@roles)
+      servers = [servers.first] if once
+      results = servers.map do |server|
         to_run = block_given? ? yield(server, cmd.dup) : cmd
         need_later { server.run(Escape.shell_command(wrapper + [to_run])) }
       end
