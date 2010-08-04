@@ -269,7 +269,7 @@ module EY
     end
 
     DEFAULT_09_BUNDLER = '0.9.26'
-    DEFAULT_10_BUNDLER = '1.0.0.rc.2'
+    DEFAULT_10_BUNDLER = '1.0.0.rc.3'
 
     def warn_about_missing_lockfile
       info "!>"
@@ -295,7 +295,7 @@ module EY
       when :bundler10
         BundleInstaller.new(
           parser.bundler_version || DEFAULT_10_BUNDLER,
-          "--production --path #{c.shared_path}/bundled_gems"
+          "--deployment --path #{c.shared_path}/bundled_gems"
           )
       else
         raise "Unknown lockfile version #{parser.lockfile_version}"
