@@ -2,12 +2,12 @@ require 'open-uri'
 require 'ey-deploy/logged_output'
 
 module EY
-  class Server < Struct.new(:hostname, :role, :name)
+  class Server < Struct.new(:hostname, :roles, :name)
     include LoggedOutput
 
     def initialize(*fields)
       super
-      self.role = self.role.to_sym
+      self.roles = self.roles.map { |r| r.to_sym }
     end
 
     def self.config=(config)
@@ -20,17 +20,21 @@ module EY
 
     attr_writer :default_task
 
-    def self.from_roles(*roles)
-      roles = roles.flatten.compact
-      return all if !roles || roles.include?(:all) || roles.empty?
+    def self.from_roles(*want_roles)
+      want_roles = want_roles.flatten.compact
+      return all if !want_roles || want_roles.include?(:all) || want_roles.empty?
 
       all.select do |s|
-        roles.include?(s.role) || roles.include?(s.name)
+        s.roles.any? { |my_role| want_roles.include? my_role }
       end
     end
 
+    def role
+      roles.first
+    end
+
     def self.from_hash(h)
-      new(h[:hostname], h[:role], h[:name])
+      new(h[:hostname], (h[:roles] || [h[:role]]), h[:name])
     end
 
     def self.all
