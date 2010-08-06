@@ -295,7 +295,7 @@ module EY
       when :bundler10
         BundleInstaller.new(
           parser.bundler_version || DEFAULT_10_BUNDLER,
-          "--deployment --path #{c.shared_path}/bundled_gems"
+          "--deployment --path #{c.shared_path}/bundled_gems --without development test"
           )
       else
         raise "Unknown lockfile version #{parser.lockfile_version}"
