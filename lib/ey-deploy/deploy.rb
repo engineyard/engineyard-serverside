@@ -176,7 +176,7 @@ module EY
     # task
     def copy_repository_cache
       info "~> Copying to #{c.release_path}"
-      sudo("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
+      run("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
 
       info "~> Ensuring proper ownership"
       sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
@@ -202,14 +202,14 @@ module EY
         "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi",
 
       ].each do |cmd|
-        sudo cmd
+        run cmd
       end
     end
 
     # task
     def symlink(release_to_link=c.release_path)
       info "~> Symlinking code"
-      sudo "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
+      run "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
       @symlink_changed = true
     rescue Exception
       sudo "rm -f #{c.current_path} && ln -nfs #{c.previous_release(release_to_link)} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
