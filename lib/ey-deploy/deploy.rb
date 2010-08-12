@@ -103,12 +103,12 @@ module EY
         when "nginx_unicorn"
           pidfile = "/var/run/engineyard/unicorn_#{c.app}.pid"
           condition = "[ -e #{pidfile} ] && [ ! -d /proc/`cat #{pidfile}` ]"
-          sudo("if #{condition}; then rm -f #{pidfile}; fi")
-          sudo("/etc/init.d/unicorn_#{c.app} deploy")
+          run("if #{condition}; then rm -f #{pidfile}; fi")
+          run("/engineyard/bin/app_#{c.app} deploy")
         when "nginx_mongrel"
           sudo("monit restart all -g #{c.app}")
         when "nginx_passenger"
-          sudo("touch #{c.current_path}/tmp/restart.txt")
+          run("touch #{c.current_path}/tmp/restart.txt")
         else
           raise "Unknown stack #{c.stack}; restart failed!"
         end
