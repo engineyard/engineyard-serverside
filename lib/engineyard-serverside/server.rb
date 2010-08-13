@@ -1,5 +1,5 @@
 require 'open-uri'
-require 'ey-deploy/logged_output'
+require 'engineyard-serverside/logged_output'
 
 module EY
   class Server < Struct.new(:hostname, :role, :name)
@@ -68,4 +68,3 @@ module EY
     end
   end
 end
-

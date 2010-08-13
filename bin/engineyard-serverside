@@ -5,6 +5,6 @@ rescue LoadError
 end
 
 $LOAD_PATH.push(File.expand_path("../lib", File.dirname(__FILE__)))
-require 'ey-deploy'
+require 'engineyard-serverside'
 
 EY::CLI.start

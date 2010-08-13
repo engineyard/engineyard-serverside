@@ -1,10 +1,10 @@
 lib = File.expand_path('../lib/', __FILE__)
 $:.unshift lib unless $:.include?(lib)
 require 'bundler'
-require 'ey-deploy'
+require 'engineyard-serverside'
 
 Gem::Specification.new do |s|
-  s.name = "ey-deploy"
+  s.name = "engineyard-serverside"
   s.version = EY::VERSION
   s.platform = Gem::Platform::RUBY
   s.author = "EY Cloud Team"
@@ -13,8 +13,8 @@ Gem::Specification.new do |s|
   s.summary = "A gem that deploys ruby applications on EY Cloud instances"
 
   s.files = Dir.glob("{bin,lib}/**/*") + %w(LICENSE)
-  s.executables = ["ey-deploy"]
-  s.default_executable = "ey-deploy"
+  s.executables = ["engineyard-serverside"]
+  s.default_executable = "engineyard-serverside"
   s.require_path = 'lib'
 
   s.rubygems_version = %q{1.3.6}

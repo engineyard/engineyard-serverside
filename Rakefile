@@ -8,11 +8,11 @@ task :default => :spec
 require 'rake/rdoctask'
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
-require 'ey-deploy'
+require 'engineyard-serverside'
 
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "ey-deploy #{EY::VERSION}"
+  rdoc.title = "engineyard-serverside #{EY::VERSION}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
   rdoc.rdoc_files.exclude('lib/vendor/**/*.rb')
@@ -22,7 +22,7 @@ desc "Build the gem + install it on the instance: rake install_on[[user@]host]"
 task :install_on, [:instance] do |t, args|
   instance = args.instance
 
-  system("gem build ey-deploy.gemspec")
+  system("gem build engineyard-serverside.gemspec")
   gem = Dir["*.gem"].last   # hopefully true
   abort "Failed to build gem; aborting!" unless gem
   system("scp #{gem} #{instance}:")
@@ -40,7 +40,7 @@ def bump
                   digits.join('.') + ".pre"
                 end
 
-  File.open('lib/ey-deploy/version.rb', 'w') do |f|
+  File.open('lib/engineyard-serverside/version.rb', 'w') do |f|
     f.write version_file.gsub(/_VERSION_GOES_HERE_/, new_version)
   end
   new_version
@@ -55,15 +55,15 @@ end
 desc "Release gem"
 task :release do
   new_version = bump
-  system("git add lib/ey-deploy/version.rb")
+  system("git add lib/engineyard-serverside/version.rb")
   system("git commit -m 'Bump version for release #{new_version}'")
   system("git tag v#{new_version}")
 
-  system("gem build ey-deploy.gemspec")
+  system("gem build engineyard-serverside.gemspec")
 
-  load 'lib/ey-deploy/version.rb'
+  load 'lib/engineyard-serverside/version.rb'
   bump
-  system("git add lib/ey-deploy/version.rb")
+  system("git add lib/engineyard-serverside/version.rb")
   system("git commit -m 'Add .pre for next release'")
 
   puts '********************************************************************************'

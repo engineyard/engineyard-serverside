@@ -1,4 +1,4 @@
-require 'ey-deploy/logged_output'
+require 'engineyard-serverside/logged_output'
 
 module EY
   module Strategies

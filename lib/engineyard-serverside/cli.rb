@@ -99,10 +99,10 @@ module EY
       end
     end
 
-    desc "propagate", "Propagate the ey-deploy gem to the other instances in the cluster. This will install exactly version #{VERSION} and remove other versions if found."
+    desc "propagate", "Propagate the engineyard-serverside gem to the other instances in the cluster. This will install exactly version #{VERSION} and remove other versions if found."
     def propagate
       config          = EY::Deploy::Configuration.new
-      gem_filename    = "ey-deploy-#{VERSION}.gem"
+      gem_filename    = "engineyard-serverside-#{VERSION}.gem"
       local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
       remote_gem_file = File.join(Dir.tmpdir, gem_filename)
       gem_binary      = File.join(Gem.default_bindir, 'gem')
@@ -116,10 +116,10 @@ module EY
           egrep_escaped_version = VERSION.gsub(/\./, '\.')
           # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
           # 0.5.11, and mistakenly thinking 0.5.1 is there
-          has_gem_cmd = "#{gem_binary} list ey-deploy | grep \"ey-deploy \" | egrep -q '#{egrep_escaped_version}[,)]'"
+          has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
           if !server.run(has_gem_cmd)  # doesn't have this exact version
-            puts "~> Installing ey-deploy on #{server.hostname}"
+            puts "~> Installing engineyard-serverside on #{server.hostname}"
 
             system(Escape.shell_command([
               'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
