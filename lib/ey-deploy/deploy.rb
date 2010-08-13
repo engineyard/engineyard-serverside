@@ -198,12 +198,12 @@ module EY
         "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
         "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
         "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
-        "chown -R #{c.user}:#{c.group} #{release_to_link}",
-        "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi",
-
       ].each do |cmd|
         run cmd
       end
+
+      sudo "chown -R #{c.user}:#{c.group} #{release_to_link}"
+      run "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi"
     end
 
     # task
