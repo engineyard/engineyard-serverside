@@ -126,7 +126,7 @@ module EY
                               get_bundler_installer(lockfile)
                             else
                               warn_about_missing_lockfile
-                              DEFAULT_09_BUNDLER
+                              BundleInstaller.new(DEFAULT_09_BUNDLER, "--without=development --without=test")
                             end
 
         sudo "#{$0} _#{VERSION}_ install_bundler #{bundler_installer.version}"
