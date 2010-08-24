@@ -57,9 +57,6 @@ module EY
       # convenience functions for running on certain instance types
       def on_app_master(&blk)                 on_roles(%w[solo app_master],          &blk) end
       def on_app_servers(&blk)                on_roles(%w[solo app_master app],      &blk) end
-      def on_db_master(&blk)                  on_roles(%w[solo db_master],           &blk) end
-      def on_db_slaves(&blk)                  on_roles(%w[db_slave],                 &blk) end
-      def on_db_servers(&blk)                 on_roles(%w[solo db_master db_slave],  &blk) end
       def on_app_servers_and_utilities(&blk)  on_roles(%w[solo app_master app util], &blk) end
 
       def on_utilities(*names, &blk)

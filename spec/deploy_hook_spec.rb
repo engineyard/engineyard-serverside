@@ -157,18 +157,6 @@ describe "the deploy-hook API" do
       where_code_runs_with(:on_app_servers).should == %w(solo app_master app)
     end
 
-    it "#on_db_master runs on DB masters and solos" do
-      where_code_runs_with(:on_db_master).should == %w(solo db_master)
-    end
-
-    it "#on_db_slaves runs on DB slaves only (not solos or masters)" do
-      where_code_runs_with(:on_db_slaves).should == %w(db_slave)
-    end
-
-    it "#on_db_servers runs on DB masters, DB slaves, and solos" do
-      where_code_runs_with(:on_db_servers).should == %w(solo db_master db_slave)
-    end
-
     it "#on_app_servers_and_utilities does what it says on the tin" do
       where_code_runs_with(:on_app_servers_and_utilities).should ==
         %w(solo app_master app util_alpha util_beta util_gamma)
