@@ -220,13 +220,19 @@ module EY
     def callback(what)
       @callbacks_reached ||= true
       if File.exist?("#{c.release_path}/deploy/#{what}.rb")
-        eydeploy_path = $0   # invoke others just like we were invoked
-        run "#{eydeploy_path} _#{VERSION}_ hook '#{what}' --app '#{config.app}' --release-path #{config.release_path}" do |server, cmd|
-          cmd << " --framework-env '#{c.environment}'"
-          cmd << " --current-role '#{server.role}'"
-          cmd << " --current-name '#{server.name}'" if server.name
-          cmd << " --config '#{c[:config]}'" if c.has_key?(:config)
-          cmd
+        base_command = [$0, "_#{VERSION}_", 'hook', what.to_s,
+          '--app', config.app.to_s,
+          '--release-path', config.release_path.to_s,
+        ]
+
+        run Escape.shell_command(base_command) do |server, cmd|
+          per_instance_args = [
+            '--framework-env', c.environment.to_s,
+            '--current-role', server.role.to_s,
+            '--config', c.to_json,
+          ]
+          per_instance_args << '--current-name' << server.name.to_s if server.name
+          cmd << " " << Escape.shell_command(per_instance_args)
         end
       end
     end

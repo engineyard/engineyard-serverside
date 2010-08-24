@@ -44,6 +44,10 @@ module EY
       end
     end
 
+    def to_json
+      configuration.to_json
+    end
+
     def node
       EY.node
     end
