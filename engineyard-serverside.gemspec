@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.author = "EY Cloud Team"
   s.email = "cloud@engineyard.com"
-  s.homepage = "http://engineyard.com"
+  s.homepage = "http://github.com/engineyard/engineyard-serverside"
   s.summary = "A gem that deploys ruby applications on EY Cloud instances"
 
   s.files = Dir.glob("{bin,lib}/**/*") + %w(LICENSE)
