@@ -307,7 +307,7 @@ module EY
     public :get_bundler_installer
 
     def default_09_bundler() "0.9.26"     end
-    def default_10_bundler() "1.0.0.rc.3" end
+    def default_10_bundler() "1.0.0.rc.6" end
 
   end   # DeployBase
 
