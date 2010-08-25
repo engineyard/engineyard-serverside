@@ -126,7 +126,7 @@ module EY
                               get_bundler_installer(lockfile)
                             else
                               warn_about_missing_lockfile
-                              BundleInstaller.new(DEFAULT_09_BUNDLER, "--without=development --without=test")
+                              BundleInstaller.new(default_09_bundler, "--without=development --without=test")
                             end
 
         sudo "#{$0} _#{VERSION}_ install_bundler #{bundler_installer.version}"
@@ -274,9 +274,6 @@ module EY
       sudo "rm -rf #{c.release_path}"
     end
 
-    DEFAULT_09_BUNDLER = '0.9.26'
-    DEFAULT_10_BUNDLER = '1.0.0.rc.3'
-
     def warn_about_missing_lockfile
       info "!>"
       info "!> WARNING: Gemfile.lock is missing!"
@@ -287,7 +284,7 @@ module EY
       info "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
       info "!> If you don't have a Gemfile.lock, run \"bundle lock\" to create one."
       info "!>"
-      info "!> This deployment will use bundler #{DEFAULT_09_BUNDLER} to run 'bundle install'."
+      info "!> This deployment will use bundler #{default_09_bundler} to run 'bundle install'."
       info "!>"
     end
 
@@ -296,11 +293,11 @@ module EY
       case parser.lockfile_version
       when :bundler09
         BundleInstaller.new(
-          parser.bundler_version || DEFAULT_09_BUNDLER,
+          parser.bundler_version || default_09_bundler,
           "--without=development --without=test")
       when :bundler10
         BundleInstaller.new(
-          parser.bundler_version || DEFAULT_10_BUNDLER,
+          parser.bundler_version || default_10_bundler,
           "--deployment --path #{c.shared_path}/bundled_gems --without development test"
           )
       else
@@ -308,6 +305,9 @@ module EY
       end
     end
     public :get_bundler_installer
+
+    def default_09_bundler() "0.9.26"     end
+    def default_10_bundler() "1.0.0.rc.3" end
 
   end   # DeployBase
 
