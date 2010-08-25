@@ -73,9 +73,12 @@ module EY
     end
 
     def user
-      ENV['USER']
+      configuration['user'] || ENV['USER']
     end
-    alias :group :user
+
+    def group
+      configuration['group'] || user
+    end
 
     def role
       node['instance_role']
