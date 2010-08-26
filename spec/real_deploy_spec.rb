@@ -17,16 +17,16 @@ module EY::Strategies::IntegrationSpec
     end
 
     def short_log_message(revision)
-      "oh crap, here comes #{revision}"
+      "FONDLED THE CODE"
     end
 
   end  
 end
 
 describe "deploying an application" do
-
-
   class FullTestDeploy < EY::Deploy
+    attr_reader :infos, :debugs
+
     def initialize(*)
       super
       @infos = []
@@ -70,5 +70,9 @@ describe "deploying an application" do
 
   it "creates a REVISION file" do
     File.exist?(File.join(@deploy_dir, 'current', 'REVISION')).should be_true
+  end
+
+  it "restarts the app servers" do
+    File.exist?(File.join(@deploy_dir, 'current', 'tmp', 'restart.txt')).should be_true
   end
 end
