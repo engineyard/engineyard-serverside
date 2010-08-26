@@ -62,8 +62,10 @@ module EY
 
       @maintenance_up = true
       roles :app_master, :app, :solo do
-        visible_maint_page = File.join(c.shared_path, "system", "maintenance.html")
-        run "cp '#{maintenance_file}' '#{visible_maint_page}'"
+        maint_page_dir = File.join(c.shared_path, "system")
+        visible_maint_page = File.join(maint_page_dir, "maintenance.html")
+        run Escape.shell_command(['mkdir', '-p', maint_page_dir])
+        run Escape.shell_command(['cp', maintenance_file, visible_maint_page])
       end
     end
 
@@ -167,7 +169,7 @@ module EY
       return unless c.migrate?
       @migrations_reached = true
       roles :app_master, :solo do
-        cmd = "cd #{c.release_path} && #{c.framework_envs} #{c.migration_command}"
+        cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} #{c.migration_command}"
         info "~> Migrating: #{cmd}"
         run(cmd)
       end
@@ -298,7 +300,7 @@ module EY
       when :bundler10
         BundleInstaller.new(
           parser.bundler_version || default_10_bundler,
-          "--deployment --path #{c.shared_path}/bundled_gems --without development test"
+          "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test"
           )
       else
         raise "Unknown lockfile version #{parser.lockfile_version}"

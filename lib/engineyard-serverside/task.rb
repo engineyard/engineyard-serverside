@@ -56,7 +56,7 @@ module EY
       # MRI's truthiness check is an internal C thing that does not call
       # any methods... so Dataflow cannot proxy it & we must "x == true"
       # Rubinius, wherefore art thou!?
-      results.all?{|x| x == true } || raise(EY::RemoteFailure)
+      results.all?{|x| x == true } || raise(EY::RemoteFailure.new(cmd))
     end
   end
 end

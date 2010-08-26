@@ -109,6 +109,10 @@ module EY
       Dir.glob("#{release_dir}/*").sort
     end
 
+    def binstubs_path
+      release_path + '/ey_bundler_binstubs'
+    end
+
     def framework_envs
       "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
     end

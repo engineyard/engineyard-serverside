@@ -35,7 +35,7 @@ module EY
         end
 
         unless dep_section.length > 0
-          raise "Couldn't parse #{lockfile}; exiting"
+          raise "Couldn't parse #{@contents}; exiting"
           exit(1)
         end
 
