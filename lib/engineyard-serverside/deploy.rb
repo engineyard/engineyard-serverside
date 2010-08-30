@@ -128,7 +128,7 @@ module EY
                               get_bundler_installer(lockfile)
                             else
                               warn_about_missing_lockfile
-                              BundleInstaller.new(default_09_bundler, "--without=development --without=test")
+                              bundler_09_installer(default_09_bundler)
                             end
 
         sudo "#{$0} _#{VERSION}_ install_bundler #{bundler_installer.version}"
@@ -294,22 +294,26 @@ module EY
       parser = LockfileParser.new(File.read(lockfile))
       case parser.lockfile_version
       when :bundler09
-        BundleInstaller.new(
-          parser.bundler_version || default_09_bundler,
-          "--without=development --without=test")
+        bundler_09_installer(parser.bundler_version || default_09_bundler)
       when :bundler10
-        BundleInstaller.new(
-          parser.bundler_version || default_10_bundler,
-          "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test"
-          )
+        bundler_10_installer(parser.bundler_version || default_10_bundler)
       else
         raise "Unknown lockfile version #{parser.lockfile_version}"
       end
     end
     public :get_bundler_installer
 
-    def default_09_bundler() "0.9.26"     end
-    def default_10_bundler() "1.0.0.rc.6" end
+    def bundler_09_installer(version)
+      BundleInstaller.new(version, '--without=development --without=test')
+    end
+
+    def bundler_10_installer(version)
+      BundleInstaller.new(version,
+        "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test")
+    end
+
+    def default_09_bundler() "0.9.26" end
+    def default_10_bundler() "1.0.0"  end
 
   end   # DeployBase
 
