@@ -61,7 +61,7 @@ module EY
       end
 
       @maintenance_up = true
-      roles :app_master, :app, :solo do
+      roles(*c.stack.roles_for(:maintenance_page)) do
         maint_page_dir = File.join(c.shared_path, "system")
         visible_maint_page = File.join(maint_page_dir, "maintenance.html")
         run Escape.shell_command(['mkdir', '-p', maint_page_dir])
@@ -70,14 +70,14 @@ module EY
     end
 
     def conditionally_enable_maintenance_page
-      if c.migrate? || c.stack == "nginx_mongrel"
+      if c.migrate? || c.stack.uses_maintenance_page?
         enable_maintenance_page
       end
     end
 
     def disable_maintenance_page
       @maintenance_up = false
-      roles :app_master, :app, :solo do
+      roles(*c.stack.roles_for(:maintenance_page)) do
         run "rm -f #{File.join(c.shared_path, "system", "maintenance.html")}"
       end
     end
@@ -100,22 +100,11 @@ module EY
     def restart
       @restart_failed = true
       info "~> Restarting app servers"
-      roles :app_master, :app, :solo do
-        restart_command = case c.stack
-        when "nginx_unicorn"
-          pidfile = "/var/run/engineyard/unicorn_#{c.app}.pid"
-          condition = "[ -e #{pidfile} ] && [ ! -d /proc/`cat #{pidfile}` ]"
-          run("if #{condition}; then rm -f #{pidfile}; fi")
-          run("/engineyard/bin/app_#{c.app} deploy")
-        when "nginx_mongrel"
-          sudo("monit restart all -g #{c.app}")
-        when "nginx_passenger"
-          run("touch #{c.current_path}/tmp/restart.txt")
-        else
-          raise "Unknown stack #{c.stack}; restart failed!"
+      roles(*c.stack.roles_for(:restart)) do
+        if do_restart
+          @restart_failed = false
         end
       end
-      @restart_failed = false
     end
 
     # task
@@ -168,7 +157,7 @@ module EY
     def migrate
       return unless c.migrate?
       @migrations_reached = true
-      roles :app_master, :solo do
+      roles(*c.stack.roles_for(:migrate)) do
         cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} #{c.migration_command}"
         info "~> Migrating: #{cmd}"
         run(cmd)
@@ -328,6 +317,13 @@ module EY
       conf = EY::Deploy::Configuration.new(opts)
       EY::Server.config = conf
       new(conf).send(opts["default_task"])
+    end
+
+    def initialize(*args)
+      super
+      if c.stack && c.stack.task_overrides
+        self.extend c.stack.task_overrides
+      end
     end
   end
 end
