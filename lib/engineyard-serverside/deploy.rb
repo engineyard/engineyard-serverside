@@ -230,6 +230,7 @@ module EY
         run Escape.shell_command(base_command) do |server, cmd|
           per_instance_args = [
             '--framework-env', c.environment.to_s,
+            # XXX needs to be updated for multiple roles
             '--current-role', server.role.to_s,
             '--config', c.to_json,
           ]

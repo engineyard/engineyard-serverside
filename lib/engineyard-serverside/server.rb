@@ -5,9 +5,15 @@ module EY
   class Server < Struct.new(:hostname, :roles, :name)
     include LoggedOutput
 
+    class DuplicateHostname < StandardError
+      def initialize(hostname)
+        super "There is already an EY::Server with hostname '#{hostname}'"
+      end
+    end
+
     def initialize(*fields)
       super
-      self.roles = self.roles.map { |r| r.to_sym }
+      self.roles = self.roles.map { |r| r.to_sym } if self.roles
     end
 
     def self.config=(config)
@@ -21,11 +27,11 @@ module EY
     attr_writer :default_task
 
     def self.from_roles(*want_roles)
-      want_roles = want_roles.flatten.compact
+      want_roles = want_roles.flatten.compact.map{|r| r.to_sym}
       return all if !want_roles || want_roles.include?(:all) || want_roles.empty?
 
       all.select do |s|
-        s.roles.any? { |my_role| want_roles.include? my_role }
+        !(s.roles & want_roles).empty?
       end
     end
 
@@ -34,23 +40,41 @@ module EY
     end
 
     def self.from_hash(h)
-      new(h[:hostname], (h[:roles] || [h[:role]]), h[:name])
+      new(h[:hostname], h[:roles], h[:name])
     end
 
     def self.all
       @all
     end
 
-    def self.all=(server_hashes)
-      @all = server_hashes.map { |s| from_hash(s) }
+    def self.by_hostname(hostname)
+      all.find{|s| s.hostname == hostname}
+    end
+
+    def self.add(server_hash)
+      if by_hostname(server_hash[:hostname])
+        raise DuplicateHostname.new(server_hash[:hostname])
+      end
+      new_guy = from_hash(server_hash)
+      @all << new_guy
+      new_guy
     end
 
     def self.current
       all.find {|s| s.local? }
     end
 
+    def self.reset
+      @all = [new('localhost', [], nil)]
+    end
+    reset
+
+    def roles=(roles)
+      super(roles.map{|r| r.to_sym})
+    end
+
     def local?
-      [:app_master, :solo].include?(role)
+      hostname == 'localhost'
     end
 
     def push_code

@@ -10,51 +10,59 @@ module EY
       exit(1)
     end
 
-    method_option :migrate,       :type     => :string,
-                                  :desc     => "Run migrations with this deploy",
-                                  :aliases  => ["-m"]
+    method_option :migrate,         :type     => :string,
+                                    :desc     => "Run migrations with this deploy",
+                                    :aliases  => ["-m"]
 
-    method_option :branch,        :type     => :string,
-                                  :desc     => "Git ref to deploy, defaults to master. May be a branch, a tag, or a SHA",
-                                  :aliases  => %w[-b --ref --tag]
+    method_option :branch,          :type     => :string,
+                                    :desc     => "Git ref to deploy, defaults to master. May be a branch, a tag, or a SHA",
+                                    :aliases  => %w[-b --ref --tag]
 
-    method_option :repo,          :type     => :string,
-                                  :desc     => "Remote repo to deploy",
-                                  :aliases  => ["-r"]
+    method_option :repo,            :type     => :string,
+                                    :desc     => "Remote repo to deploy",
+                                    :aliases  => ["-r"]
 
-    method_option :app,           :type     => :string,
-                                  :required => true,
-                                  :desc     => "Application to deploy",
-                                  :aliases  => ["-a"]
+    method_option :app,             :type     => :string,
+                                    :required => true,
+                                    :desc     => "Application to deploy",
+                                    :aliases  => ["-a"]
 
-    method_option :framework_env, :type     => :string,
-                                  :required => true,
-                                  :desc     => "Ruby web framework environment",
-                                  :aliases  => ["-e"]
+    method_option :framework_env,   :type     => :string,
+                                    :required => true,
+                                    :desc     => "Ruby web framework environment",
+                                    :aliases  => ["-e"]
 
-    method_option :config,        :type     => :string,
-                                  :desc     => "Additional configuration"
+    method_option :config,          :type     => :string,
+                                    :desc     => "Additional configuration"
 
-    method_option :stack,         :type     => :string,
-                                  :desc     => "Web stack (so we can restart it correctly)"
+    method_option :stack,           :type     => :string,
+                                    :desc     => "Web stack (so we can restart it correctly)"
 
-    method_option :instances,     :type     => :array,
-                                  :desc     => "Hostnames of instances to deploy to. ie instance1 instance2"
+    method_option :other_instances, :type     => :array,
+                                    :desc     => "Hostnames of instances to deploy to. ie instance1 instance2. Localhost is implicitly present."
 
-    method_option :instance_roles,:type     => :hash,
-                                  :desc     => "Roles of instances, keyed on hostname. ie instance1:app_master,etc instance2:db,memcached ..."
+    method_option :instance_roles,  :type     => :hash,
+                                    :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
 
-    method_option :instance_names,:type     => :hash,
-                                  :desc     => "Instance names, keyed on hostname. ie instance1:name1 instance2:name2"
+    method_option :instance_names,  :type     => :hash,
+                                    :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
 
-    method_option :verbose,       :type     => :boolean,
-                                  :default  => false,
-                                  :desc     => "Verbose output",
-                                  :aliases  => ["-v"]
+    method_option :verbose,         :type     => :boolean,
+                                    :default  => false,
+                                    :desc     => "Verbose output",
+                                    :aliases  => ["-v"]
 
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
-      EY::Server.all = assemble_instance_hashes
+      assemble_instance_hashes.each do |instance_hash|
+        if server = EY::Server.by_hostname(instance_hash[:hostname])
+          server.roles = instance_hash[:roles]
+          server.name = instance_hash[:name]
+        else
+          EY::Server.add(instance_hash)
+        end
+      end
+
       EY::LoggedOutput.verbose = options[:verbose]
       EY::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-deploy.log")
 
