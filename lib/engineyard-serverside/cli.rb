@@ -39,7 +39,13 @@ module EY
                                   :desc     => "Web stack (so we can restart it correctly)"
 
     method_option :instances,     :type     => :array,
-                                  :desc     => "Instances in cluster"
+                                  :desc     => "Hostnames of instances to deploy to. ie instance1 instance2"
+
+    method_option :instance_roles,:type     => :hash,
+                                  :desc     => "Roles of instances, keyed on hostname. ie instance1:app_master,etc instance2:db,memcached ..."
+
+    method_option :instance_names,:type     => :hash,
+                                  :desc     => "Instance names, keyed on hostname. ie instance1:name1 instance2:name2"
 
     method_option :verbose,       :type     => :boolean,
                                   :default  => false,
@@ -48,7 +54,7 @@ module EY
 
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
-      EY::Server.all = parse_instances(options[:instances])
+      EY::Server.all = assemble_instance_hashes
       EY::LoggedOutput.verbose = options[:verbose]
       EY::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-deploy.log")
 
@@ -135,12 +141,13 @@ module EY
 
     private
 
-    def parse_instances(instance_strings)
-      instance_strings.map do |s|
-        tuple = s.split(/,/)
-        {:hostname => tuple[0], :role => tuple[1], :name => tuple[2]}
-      end
+    def assemble_instance_hashes
+      options[:instances].collect { |hostname|
+        { :hostname => hostname,
+          :roles => options[:instance_roles][hostname].to_s.split(','),
+          :name => options[:instance_names][hostname]
+        }
+      }
     end
-
   end
 end
