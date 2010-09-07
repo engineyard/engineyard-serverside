@@ -79,8 +79,8 @@ module EY
                                   :desc     => "Value for #release_path in hooks (mostly for internal coordination)",
                                   :aliases  => ["-r"]
 
-    method_option :current_role,  :type     => :string,
-                                  :desc     => "Value for #current_role in hooks"
+    method_option :current_roles, :type     => :array,
+                                  :desc     => "Value for #current_roles in hooks"
 
     method_option :framework_env, :type     => :string,
                                   :required => true,

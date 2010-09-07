@@ -130,6 +130,8 @@ describe "the deploy-hook API" do
         {:instance_role => 'app'},
         {:instance_role => 'db_master'},
         {:instance_role => 'db_slave'},
+        {:instance_role => 'multi_role,app'},
+        {:instance_role => 'multi,util'},
         {:instance_role => 'util', :name => "alpha"},
         {:instance_role => 'util', :name => "beta"},
         {:instance_role => 'util', :name => "gamma"},
@@ -138,7 +140,7 @@ describe "the deploy-hook API" do
 
     def where_code_runs_with(method, *args)
       scenarios.map do |s|
-        @callback_context.configuration[:current_role] = s[:instance_role]
+        @callback_context.configuration[:current_roles] = s[:instance_role].split(',')
         @callback_context.configuration[:current_name] = s[:name]
 
         if run_hook { send(method, *args) { 'ran!'} } == 'ran!'
@@ -154,17 +156,17 @@ describe "the deploy-hook API" do
     end
 
     it "#on_app_servers runs on app masters, app slaves, and solos" do
-      where_code_runs_with(:on_app_servers).should == %w(solo app_master app)
+      where_code_runs_with(:on_app_servers).should == %w(solo app_master app multi_role,app)
     end
 
     it "#on_app_servers_and_utilities does what it says on the tin" do
       where_code_runs_with(:on_app_servers_and_utilities).should ==
-        %w(solo app_master app util_alpha util_beta util_gamma)
+        %w(solo app_master app multi_role,app multi,util util_alpha util_beta util_gamma)
     end
 
     it "#on_utilities() runs on all utility instances" do
       where_code_runs_with(:on_utilities).should ==
-        %w(util_alpha util_beta util_gamma)
+        %w(multi,util util_alpha util_beta util_gamma)
     end
 
     it "#on_utilities('sometype') runs on only utilities of type 'sometype'" do
@@ -194,6 +196,12 @@ describe "the deploy-hook API" do
       desc = "spec/fixtures/invalid_hook.rb:1: syntax error, unexpected '^'"
       match = /\A.*#{Regexp.escape desc}\Z/
       @hook.syntax_error(hook_path).should =~ match
+    end
+  end
+
+  context "is compatible with older deploy hook scripts" do
+    it "#current_role returns the first role" do
+      run_hook(:current_roles => %w(a b)) { current_role.should == 'a' }
     end
   end
 end
