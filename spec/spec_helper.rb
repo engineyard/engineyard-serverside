@@ -4,11 +4,17 @@ Bundler.require :default, :test
 require 'pp'
 require 'engineyard-serverside'
 
+class EY::Metadata::DnaJsonProvider
+  def self.dna_json=(j)
+    @dna_json = j
+    @raw = nil
+    j
+  end
+end
+
 module EY
   def self.dna_json=(j)
-    @dna_json = j;
-    @node = nil
-    j
+    EY::Metadata::DnaJsonProvider.dna_json = j
   end
 
   module LoggedOutput
