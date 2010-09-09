@@ -53,7 +53,7 @@ describe "the EY::Deploy API" do
     end
 
     before(:each) do
-      @tempdir = `mktemp -d -t custom_deploy_spec`.strip
+      @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
       @config = EY::Deploy::Configuration.new('repository_cache' => @tempdir)
       @deploy = TestQuietDeploy.new(@config)
     end
