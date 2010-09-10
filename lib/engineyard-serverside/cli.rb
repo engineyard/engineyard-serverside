@@ -1,4 +1,5 @@
 require 'thor'
+require 'pathname'
 
 module EY
   class CLI < Thor
@@ -94,6 +95,68 @@ module EY
     def hook(hook_name)
       EY::DeployHook.new(options).run(hook_name)
     end
+
+
+    method_option :app,             :type     => :string,
+                                    :required => true,
+                                    :desc     => "Application to deploy",
+                                    :aliases  => ["-a"]
+
+    method_option :framework_env,   :type     => :string,
+                                    :required => true,
+                                    :desc     => "Ruby web framework environment",
+                                    :aliases  => ["-e"]
+
+    method_option :stack,           :type     => :string,
+                                    :desc     => "Web stack (so we can restart it correctly)"
+
+    method_option :instances,       :type     => :array,
+                                    :desc     => "Hostnames of instances to deploy to, e.g. --instances localhost app1 app2"
+
+    method_option :instance_roles,  :type     => :hash,
+                                    :default  => {},
+                                    :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
+
+    method_option :instance_names,  :type     => :hash,
+                                    :default  => {},
+                                    :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
+
+    method_option :verbose,         :type     => :boolean,
+                                    :default  => false,
+                                    :desc     => "Verbose output",
+                                    :aliases  => ["-v"]
+    desc "integrate", "Integrate other instances into this cluster"
+    def integrate
+      EY::LoggedOutput.verbose = options[:verbose]
+      EY::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-integrate.log")
+
+      EY::Server.load_all_from_array(assemble_instance_hashes)
+
+      invoke :propagate
+
+      app_dir = Pathname.new "/data/#{options[:app]}"
+      current_app_dir = app_dir + "current"
+
+      # so that we deploy to the same place there that we have here
+      deploy_options = options.dup
+      deploy_options[:release_path] = current_app_dir.realpath.to_s
+
+      # we have to deploy the same SHA there as here
+      deploy_options[:branch] = (current_app_dir + 'REVISION').read.strip
+
+      EY::Server.all.each do |server|
+        server.sync_directory app_dir
+        # we're just about to recreate this, so it has to be gone
+        # first. otherwise, non-idempotent deploy hooks could screw
+        # things up, and since we don't control deploy hooks, we must
+        # assume the worst.
+        server.run("rm -rf #{current_app_dir}")
+      end
+
+      # deploy local-ref to other instances into /data/$app/local-current
+      EY::Deploy.run(deploy_options.merge("default_task" => :cached_deploy))
+    end
+
 
     desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
     def install_bundler(version)

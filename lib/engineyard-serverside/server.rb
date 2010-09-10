@@ -74,10 +74,10 @@ module EY
       hostname == 'localhost'
     end
 
-    def push_code
+    def sync_directory(directory)
       return if local?
-      run "mkdir -p #{config.repository_cache}"
-      logged_system(%|rsync --delete -aq -e "#{ssh_command}" #{config.repository_cache}/ #{config.user}@#{hostname}:#{config.repository_cache}|)
+      run "mkdir -p #{directory}"
+      logged_system(%|rsync --delete -aq -e "#{ssh_command}" #{directory}/ #{config.user}@#{hostname}:#{directory}|)
     end
 
     def run(command)

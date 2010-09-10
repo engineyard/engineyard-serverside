@@ -11,6 +11,11 @@ module EY
     def deploy
       debug "Starting deploy at #{Time.now.asctime}"
       update_repository_cache
+      cached_deploy
+    end
+
+    def cached_deploy
+      debug "Deploying app from cached copy at #{Time.now.asctime}"
       require_custom_tasks
       push_code
 
@@ -92,7 +97,7 @@ module EY
     def push_code
       info "~> Pushing code to all servers"
       barrier *(EY::Server.all.map do |server|
-        need_later { server.push_code }
+        need_later { server.sync_directory(config.repository_cache) }
       end)
     end
 
