@@ -42,9 +42,11 @@ module EY
                                     :desc     => "Hostnames of instances to deploy to, e.g. --instances localhost app1 app2"
 
     method_option :instance_roles,  :type     => :hash,
+                                    :default  => {},
                                     :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
 
     method_option :instance_names,  :type     => :hash,
+                                    :default  => {},
                                     :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
 
     method_option :verbose,         :type     => :boolean,
