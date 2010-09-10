@@ -68,7 +68,7 @@ module EY
 
       private
       def on_roles(desired_roles)
-        yield if desired_roles.include?(current_role.to_s)
+        yield if desired_roles.any? { |role| current_roles.include?(role) }
       end
 
     end

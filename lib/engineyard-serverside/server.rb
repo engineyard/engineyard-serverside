@@ -2,12 +2,18 @@ require 'open-uri'
 require 'engineyard-serverside/logged_output'
 
 module EY
-  class Server < Struct.new(:hostname, :role, :name)
+  class Server < Struct.new(:hostname, :roles, :name)
     include LoggedOutput
+
+    class DuplicateHostname < StandardError
+      def initialize(hostname)
+        super "There is already an EY::Server with hostname '#{hostname}'"
+      end
+    end
 
     def initialize(*fields)
       super
-      self.role = self.role.to_sym
+      self.roles = self.roles.map { |r| r.to_sym } if self.roles
     end
 
     def self.config=(config)
@@ -20,33 +26,52 @@ module EY
 
     attr_writer :default_task
 
-    def self.from_roles(*roles)
-      roles = roles.flatten.compact
-      return all if !roles || roles.include?(:all) || roles.empty?
+    def self.from_roles(*want_roles)
+      want_roles = want_roles.flatten.compact.map{|r| r.to_sym}
+      return all if !want_roles || want_roles.include?(:all) || want_roles.empty?
 
       all.select do |s|
-        roles.include?(s.role) || roles.include?(s.name)
+        !(s.roles & want_roles).empty?
       end
     end
 
-    def self.from_hash(h)
-      new(h[:hostname], h[:role], h[:name])
+    def role
+      roles.first
     end
 
     def self.all
       @all
     end
 
-    def self.all=(server_hashes)
-      @all = server_hashes.map { |s| from_hash(s) }
+    def self.by_hostname(hostname)
+      all.find{|s| s.hostname == hostname}
+    end
+
+    def self.add(server_hash)
+      hostname = server_hash[:hostname]
+      if by_hostname(hostname)
+        raise DuplicateHostname.new(hostname)
+      end
+      server = new(hostname, server_hash[:roles], server_hash[:name])
+      @all << server
+      server
     end
 
     def self.current
       all.find {|s| s.local? }
     end
 
+    def self.reset
+      @all = []
+    end
+    reset
+
+    def roles=(roles)
+      super(roles.map{|r| r.to_sym})
+    end
+
     def local?
-      [:app_master, :solo].include?(role)
+      hostname == 'localhost'
     end
 
     def push_code

@@ -84,6 +84,10 @@ module EY
       node['instance_role']
     end
 
+    def current_role
+      current_roles.first
+    end
+
     def copy_exclude
       @copy_exclude ||= Array(configuration.fetch("copy_exclude", []))
     end

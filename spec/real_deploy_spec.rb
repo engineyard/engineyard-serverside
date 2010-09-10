@@ -105,7 +105,8 @@ describe "deploying an application" do
     @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
 
     # set up EY::Server like we're on a solo
-    EY::Server.all = [{:hostname => 'dontcare', :role => 'solo'}]
+    EY::Server.reset
+    EY::Server.add(:hostname => 'localhost', :roles => %w[solo])
 
     # run a deploy
     config = EY::Deploy::Configuration.new({

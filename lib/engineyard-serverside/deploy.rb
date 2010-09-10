@@ -230,7 +230,7 @@ module EY
         run Escape.shell_command(base_command) do |server, cmd|
           per_instance_args = [
             '--framework-env', c.environment.to_s,
-            '--current-role', server.role.to_s,
+            '--current-roles', server.roles.join(' '),
             '--config', c.to_json,
           ]
           per_instance_args << '--current-name' << server.name.to_s if server.name
