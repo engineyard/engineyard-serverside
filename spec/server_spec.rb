@@ -6,14 +6,13 @@ describe EY::Server do
   end
 
   context ".all" do
-    it "starts off containing localhost" do
-      EY::Server.all.size.should == 1
-      EY::Server.all.first.hostname.should == 'localhost'
+    it "starts off empty" do
+      EY::Server.all.should be_empty
     end
 
     it "is added to with .add" do
       EY::Server.add(:hostname => 'otherhost', :roles => %w[fire water])
-      EY::Server.all.size.should == 2
+      EY::Server.all.size.should == 1
 
       EY::Server.by_hostname('otherhost').should_not be_nil
     end
@@ -42,8 +41,7 @@ describe EY::Server do
 
   context ".from_roles" do
     before(:each) do
-      @localhost = EY::Server.current
-      @localhost.roles = [:ice, :cold]
+      @localhost = EY::Server.add(:hostname => 'localhost', :roles => [:ice, :cold])
       @host1 = EY::Server.add(:hostname => 'host1', :roles => [:fire, :water])
       @host2 = EY::Server.add(:hostname => 'host2', :roles => [:ice, :water])
     end

@@ -65,7 +65,7 @@ module EY
     end
 
     def self.reset
-      @all = [new('localhost', [], nil)]
+      @all = []
     end
     reset
 

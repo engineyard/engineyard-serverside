@@ -38,8 +38,8 @@ module EY
     method_option :stack,           :type     => :string,
                                     :desc     => "Web stack (so we can restart it correctly)"
 
-    method_option :other_instances, :type     => :array,
-                                    :desc     => "Hostnames of instances to deploy to. ie instance1 instance2. Localhost is implicitly present."
+    method_option :instances,       :type     => :array,
+                                    :desc     => "Hostnames of instances to deploy to, e.g. --instances localhost app1 app2"
 
     method_option :instance_roles,  :type     => :hash,
                                     :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
