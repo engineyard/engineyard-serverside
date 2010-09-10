@@ -39,10 +39,6 @@ module EY
       roles.first
     end
 
-    def self.from_hash(h)
-      new(h[:hostname], h[:roles], h[:name])
-    end
-
     def self.all
       @all
     end
@@ -52,12 +48,13 @@ module EY
     end
 
     def self.add(server_hash)
-      if by_hostname(server_hash[:hostname])
-        raise DuplicateHostname.new(server_hash[:hostname])
+      hostname = server_hash[:hostname]
+      if by_hostname(hostname)
+        raise DuplicateHostname.new(hostname)
       end
-      new_guy = from_hash(server_hash)
-      @all << new_guy
-      new_guy
+      server = new(hostname, server_hash[:roles], server_hash[:name])
+      @all << server
+      server
     end
 
     def self.current

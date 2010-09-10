@@ -57,12 +57,7 @@ module EY
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
       assemble_instance_hashes.each do |instance_hash|
-        if server = EY::Server.by_hostname(instance_hash[:hostname])
-          server.roles = instance_hash[:roles]
-          server.name = instance_hash[:name]
-        else
-          EY::Server.add(instance_hash)
-        end
+        EY::Server.add(instance_hash)
       end
 
       EY::LoggedOutput.verbose = options[:verbose]
