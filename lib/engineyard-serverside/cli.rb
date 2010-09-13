@@ -57,15 +57,15 @@ module EY
 
     desc "deploy", "Deploy code from /data/<app>"
     def deploy(default_task=:deploy)
-      assemble_instance_hashes.each do |instance_hash|
-        EY::Server.add(instance_hash)
-      end
+      config = EY::Deploy::Configuration.new(options)
+      EY::Server.load_all_from_array(assemble_instance_hashes(config))
 
       EY::LoggedOutput.verbose = options[:verbose]
       EY::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-deploy.log")
 
       invoke :propagate
-      EY::Deploy.run(options.merge("default_task" => default_task))
+
+      EY::Deploy.new(config).send(default_task)
     end
 
     method_option :app,           :type     => :string,
@@ -130,19 +130,21 @@ module EY
       EY::LoggedOutput.verbose = options[:verbose]
       EY::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-integrate.log")
 
-      EY::Server.load_all_from_array(assemble_instance_hashes)
-
-      invoke :propagate
-
       app_dir = Pathname.new "/data/#{options[:app]}"
       current_app_dir = app_dir + "current"
 
       # so that we deploy to the same place there that we have here
-      deploy_options = options.dup
-      deploy_options[:release_path] = current_app_dir.realpath.to_s
+      integrate_options = options.dup
+      integrate_options[:release_path] = current_app_dir.realpath.to_s
 
       # we have to deploy the same SHA there as here
-      deploy_options[:branch] = (current_app_dir + 'REVISION').read.strip
+      integrate_options[:branch] = (current_app_dir + 'REVISION').read.strip
+
+      config = EY::Deploy::Configuration.new(integrate_options)
+
+      EY::Server.load_all_from_array(assemble_instance_hashes(config))
+
+      invoke :propagate
 
       EY::Server.all.each do |server|
         server.sync_directory app_dir
@@ -154,7 +156,7 @@ module EY
       end
 
       # deploy local-ref to other instances into /data/$app/local-current
-      EY::Deploy.run(deploy_options.merge("default_task" => :cached_deploy))
+      EY::Deploy.new(config).cached_deploy
     end
 
 
@@ -173,15 +175,13 @@ module EY
       end
     end
 
-    desc "propagate", "Propagate the engineyard-serverside gem to the other instances in the cluster. This will install exactly version #{VERSION} and remove other versions if found."
+    desc "propagate", "Propagate the engineyard-serverside gem to the other instances in the cluster. This will install exactly version #{VERSION}."
     def propagate
       config          = EY::Deploy::Configuration.new
       gem_filename    = "engineyard-serverside-#{VERSION}.gem"
       local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
       remote_gem_file = File.join(Dir.tmpdir, gem_filename)
       gem_binary      = File.join(Gem.default_bindir, 'gem')
-
-      EY::Server.config = config
 
       barrier(*(EY::Server.all.find_all do |server|
         !server.local?            # of course this machine has it
@@ -209,11 +209,12 @@ module EY
 
     private
 
-    def assemble_instance_hashes
+    def assemble_instance_hashes(config)
       options[:instances].collect { |hostname|
         { :hostname => hostname,
           :roles => options[:instance_roles][hostname].to_s.split(','),
-          :name => options[:instance_names][hostname]
+          :name => options[:instance_names][hostname],
+          :user => config.user,
         }
       }
     end

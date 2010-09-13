@@ -2,7 +2,7 @@ require 'open-uri'
 require 'engineyard-serverside/logged_output'
 
 module EY
-  class Server < Struct.new(:hostname, :roles, :name)
+  class Server < Struct.new(:hostname, :roles, :name, :user)
     include LoggedOutput
 
     class DuplicateHostname < StandardError
@@ -14,14 +14,6 @@ module EY
     def initialize(*fields)
       super
       self.roles = self.roles.map { |r| r.to_sym } if self.roles
-    end
-
-    def self.config=(config)
-      @@config = config
-    end
-
-    def config
-      @@config
     end
 
     attr_writer :default_task
@@ -39,6 +31,12 @@ module EY
       roles.first
     end
 
+    def self.load_all_from_array(server_hashes)
+      server_hashes.each do |instance_hash|
+        add(instance_hash)
+      end
+    end
+
     def self.all
       @all
     end
@@ -52,7 +50,7 @@ module EY
       if by_hostname(hostname)
         raise DuplicateHostname.new(hostname)
       end
-      server = new(hostname, server_hash[:roles], server_hash[:name])
+      server = new(hostname, server_hash[:roles], server_hash[:name], server_hash[:user])
       @all << server
       server
     end
@@ -77,14 +75,14 @@ module EY
     def sync_directory(directory)
       return if local?
       run "mkdir -p #{directory}"
-      logged_system(%|rsync --delete -aq -e "#{ssh_command}" #{directory}/ #{config.user}@#{hostname}:#{directory}|)
+      logged_system(%|rsync --delete -aq -e "#{ssh_command}" #{directory}/ #{user}@#{hostname}:#{directory}|)
     end
 
     def run(command)
       if local?
         logged_system(command)
       else
-        logged_system(ssh_command + " " + Escape.shell_command(["#{config.user}@#{hostname}", command]))
+        logged_system(ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command]))
       end
     end
 

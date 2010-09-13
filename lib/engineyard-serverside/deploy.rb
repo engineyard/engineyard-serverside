@@ -323,16 +323,11 @@ module EY
   end   # DeployBase
 
   class Deploy < DeployBase
-    def self.new(opts={})
+    def self.new(config)
       # include the correct fetch strategy
-      include EY::Strategies.const_get(opts.strategy)::Helpers
+      include EY::Strategies.const_get(config.strategy)::Helpers
       super
     end
 
-    def self.run(opts={})
-      conf = EY::Deploy::Configuration.new(opts)
-      EY::Server.config = conf
-      new(conf).send(opts["default_task"])
-    end
   end
 end
