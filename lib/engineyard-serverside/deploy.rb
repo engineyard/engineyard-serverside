@@ -87,9 +87,9 @@ module EY
       end
     end
 
-    def run_with_callbacks(task, *args)
+    def run_with_callbacks(task)
       callback(:"before_#{task}")
-      send(task, *args)
+      send(task)
       callback(:"after_#{task}")
     end
 
@@ -153,13 +153,14 @@ module EY
     # task
     def rollback
       if c.all_releases.size > 1
-        c.release_path = c.previous_release
+        rolled_back_release = c.latest_release
+        c.release_path = c.previous_release(rolled_back_release)
 
         revision = File.read(File.join(c.release_path, 'REVISION')).strip
         info "~> Rolling back to previous release: #{short_log_message(revision)}"
 
-        run_with_callbacks(:symlink, c.previous_release)
-        cleanup_current_release
+        run_with_callbacks(:symlink)
+        sudo "rm -rf #{rolled_back_release}"
         bundle
         info "~> Restarting with previous release"
         with_maintenance_page { run_with_callbacks(:restart) }
@@ -273,12 +274,8 @@ module EY
     def with_failed_release_cleanup
       yield
     rescue Exception
-      cleanup_current_release
-      raise
-    end
-
-    def cleanup_current_release
       sudo "rm -rf #{c.release_path}"
+      raise
     end
 
     def warn_about_missing_lockfile
