@@ -48,6 +48,7 @@ describe "Deploying" do
       it "restarts the app servers using monit" do
         monit_cmd = @deployer.commands.grep(/^monit/).first
         monit_cmd.should == "monit restart all -g #{@deploy_config['app']}"
+        @deployer.command_roles[monit_cmd].should == [ :app_master, :app, :solo ]
       end
 
       it "uses a maintenance page when migrating" do
@@ -56,6 +57,20 @@ describe "Deploying" do
         # TODO: Kind of pedestrian tests, could be better
         maint_page_cmds.grep(/^cp/).size.should == 1
         maint_page_cmds.grep(/^rm/).size.should == 1
+      end
+    end
+
+    describe "using nginx_unicorn" do
+      before(:all) {
+        @deploy_config = { "stack" => "nginx_unicorn", "app" => "rainbowfarts" }
+        @deployer = run_test_deploy
+      }
+
+      it_should_behave_like "all deploys"
+
+      it "restarts the app servers" do
+        restart_cmd = @deployer.commands.grep(%r!/engineyard/bin/app_!).first
+        restart_cmd.should == "/engineyard/bin/app_#{@deploy_config['app']} deploy"
       end
     end
   end

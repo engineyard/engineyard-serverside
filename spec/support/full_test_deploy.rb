@@ -1,11 +1,12 @@
 class FullTestDeploy < EY::Deploy
-  attr_reader :infos, :debugs, :commands
+  attr_reader :infos, :debugs, :commands, :command_roles
 
   def initialize(*)
     super
     @infos = []
     @debugs = []
     @commands = []
+    @command_roles = {}
   end
 
   # stfu
@@ -26,12 +27,13 @@ class FullTestDeploy < EY::Deploy
   def run(cmd)
     # $stderr.puts(cmd)
     @commands << cmd
+    @command_roles[cmd] = @roles
     super unless skip_command?(cmd)
   end
 
   def skip_command?(cmd)
     case cmd
-      when /^monit/
+      when /^monit/, %r!/engineyard/bin/!
         true
       else
         false
