@@ -285,6 +285,11 @@ module EY
       raise
     end
 
+    def deploy_delegate
+      @deploy_delegate ||= DeployDelegate.for(self)
+    end
+    alias :delegate :deploy_delegate
+
     def warn_about_missing_lockfile
       info "!>"
       info "!> WARNING: Gemfile.lock is missing!"
