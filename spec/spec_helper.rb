@@ -1,8 +1,12 @@
 $LOAD_PATH.push File.expand_path("../lib", File.dirname(__FILE__))
+$LOAD_PATH.push File.expand_path("support", File.dirname(__FILE__))
 
 Bundler.require :default, :test
 require 'pp'
 require 'engineyard-serverside'
+
+require 'full_test_deploy'
+require 'full_deploy_helpers'
 
 class EY::Metadata::DnaJsonProvider
   def self.dna_json=(j)

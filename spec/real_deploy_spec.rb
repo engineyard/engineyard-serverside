@@ -1,147 +1,62 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-module EY::Strategies::IntegrationSpec
-  module Helpers
+describe "Deploying" do
+  include FullDeployHelpers
 
-    def update_repository_cache
-      cached_copy = File.join(c.shared_path, 'cached-copy')
+  shared_examples_for "all deploys" do
+    it "creates a REVISION file" do
+      File.exist?(File.join(@deploy_dir, 'current', 'REVISION')).should be_true
+    end
 
-      FileUtils.mkdir_p(cached_copy)
-      Dir.chdir(cached_copy) do
-        `echo "this is my file; there are many like it, but this one is mine" > file`
-        File.open('Gemfile', 'w') do |f|
-          f.write <<-EOF
-source :gemcutter
+    it "runs 'bundle install' with --deployment" do
+      bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+      bundle_install_cmd.should_not be_nil
+      bundle_install_cmd.should include('--deployment')
+    end
 
-gem "bundler", "~> 1.0.0.rc.6"
-gem "rake"
-EOF
-        end
+    it "creates binstubs somewhere out of the way" do
+      File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
+    end
 
-        File.open("Gemfile.lock", "w") do |f|
-          f.write <<-EOF
-GEM
-  remote: http://rubygems.org/
-  specs:
-    rake (0.8.7)
+    it "has the binstubs in the path when migrating" do
+      File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
+    end
+  end
 
-PLATFORMS
-  ruby
+  describe "on appcloud" do
+    describe "using nginx_passenger" do
+      before(:all) {
+        @deploy_config = { "stack" => "nginx_passenger" }
+        @deployer = run_test_deploy
+      }
 
-DEPENDENCIES
-  bundler (~> 1.0.0.rc.6)
-  rake
-EOF
-        end
+      it_should_behave_like "all deploys"
+
+      it "restarts the app servers" do
+        File.exist?(File.join(@deploy_dir, 'current', 'tmp', 'restart.txt')).should be_true
       end
     end
 
-    def create_revision_file_command
-      "echo 'revision, yo' > #{c.release_path}/REVISION"
-    end
+    describe "using nginx_mongrel" do
+      before(:all) {
+        @deploy_config = { "stack" => "nginx_mongrel", "app" => "mine" }
+        @deployer = run_test_deploy
+      }
 
-    def short_log_message(revision)
-      "FONDLED THE CODE"
-    end
+      it_should_behave_like "all deploys"
 
+      it "restarts the app servers using monit" do
+        monit_cmd = @deployer.commands.grep(/^monit/).first
+        monit_cmd.should == "monit restart all -g #{@deploy_config['app']}"
+      end
+
+      it "uses a maintenance page when migrating" do
+        maint_page_cmds = @deployer.commands.grep(/maintenance/)
+
+        # TODO: Kind of pedestrian tests, could be better
+        maint_page_cmds.grep(/^cp/).size.should == 1
+        maint_page_cmds.grep(/^rm/).size.should == 1
+      end
+    end
   end
-end
-
-describe "deploying an application" do
-  class FullTestDeploy < EY::Deploy
-    attr_reader :infos, :debugs, :commands
-
-    def initialize(*)
-      super
-      @infos = []
-      @debugs = []
-      @commands = []
-    end
-
-    # stfu
-    def info(msg)
-      @infos << msg
-    end
-
-    # no really, stfu
-    def debug(msg)
-      @debugs << msg
-    end
-
-    # passwordless sudo is neither guaranteed nor desired
-    def sudo(cmd)
-      run(cmd)
-    end
-
-    def run(cmd)
-      # $stderr.puts(cmd)
-      @commands << cmd
-      super
-    end
-
-    # we're probably running this spec under bundler, but a real
-    # deploy does not
-    def bundle
-      my_env = ENV.to_hash
-
-      ENV.delete("BUNDLE_GEMFILE")
-      ENV.delete("BUNDLE_BIN_PATH")
-
-      result = super
-
-      ENV.replace(my_env)
-      result
-    end
-
-    def get_bundler_installer(lockfile)
-      installer = super
-      installer.options << ' --quiet'   # stfu already!
-      installer
-    end
-
-  end
-
-  before(:all) do
-    @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
-
-    # set up EY::Server like we're on a solo
-    EY::Server.reset
-    EY::Server.add(:hostname => 'localhost', :roles => %w[solo])
-
-    # run a deploy
-    config = EY::Deploy::Configuration.new({
-        "strategy" => "IntegrationSpec",
-        "deploy_to" => @deploy_dir,
-        "group" => `id -gn`.strip,
-        "stack" => 'nginx_passenger',
-        "migrate" => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating"
-      })
-
-    $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    @deployer = FullTestDeploy.new(config)
-    @deployer.deploy
-  end
-
-  it "creates a REVISION file" do
-    File.exist?(File.join(@deploy_dir, 'current', 'REVISION')).should be_true
-  end
-
-  it "restarts the app servers" do
-    File.exist?(File.join(@deploy_dir, 'current', 'tmp', 'restart.txt')).should be_true
-  end
-
-  it "runs 'bundle install' with --deployment" do
-    bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
-    bundle_install_cmd.should_not be_nil
-    bundle_install_cmd.should include('--deployment')
-  end
-
-  it "creates binstubs somewhere out of the way" do
-    File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
-  end
-
-  it "has the binstubs in the path when migrating" do
-    File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
-  end
-
 end
