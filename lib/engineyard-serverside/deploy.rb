@@ -44,6 +44,13 @@ module EY
       raise
     end
 
+    def restart_with_maintenance_page
+      require_custom_tasks
+      conditionally_enable_maintenance_page
+      restart
+      disable_maintenance_page
+    end
+
     def enable_maintenance_page
       maintenance_page_candidates = [
         "public/maintenance.html.custom",

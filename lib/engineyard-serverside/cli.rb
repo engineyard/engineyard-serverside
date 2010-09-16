@@ -158,6 +158,41 @@ module EY
       EY::Deploy.new(config).cached_deploy
     end
 
+    method_option :app,             :type     => :string,
+                                    :required => true,
+                                    :desc     => "Application to deploy",
+                                    :aliases  => ["-a"]
+
+    method_option :stack,           :type     => :string,
+                                    :desc     => "Web stack (so we can restart it correctly)"
+
+    method_option :instances,       :type     => :array,
+                                    :desc     => "Hostnames of instances to deploy to, e.g. --instances localhost app1 app2"
+
+    method_option :instance_roles,  :type     => :hash,
+                                    :default  => {},
+                                    :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
+
+    method_option :instance_names,  :type     => :hash,
+                                    :default  => {},
+                                    :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
+
+    method_option :verbose,         :type     => :boolean,
+                                    :default  => false,
+                                    :desc     => "Verbose output",
+                                    :aliases  => ["-v"]
+    desc "restart", "Restart app servers, conditionally enabling maintenance page"
+    def restart
+      EY::LoggedOutput.verbose = options[:verbose]
+      EY::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-restart.log")
+
+      config = EY::Deploy::Configuration.new(options)
+      EY::Server.load_all_from_array(assemble_instance_hashes(config))
+
+      invoke :propagate
+
+      EY::Deploy.new(config).restart_with_maintenance_page
+    end
 
     desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
     def install_bundler(version)
