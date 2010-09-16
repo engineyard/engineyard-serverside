@@ -29,7 +29,6 @@ module EY
                                     :aliases  => ["-a"]
 
     method_option :framework_env,   :type     => :string,
-                                    :required => true,
                                     :desc     => "Ruby web framework environment",
                                     :aliases  => ["-e"]
 
