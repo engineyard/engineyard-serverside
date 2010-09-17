@@ -32,12 +32,12 @@ module EY
 
       def restart_roles
         # Implement in subclass, return roles of instances where restart should be run
-        raise "Subclasses of DeployDelegate::Base must implement #restart_roles"
+        raise "#{self.class} has not implemented #restart_roles"
       end
 
       def restart
         # Implement in subclass, perform necessary actions to restart app instances
-        raise "Subclasses of DeployDelegate::Base must implement #restart"
+        raise "#{self.class} has not implemented #restart"
       end
     end
   end

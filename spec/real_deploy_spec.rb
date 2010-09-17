@@ -57,6 +57,10 @@ describe "Deploying" do
         # TODO: Kind of pedestrian tests, could be better
         maint_page_cmds.grep(/^cp/).size.should == 1
         maint_page_cmds.grep(/^rm/).size.should == 1
+
+        maint_page_cmds.each { |c|
+          @deployer.command_roles[c].should == [ :app_master, :app, :solo ]
+        }
       end
     end
 
