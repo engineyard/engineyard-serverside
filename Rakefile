@@ -46,6 +46,12 @@ def bump
   new_version
 end
 
+def run_commands(*cmds)
+  cmds.flatten.each do |c|
+    system(c) or raise "Command "#{c}" failed to execute; aborting!"
+  end
+end
+
 desc "Bump version of this gem"
 task :bump do
   ver = bump
@@ -55,16 +61,19 @@ end
 desc "Release gem"
 task :release do
   new_version = bump
-  system("git add lib/engineyard-serverside/version.rb")
-  system("git commit -m 'Bump version for release #{new_version}'")
-  system("git tag v#{new_version}")
-
-  system("gem build engineyard-serverside.gemspec")
+  run_commands(
+    "git add lib/engineyard-serverside/version.rb",
+    "git commit -m 'Bump version for release #{new_version}'",
+    "gem build engineyard-serverside.gemspec")
 
   load 'lib/engineyard-serverside/version.rb'
   bump
-  system("git add lib/engineyard-serverside/version.rb")
-  system("git commit -m 'Add .pre for next release'")
+
+  run_commands(
+    "git add lib/engineyard-serverside/version.rb",
+    "git commit -m 'Add .pre for next release'",
+    "git tag v#{new_version} HEAD^")
+
 
   puts '********************************************************************************'
   puts
