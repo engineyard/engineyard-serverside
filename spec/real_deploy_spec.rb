@@ -6,6 +6,8 @@ module EY::Strategies::IntegrationSpec
     def update_repository_cache
       cached_copy = File.join(c.shared_path, 'cached-copy')
 
+      FileUtils.mkdir_p(File.join(c.shared_path, 'config'))
+
       FileUtils.mkdir_p(cached_copy)
       Dir.chdir(cached_copy) do
         `echo "this is my file; there are many like it, but this one is mine" > file`
@@ -74,9 +76,13 @@ describe "deploying an application" do
     end
 
     def run(cmd)
-      # $stderr.puts(cmd)
+      #$stderr.puts(cmd)
       @commands << cmd
       super
+    end
+
+    def restart
+      FileUtils.touch("#{c.release_path}/restart")
     end
 
     # we're probably running this spec under bundler, but a real
@@ -110,11 +116,12 @@ describe "deploying an application" do
 
     # run a deploy
     config = EY::Deploy::Configuration.new({
-        "strategy" => "IntegrationSpec",
+        "strategy"  => "IntegrationSpec",
         "deploy_to" => @deploy_dir,
-        "group" => `id -gn`.strip,
-        "stack" => 'nginx_passenger',
-        "migrate" => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating"
+        "group"     => `id -gn`.strip,
+        "stack"     => 'nginx_passenger',
+        "migrate"   => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
+        'app'       => 'foo'
       })
 
     $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
@@ -127,7 +134,7 @@ describe "deploying an application" do
   end
 
   it "restarts the app servers" do
-    File.exist?(File.join(@deploy_dir, 'current', 'tmp', 'restart.txt')).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'restart')).should be_true
   end
 
   it "runs 'bundle install' with --deployment" do

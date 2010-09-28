@@ -82,9 +82,13 @@ module EY
     end
 
     def conditionally_enable_maintenance_page
-      if c.migrate? || c.stack == "nginx_mongrel"
+      if c.migrate? || required_downtime_stack?
         enable_maintenance_page
       end
+    end
+
+    def required_downtime_stack?
+      %w[ nginx_mongrel glassfish ].include? c.stack
     end
 
     def disable_maintenance_page
@@ -113,21 +117,13 @@ module EY
       @restart_failed = true
       info "~> Restarting app servers"
       roles :app_master, :app, :solo do
-        restart_command = case c.stack
-        when "nginx_unicorn"
-          pidfile = "/var/run/engineyard/unicorn_#{c.app}.pid"
-          condition = "[ -e #{pidfile} ] && [ ! -d /proc/`cat #{pidfile}` ]"
-          run("if #{condition}; then rm -f #{pidfile}; fi")
-          run("/engineyard/bin/app_#{c.app} deploy")
-        when "nginx_mongrel"
-          sudo("monit restart all -g #{c.app}")
-        when "nginx_passenger"
-          run("touch #{c.current_path}/tmp/restart.txt")
-        else
-          raise "Unknown stack #{c.stack}; restart failed!"
-        end
+        run(restart_command)
       end
       @restart_failed = false
+    end
+
+    def restart_command
+      "/engineyard/bin/app_#{c.app} deploy"
     end
 
     # task
@@ -211,6 +207,7 @@ module EY
         "mkdir -p #{release_to_link}/config",
         "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
         "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
+        "find #{c.shared_path}/config -type f -exec ln -s {} #{release_to_link}/config \\;",
         "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
         "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
       ].each do |cmd|
