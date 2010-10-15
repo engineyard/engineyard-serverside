@@ -62,6 +62,7 @@ module EY
         in_git_work_tree do
           (logged_system("git checkout -q '#{to_checkout}'") ||
             logged_system("git reset -q --hard '#{to_checkout}'")) &&
+            logged_system("git submodule sync") &&
             logged_system("git submodule update --init") &&
             logged_system("git clean -dfq")
         end
