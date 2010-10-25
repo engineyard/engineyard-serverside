@@ -4,9 +4,9 @@ module EY
   module Strategies
     class Git
       module Helpers
+
         def update_repository_cache
-          strategy.fetch
-          unless strategy.checkout
+          unless strategy.fetch && strategy.checkout
             abort "*** [Error] Git could not checkout (#{strategy.to_checkout}) ***"
           end
         end
@@ -132,6 +132,7 @@ module EY
 
         ENV['GIT_SSH'] = @git_ssh.path
       end
+
     end
   end
 end
