@@ -99,9 +99,9 @@ module EY
     end
 
     def run_with_callbacks(task)
-      callback(:"before_#{task}")
+      callback("before_#{task}")
       send(task)
-      callback(:"after_#{task}")
+      callback("after_#{task}")
     end
 
     # task
