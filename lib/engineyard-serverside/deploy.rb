@@ -24,7 +24,7 @@ module EY
 
       with_failed_release_cleanup do
         create_revision_file
-        bundle
+        run_with_callbacks(:bundle)
         symlink_configs
         conditionally_enable_maintenance_page
         run_with_callbacks(:migrate)
