@@ -6,6 +6,17 @@ module EY::Strategies::IntegrationSpec
     def update_repository_cache
       cached_copy = File.join(c.shared_path, 'cached-copy')
 
+      deploy_hook_dir = File.join(cached_copy, 'deploy')
+      FileUtils.mkdir_p(deploy_hook_dir)
+      %w[bundle migrate symlink restart].each do |action|
+        %w[before after].each do |prefix|
+          hook = "#{prefix}_#{action}"
+          File.open(File.join(deploy_hook_dir, "#{hook}.rb"), 'w') do |f|
+            f.write(%Q{run 'touch "#{c.release_path}/#{hook}.ran"'})
+          end
+        end
+      end
+
       FileUtils.mkdir_p(File.join(c.shared_path, 'config'))
 
       FileUtils.mkdir_p(cached_copy)
@@ -76,9 +87,22 @@ describe "deploying an application" do
     end
 
     def run(cmd)
-      #$stderr.puts(cmd)
       @commands << cmd
       super
+    end
+
+    def version_specifier
+      # Normally, the deploy task invokes the hook task by executing
+      # the rubygems-generated wrapper (it's what's in $PATH). It
+      # specifies the version to make sure that the pieces don't get
+      # out of sync. However, in test mode, there's no
+      # rubygems-generated wrapper, and so the hook task doesn't get
+      # run because thor thinks we're trying to invoke the _$VERSION_
+      # task instead, which doesn't exist.
+      #
+      # By stripping that out, we can get the hooks to actually run
+      # inside this test.
+      nil
     end
 
     def restart
@@ -116,12 +140,13 @@ describe "deploying an application" do
 
     # run a deploy
     config = EY::Deploy::Configuration.new({
-        "strategy"  => "IntegrationSpec",
-        "deploy_to" => @deploy_dir,
-        "group"     => `id -gn`.strip,
-        "stack"     => 'nginx_passenger',
-        "migrate"   => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
-        'app'       => 'foo'
+        "strategy"      => "IntegrationSpec",
+        "deploy_to"     => @deploy_dir,
+        "group"         => `id -gn`.strip,
+        "stack"         => 'nginx_passenger',
+        "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
+        'app'           => 'foo',
+        'framework_env' => 'staging'
       })
 
     $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
@@ -151,4 +176,14 @@ describe "deploying an application" do
     File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
   end
 
+  it "runs all the hooks" do
+    File.exist?(File.join(@deploy_dir, 'current', 'before_bundle.ran' )).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'after_bundle.ran'  )).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'before_migrate.ran')).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'after_migrate.ran' )).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'before_symlink.ran')).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'after_symlink.ran' )).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'before_restart.ran')).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'after_restart.ran' )).should be_true
+  end
 end

@@ -26,7 +26,11 @@ module EY
   end
 
   def self.dna_json
-    @dna_json ||= `sudo cat /etc/chef/dna.json`
+    @dna_json ||= if File.exist?('/etc/chef/dna.json')
+                    `sudo cat /etc/chef/dna.json`
+                  else
+                    {}.to_json
+                  end
   end
 
   RemoteFailure = Class.new StandardError

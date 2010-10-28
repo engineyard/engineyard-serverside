@@ -232,14 +232,8 @@ module EY
     def callback(what)
       @callbacks_reached ||= true
       if File.exist?("#{c.release_path}/deploy/#{what}.rb")
-        base_command = [$0, "_#{VERSION}_", 'hook', what.to_s,
-          '--app', config.app.to_s,
-          '--release-path', config.release_path.to_s,
-        ]
-
-        run Escape.shell_command(base_command) do |server, cmd|
+        run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
           per_instance_args = [
-            '--framework-env', c.environment.to_s,
             '--current-roles', server.roles.join(' '),
             '--config', c.to_json,
           ]
@@ -250,6 +244,19 @@ module EY
     end
 
     protected
+
+    def base_callback_command_for(what)
+      [$0, version_specifier, 'hook', what.to_s,
+        '--app', config.app.to_s,
+        '--release-path', config.release_path.to_s,
+        '--framework-env', c.environment.to_s,
+      ].compact
+    end
+
+    def version_specifier
+      "_#{VERSION}_"
+    end
+
 
     def puts_deploy_failure
       if @cleanup_failed
