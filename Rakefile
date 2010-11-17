@@ -24,10 +24,10 @@ task :install_on, [:instance] do |t, args|
   instance = args.instance
 
   system("gem build engineyard-serverside.gemspec")
-  gem = Dir["*.gem"].last   # hopefully true
-  abort "Failed to build gem; aborting!" unless gem
-  system("scp #{gem} #{instance}:")
-  system("ssh #{instance} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gem} --no-rdoc --no-ri'")
+  gemname = Dir["*.gem"].last   # hopefully true
+  abort "Failed to build gem; aborting!" unless gemname
+  system("scp #{gemname} #{instance}: ")
+  system("ssh #{instance} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gemname} --no-rdoc --no-ri'")
 end
 
 def bump
@@ -67,6 +67,7 @@ task :release do
     "git commit -m 'Bump version for release #{new_version}'",
     "gem build engineyard-serverside.gemspec")
 
+  #will raise a warning, but needed to load the new version after the last call to 'bump'
   load 'lib/engineyard-serverside/version.rb'
   bump
 
