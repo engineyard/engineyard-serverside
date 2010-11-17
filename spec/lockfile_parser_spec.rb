@@ -24,7 +24,27 @@ describe "the bundler version retrieved from the lockfile" do
     get_version('1.0.0.rc.1-with-bundler').should == '1.0.0.rc.1'
   end
 
-  it "raises an error if it can't parse the file" do
-    lambda { get_version('not-a-lockfile') }.should raise_error
+  it "gets the version from a 1.0.6 lockfile w/dependency on 1.0.6" do
+    # This is a real, customer-generated lockfile
+    get_version('1.0.6-with-bundler').should == '1.0.6'
   end
+
+  it "gets the version from a 1.0.6 lockfile w/dependency on 1.0.6 (bundled ~> 1.0.0)" do
+    # This is a real, customer-generated lockfile
+    get_version('1.0.6-with-any-bundler').should == '1.0.6'
+  end
+
+  it "gets the version from a 1.0.6 lockfile w/o dependency" do
+    # This is a real, customer-generated lockfile
+    get_version('1.0.6-no-bundler').should == '1.0.6'
+  end
+
+  it "raises an error if it can't parse the file" do
+    lambda { get_version('not-a-lockfile') }.should raise_error(RuntimeError, /Unknown lockfile format/)
+  end
+
+  it "raises an error if it can't parse evil yaml" do
+    lambda { get_version('evil-yaml') }.should raise_error(RuntimeError, /Unknown lockfile format/)
+  end
+
 end
