@@ -9,6 +9,7 @@ require 'rake/rdoctask'
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'
+require 'engineyard-serverside/version'
 
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'rdoc'

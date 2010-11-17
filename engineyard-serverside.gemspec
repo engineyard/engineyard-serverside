@@ -2,6 +2,7 @@ lib = File.expand_path('../lib/', __FILE__)
 $:.unshift lib unless $:.include?(lib)
 require 'bundler'
 require 'engineyard-serverside'
+require 'engineyard-serverside/version'
 
 Gem::Specification.new do |s|
   s.name = "engineyard-serverside"

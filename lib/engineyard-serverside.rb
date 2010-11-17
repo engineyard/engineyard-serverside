@@ -9,7 +9,6 @@ require 'escape'
 require 'json'
 require 'dataflow'
 
-require 'version'
 require 'strategies/git'
 require 'task'
 require 'server'
