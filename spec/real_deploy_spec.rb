@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-module EY::Strategies::IntegrationSpec
+module EY::Serverside::Strategies::IntegrationSpec
   module Helpers
 
     def update_repository_cache
@@ -61,7 +61,7 @@ EOF
 end
 
 describe "deploying an application" do
-  class FullTestDeploy < EY::Deploy
+  class FullTestDeploy < EY::Serverside::Deploy
     attr_reader :infos, :debugs, :commands
 
     def initialize(*)
@@ -134,12 +134,12 @@ describe "deploying an application" do
   before(:all) do
     @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
 
-    # set up EY::Server like we're on a solo
-    EY::Server.reset
-    EY::Server.add(:hostname => 'localhost', :roles => %w[solo])
+    # set up EY::Serverside::Server like we're on a solo
+    EY::Serverside::Server.reset
+    EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
 
     # run a deploy
-    config = EY::Deploy::Configuration.new({
+    config = EY::Serverside::Deploy::Configuration.new({
         "strategy"      => "IntegrationSpec",
         "deploy_to"     => @deploy_dir,
         "group"         => `id -gn`.strip,
@@ -149,9 +149,15 @@ describe "deploying an application" do
         'framework_env' => 'staging'
       })
 
-    $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
+    @binpath = $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     @deployer = FullTestDeploy.new(config)
     @deployer.deploy
+  end
+
+  it "runs the right bundler command" do
+    install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
+    install_bundler_command_ran.should_not be_nil
+    install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.0"
   end
 
   it "creates a REVISION file" do

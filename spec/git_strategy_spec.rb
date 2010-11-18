@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe "the git deploy strategy" do
   subject do
-    EY::Strategies::Git.new(:repo => File.expand_path("../fixtures/gitrepo/.git", __FILE__),
+    EY::Serverside::Strategies::Git.new(:repo => File.expand_path("../fixtures/gitrepo/.git", __FILE__),
                             :repository_cache => File.expand_path("../fixtures/gitrepo", __FILE__),
                             :ref => "master"
                             )

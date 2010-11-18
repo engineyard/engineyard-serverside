@@ -1,8 +1,8 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-describe "the EY::Deploy API" do
+describe "the EY::Serverside::Deploy API" do
   it "calls tasks in the right order" do
-    class TestDeploy < EY::Deploy
+    class TestDeploy < EY::Serverside::Deploy
       # This happens before require_custom_tasks, so it's not
       # overrideable. That's why it's not in @call_order.
       def update_repository_cache() end
@@ -31,7 +31,7 @@ describe "the EY::Deploy API" do
       def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
     end
 
-    td = TestDeploy.new(EY::Deploy::Configuration.new)
+    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new)
     td.deploy
     td.call_order.should == %w(
       push_code
@@ -48,13 +48,13 @@ describe "the EY::Deploy API" do
   end
 
   describe "task overrides" do
-    class TestQuietDeploy < EY::Deploy
+    class TestQuietDeploy < EY::Serverside::Deploy
       def puts(*_) 'quiet' end
     end
 
     before(:each) do
       @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
-      @config = EY::Deploy::Configuration.new('repository_cache' => @tempdir)
+      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
       @deploy = TestQuietDeploy.new(@config)
     end
 

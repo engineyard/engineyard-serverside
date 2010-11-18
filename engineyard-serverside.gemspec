@@ -6,7 +6,7 @@ require 'engineyard-serverside/version'
 
 Gem::Specification.new do |s|
   s.name = "engineyard-serverside"
-  s.version = EY::VERSION
+  s.version = EY::Serverside::VERSION
   s.platform = Gem::Platform::RUBY
   s.author = "EY Cloud Team"
   s.email = "cloud@engineyard.com"

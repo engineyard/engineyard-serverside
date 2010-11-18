@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-class TestRestartDeploy < EY::Deploy
+class TestRestartDeploy < EY::Serverside::Deploy
   attr_reader :call_order
   def initialize(*a)
     super
@@ -13,14 +13,14 @@ class TestRestartDeploy < EY::Deploy
   def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
 end
 
-describe "EY::Deploy#restart_with_maintenance_page" do
+describe "EY::Serverside::Deploy#restart_with_maintenance_page" do
 
   class TestRestartWithMaintenancePage < TestRestartDeploy
     def conditionally_enable_maintenance_page()  @call_order << 'conditionally_enable_maintenance_page'  end
   end
 
   it "puts up the maintenance page if necessary, restarts, and takes down the maintenance page" do
-    deployer = TestRestartWithMaintenancePage.new(EY::Deploy::Configuration.new)
+    deployer = TestRestartWithMaintenancePage.new(EY::Serverside::Deploy::Configuration.new)
     deployer.restart_with_maintenance_page
     deployer.call_order.should == %w(
       require_custom_tasks
@@ -34,7 +34,7 @@ end
 describe "glassfish stack" do
 
   it "requires a maintenance page" do
-    config = EY::Deploy::Configuration.new(:stack => 'glassfish')
+    config = EY::Serverside::Deploy::Configuration.new(:stack => 'glassfish')
     deployer = TestRestartDeploy.new(config)
     deployer.restart_with_maintenance_page
     deployer.call_order.should include('enable_maintenance_page')

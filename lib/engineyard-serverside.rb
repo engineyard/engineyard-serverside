@@ -1,4 +1,3 @@
-$LOAD_PATH.push(File.expand_path("engineyard-serverside", File.dirname(__FILE__)))
 $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/open4/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
@@ -9,44 +8,49 @@ require 'escape'
 require 'json'
 require 'dataflow'
 
-require 'strategies/git'
-require 'task'
-require 'server'
-require 'deploy'
-require 'deploy_hook'
-require 'lockfile_parser'
-require 'bundle_installer'
-require 'cli'
-require 'configuration'
+require 'engineyard-serverside/version'
+require 'engineyard-serverside/strategies/git'
+require 'engineyard-serverside/task'
+require 'engineyard-serverside/server'
+require 'engineyard-serverside/deploy'
+require 'engineyard-serverside/deploy_hook'
+require 'engineyard-serverside/lockfile_parser'
+require 'engineyard-serverside/bundle_installer'
+require 'engineyard-serverside/cli'
+require 'engineyard-serverside/configuration'
+require 'engineyard-serverside/deprecation'
 
 module EY
-  def self.node
-    @node ||= deep_indifferentize(JSON.parse(dna_json))
-  end
-
-  def self.dna_json
-    @dna_json ||= if File.exist?('/etc/chef/dna.json')
-                    `sudo cat /etc/chef/dna.json`
-                  else
-                    {}.to_json
-                  end
-  end
-
-  RemoteFailure = Class.new StandardError
-
-  private
-  def self.deep_indifferentize(thing)
-    if thing.kind_of?(Hash)
-      indifferent_hash = Thor::CoreExt::HashWithIndifferentAccess.new
-      thing.each do |k, v|
-        indifferent_hash[k] = deep_indifferentize(v)
-      end
-      indifferent_hash
-    elsif thing.kind_of?(Array)
-      thing.map {|x| deep_indifferentize(x)}
-    else
-      thing
+  module Serverside
+    
+    def self.node
+      @node ||= deep_indifferentize(JSON.parse(dna_json))
     end
-  end
 
+    def self.dna_json
+      @dna_json ||= if File.exist?('/etc/chef/dna.json')
+                      `sudo cat /etc/chef/dna.json`
+                    else
+                      {}.to_json
+                    end
+    end
+
+    RemoteFailure = Class.new StandardError
+
+    private
+    def self.deep_indifferentize(thing)
+      if thing.kind_of?(Hash)
+        indifferent_hash = Thor::CoreExt::HashWithIndifferentAccess.new
+        thing.each do |k, v|
+          indifferent_hash[k] = deep_indifferentize(v)
+        end
+        indifferent_hash
+      elsif thing.kind_of?(Array)
+        thing.map {|x| deep_indifferentize(x)}
+      else
+        thing
+      end
+    end
+    
+  end
 end

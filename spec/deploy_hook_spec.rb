@@ -2,8 +2,8 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe "the deploy-hook API" do
   before(:each) do
-    @hook = EY::DeployHook.new(options)
-    @callback_context = EY::DeployHook::CallbackContext.new(@hook.config)
+    @hook = EY::Serverside::DeployHook.new(options)
+    @callback_context = EY::Serverside::DeployHook::CallbackContext.new(@hook.config)
   end
 
   def run_hook(options={}, &blk)
@@ -66,7 +66,7 @@ describe "the deploy-hook API" do
 
   context "the @node ivar" do
     before(:each) do
-      EY.dna_json = {
+      EY::Serverside.dna_json = {
         'instance_role' => 'solo',
         'applications' => {
           'myapp' => {

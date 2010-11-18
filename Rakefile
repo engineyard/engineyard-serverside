@@ -13,7 +13,7 @@ require 'engineyard-serverside/version'
 
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "engineyard-serverside #{EY::VERSION}"
+  rdoc.title = "engineyard-serverside #{EY::Serverside::VERSION}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
   rdoc.rdoc_files.exclude('lib/vendor/**/*.rb')
@@ -31,12 +31,12 @@ task :install_on, [:instance] do |t, args|
 end
 
 def bump
-  version_file = "module EY\n  VERSION = '_VERSION_GOES_HERE_'\nend\n"
+  version_file = "module EY\n  module Serverside\n    VERSION = '_VERSION_GOES_HERE_'\n  end\nend\n"
 
-  new_version = if EY::VERSION =~ /\.pre$/
-                  EY::VERSION.gsub(/\.pre$/, '')
+  new_version = if EY::Serverside::VERSION =~ /\.pre$/
+                  EY::Serverside::VERSION.gsub(/\.pre$/, '')
                 else
-                  digits = EY::VERSION.scan(/(\d+)/).map { |x| x.first.to_i }
+                  digits = EY::Serverside::VERSION.scan(/(\d+)/).map { |x| x.first.to_i }
                   digits[-1] += 1
                   digits.join('.') + ".pre"
                 end

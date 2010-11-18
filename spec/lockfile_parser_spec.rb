@@ -3,12 +3,12 @@ require File.dirname(__FILE__) + '/spec_helper'
 describe "the bundler version retrieved from the lockfile" do
   def get_version(file)
     full_path = File.expand_path("../support/lockfiles/#{file}", __FILE__)
-    @config = EY::Deploy::Configuration.new('deploy_to' => 'dontcare')
-    EY::DeployBase.new(@config).get_bundler_installer(full_path).version
+    @config = EY::Serverside::Deploy::Configuration.new('deploy_to' => 'dontcare')
+    EY::Serverside::DeployBase.new(@config).get_bundler_installer(full_path).version
   end
 
   it "returns the default version for an 0.9 lockfile without a bundler dependency" do
-    get_version('0.9-no-bundler').should == EY::DeployBase.new(@config).send(:default_09_bundler)
+    get_version('0.9-no-bundler').should == EY::Serverside::DeployBase.new(@config).send(:default_09_bundler)
   end
 
   it "gets the version from an 0.9 lockfile with a bundler dependency" do
@@ -16,7 +16,7 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   it "returns the default version for a 1.0 lockfile without a bundler dependency" do
-    get_version('1.0-no-bundler').should == EY::DeployBase.new(@config).send(:default_10_bundler)
+    get_version('1.0-no-bundler').should == EY::Serverside::DeployBase.new(@config).send(:default_10_bundler)
   end
 
   it "gets the version from a 1.0.0.rc.1 lockfile w/dependency on 1.0.0.rc.1" do
