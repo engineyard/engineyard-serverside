@@ -142,7 +142,7 @@ module EY
 
           sudo "#{$0} _#{EY::Serverside::VERSION}_ install_bundler #{bundler_installer.version}"
 
-          run "cd #{c.release_path} && bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
+          run "exec ssh-agent bash -c 'ssh-add #{c.ssh_private_key} && cd #{c.release_path} && bundle _#{bundler_installer.version}_ install #{bundler_installer.options}'"
         end
       end
 

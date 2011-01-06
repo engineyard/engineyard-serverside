@@ -112,6 +112,7 @@ describe "deploying an application" do
     # we're probably running this spec under bundler, but a real
     # deploy does not
     def bundle
+      `ssh-keygen -N "" -f #{c.ssh_private_key}`
       my_env = ENV.to_hash
 
       ENV.delete("BUNDLE_GEMFILE")
@@ -140,13 +141,14 @@ describe "deploying an application" do
 
     # run a deploy
     config = EY::Serverside::Deploy::Configuration.new({
-        "strategy"      => "IntegrationSpec",
-        "deploy_to"     => @deploy_dir,
-        "group"         => `id -gn`.strip,
-        "stack"         => 'nginx_passenger',
-        "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
-        'app'           => 'foo',
-        'framework_env' => 'staging'
+        "strategy"        => "IntegrationSpec",
+        "deploy_to"       => @deploy_dir,
+        "group"           => `id -gn`.strip,
+        "stack"           => 'nginx_passenger',
+        "migrate"         => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
+        'app'             => 'foo',
+        'framework_env'   => 'staging',
+        'ssh_private_key' => File.join(@deploy_dir, "ssh_key")
       })
 
     @binpath = $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
