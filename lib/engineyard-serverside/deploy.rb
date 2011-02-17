@@ -327,7 +327,7 @@ module EY
       end
 
       def default_09_bundler() "0.9.26" end
-      def default_10_bundler() "1.0.0"  end
+      def default_10_bundler() "1.0.10" end
 
     end   # DeployBase
 

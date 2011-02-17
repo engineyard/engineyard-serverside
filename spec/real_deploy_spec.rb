@@ -157,7 +157,7 @@ describe "deploying an application" do
   it "runs the right bundler command" do
     install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
     install_bundler_command_ran.should_not be_nil
-    install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.0"
+    install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.10"
   end
 
   it "creates a REVISION file" do
