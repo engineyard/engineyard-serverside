@@ -81,6 +81,10 @@ module EY
         configuration['group'] || user
       end
 
+      def ssh_private_key
+        configuration['ssh_private_key'] || "/home/#{user}/.ssh/#{app}-deploy-key"
+      end
+
       def role
         node['instance_role']
       end
