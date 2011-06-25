@@ -119,7 +119,7 @@ module EY
       end
 
       def framework_envs
-        "RAILS_ENV=#{environment} RACK_ENV=#{environment} MERB_ENV=#{environment}"
+        "RAILS_ENV=#{environment} RACK_ENV=#{environment} APP_ENV=#{environment} MERB_ENV=#{environment}"
       end
 
       def current_path
