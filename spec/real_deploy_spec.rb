@@ -79,6 +79,16 @@ describe "deploying an application" do
       clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
       clear_bundle_cmd.should_not be_nil
     end
+
+    it "creates binstubs somewhere out of the way" do
+      File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
+    end
+  end
+
+  it "runs 'npm install'" do
+    pending
+    bundle_install_cmd = @deployer.commands.grep(/npm install/).first
+    bundle_install_cmd.should_not be_nil
   end
 
   it "generates a database.yml file" do

@@ -41,6 +41,11 @@ module EY
         EY::Serverside::LoggedOutput.verbose?
       end
 
+      # TODO color output
+      def error(msg)
+        info(msg)
+      end
+
       def info(msg)
         with_logfile do |log|
           Tee.new($stdout, log) << (msg + "\n")
