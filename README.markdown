@@ -32,7 +32,9 @@ Bundler doesn't work for ruby 1.8.6, so for the moment until we upgrade ey_resin
     gem install rake -v 0.8.7
     gem install rspec -v 1.3.0
     rake
-    
+
+Running the tests now requires nodejs and the npm package manager installed too.
+
 ### Debugging
 
 Want ruby-debug? You need some specific versions of things (https://gist.github.com/1034765)
@@ -40,3 +42,4 @@ Want ruby-debug? You need some specific versions of things (https://gist.github.
     gem install linecache -v 0.45
     gem install ruby-debug-base -v 0.10
     gem install ruby-debug -v 0.10
+

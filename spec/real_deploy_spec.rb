@@ -46,6 +46,21 @@ DEPENDENCIES
   rake
 EOF
         end
+
+        File.open('package.json', 'w') do |f|
+          f.write <<-EOF
+{
+    "name": "application-name"
+  , "version": "0.0.1"
+  , "private": true
+  , "dependencies": {
+      "express": "2.3.12"
+    , "jade": ">= 0.0.1"
+  }
+}
+EOF
+        end
+
       end
     end
 
@@ -137,8 +152,16 @@ describe "deploying an application" do
       clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
       clear_bundle_cmd.should_not be_nil
     end
+
+    it "creates binstubs somewhere out of the way" do
+      File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
+    end
   end
 
+  it "runs 'npm install'" do
+    bundle_install_cmd = @deployer.commands.grep(/npm install/).first
+    bundle_install_cmd.should_not be_nil
+  end
   it "generates a database.yml file" do
     File.exist?(File.join(@deploy_dir, 'current', 'config', 'database.yml')).should be_true
   end

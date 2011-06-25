@@ -166,6 +166,15 @@ module EY
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
         end
+        if File.exist?("#{c.release_path}/package.json")
+          unless `which npm` =~ /npm/
+            error "~> package.json detected, BUT npm not installed"
+          else
+            info "~> package.json detected, installing npm packages"
+          
+            run "cd #{c.release_path} && npm install"
+          end
+        end
       end
 
       # task
