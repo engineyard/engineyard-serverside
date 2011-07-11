@@ -149,6 +149,12 @@ describe "deploying an application" do
         'framework_env' => 'staging'
       })
 
+    # pretend there is a shared bundled_gems directory
+    FileUtils.mkdir_p(File.join(@deploy_dir, 'shared', 'bundled_gems'))
+    %w(RUBY_VERSION SYSTEM_VERSION).each do |name| 
+      File.open(File.join(@deploy_dir, 'shared', 'bundled_gems', name), "w") { |f| f.write("old\n") }
+    end
+
     @binpath = $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     @deployer = FullTestDeploy.new(config)
     @deployer.deploy
@@ -172,6 +178,24 @@ describe "deploying an application" do
     bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
     bundle_install_cmd.should_not be_nil
     bundle_install_cmd.should include('--deployment')
+  end
+
+  it "creates a ruby version file" do
+    File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
+  end
+
+  it "creates a system version file" do
+    File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
+  end
+
+  it "removes bundled_gems directory if the ruby version changed" do
+    clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
+    clear_bundle_cmd.should_not be_nil
+  end
+
+  it "removes bundled_gems directory if the system version changed" do
+    clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
+    clear_bundle_cmd.should_not be_nil
   end
 
   it "creates binstubs somewhere out of the way" do
