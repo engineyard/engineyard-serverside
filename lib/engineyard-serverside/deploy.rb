@@ -328,9 +328,9 @@ module EY
         parser = LockfileParser.new(File.read(lockfile))
         case parser.lockfile_version
         when :bundler09
-          bundler_09_installer(parser.bundler_version || default_09_bundler)
+          bundler_09_installer(parser.bundler_version)
         when :bundler10
-          bundler_10_installer(parser.bundler_version || default_10_bundler)
+          bundler_10_installer(parser.bundler_version)
         else
           raise "Unknown lockfile version #{parser.lockfile_version}"
         end
@@ -345,10 +345,6 @@ module EY
         BundleInstaller.new(version,
           "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test")
       end
-
-      def default_09_bundler() "0.9.26" end
-      def default_10_bundler() "1.0.10" end
-
     end   # DeployBase
 
     class Deploy < DeployBase

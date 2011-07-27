@@ -9,8 +9,6 @@ module EY
         @lockfile_version, @bundler_version = Parse106.new(lockfile_contents).parse
       end
 
-      private
-
       class BaseParser
         def initialize(contents)
           @contents = contents
@@ -21,6 +19,8 @@ module EY
       end
 
       class Parse09 < BaseParser
+        DEFAULT = "0.9.26"
+
         def parse
           from_yaml = safe_yaml_load(@contents)
           unless from_yaml.is_a?(Hash)
@@ -33,7 +33,7 @@ module EY
               spec.values.first["version"]
             end
           end.compact.first
-          [:bundler09, bundler_version]
+          [:bundler09, bundler_version || DEFAULT]
         end
         def safe_yaml_load(loadable)
           YAML.load(loadable) #won't always raise... soemtimes parses the contents as 1 big string
@@ -43,6 +43,8 @@ module EY
       end
 
       class Parse10 < Parse09
+        DEFAULT = "1.0.10"
+
         def parse
           unless @contents.index(/^DEPENDENCIES/)
             return super
@@ -64,9 +66,21 @@ module EY
             exit(1)
           end
 
-          result = dep_section.scan(/^\s*bundler\s*\(=\s*([^\)]+)\)/).first
-          bundler_version = result ? result.first : nil
-          [:bundler10, bundler_version]
+          result = dep_section.scan(/^\s*bundler\s*\((>?=)\s*([^\)]+)\)/).first
+          bundler_version = result ? result.last : nil
+          version_qualifier = result ? result.first : nil
+          [:bundler10, fetch_version(bundler_version, version_qualifier)]
+        end
+
+        def fetch_version(bundler_version, version_qualifier)
+          return bundler_version || DEFAULT unless version_qualifier
+
+          case version_qualifier
+          when '='
+            bundler_version
+          when '>='
+            Gem::Version.new(bundler_version) > Gem::Version.new(DEFAULT) ? bundler_version : DEFAULT
+          end
         end
       end
 
@@ -93,7 +107,7 @@ module EY
           end
 
           result = meta_section.scan(/^\s*version:\s*(.*)$/).first
-          bundler_version = result ? result.first : nil
+          bundler_version = result ? result.first : DEFAULT
           [:bundler10, bundler_version]
         end
       end
