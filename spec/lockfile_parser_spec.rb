@@ -60,12 +60,25 @@ describe "the bundler version retrieved from the lockfile" do
       subject.fetch_version('1.0.1', '=').should == '1.0.1'
     end
 
+    it "uses the default version when we get a pessimistic qualifier and is lower than the default version" do
+      subject.fetch_version('1.0.1', '~>').should == '1.0.10'
+    end
+
+    it "uses the given version when we get a pessimistic qualifier that doesn't match the default version" do
+      subject.fetch_version('1.1.0', '~>').should == '1.1.0'
+    end
+
     it "uses the given version when it's geater of equal than the default version" do
       subject.fetch_version('1.1.0', '>=').should == '1.1.0'
     end
 
     it "uses the default version when the given version is lower" do
       subject.fetch_version('1.0.1', '>=').should == EY::Serverside::LockfileParser::Parse10::DEFAULT
+    end
+
+    it "selects only the first version expression" do
+      scan = subject.scan_bundler 'bundler (>=1.0.1, <2.0.0)'
+      scan.last.should == '1.0.1'
     end
   end
 end

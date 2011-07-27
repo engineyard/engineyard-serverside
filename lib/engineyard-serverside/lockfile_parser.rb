@@ -66,7 +66,7 @@ module EY
             exit(1)
           end
 
-          result = dep_section.scan(/^\s*bundler\s*\((>?=)\s*([^\)]+)\)/).first
+          result = scan_bundler(dep_section)
           bundler_version = result ? result.last : nil
           version_qualifier = result ? result.first : nil
           [:bundler10, fetch_version(bundler_version, version_qualifier)]
@@ -80,7 +80,15 @@ module EY
             bundler_version
           when '>='
             Gem::Version.new(bundler_version) > Gem::Version.new(DEFAULT) ? bundler_version : DEFAULT
+          when '~>'
+            bundler_gem_version = Gem::Version.new(bundler_version)
+            recommendation = bundler_gem_version.spermy_recommendation.gsub(/~>\s*(.+)$/, '\1.')
+            DEFAULT.start_with?(recommendation) && Gem::Version.new(DEFAULT) > bundler_gem_version ? DEFAULT : bundler_version
           end
+        end
+
+        def scan_bundler(dep_section)
+          dep_section.scan(/^\s*bundler\s*\((>?=|~>)\s*([^,\)]+)/).first
         end
       end
 
