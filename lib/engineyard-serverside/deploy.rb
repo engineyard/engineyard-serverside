@@ -26,6 +26,7 @@ module EY
         with_failed_release_cleanup do
           create_revision_file
           run_with_callbacks(:bundle)
+          precompile_assets
           symlink_configs
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
@@ -121,6 +122,15 @@ module EY
           run(restart_command)
         end
         @restart_failed = false
+      end
+
+      def precompile_assets
+        assets_testdir="#{c.release_path}/app/assets"
+        if File.directory?(assets_testdir)
+          roles :app_master, :app, :solo do
+            run "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake precompile:assets"
+          end
+        end
       end
 
       def restart_command
