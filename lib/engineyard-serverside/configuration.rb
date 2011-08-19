@@ -89,6 +89,31 @@ module EY
         current_roles.first
       end
 
+      def bundler_options
+        @bundler_options ||= configuration.fetch("bundler", default_bundler_options)
+      end
+
+      def bundler_group_exclude
+        @without_gemfile_groups ||= Array(bundler_options["group_exclude"])
+      end
+
+      def default_bundler_options
+        {
+          "group_exclude" => ["development", "test"]
+        }
+      end
+
+      def bundler_group_exclusions(bundler_version)
+        case bundler_version
+        when /^0\.9/
+          bundler_group_exclude.collect{|g| "--without=#{g}"}.join(" ")
+        when /^1\.0/
+          "--without #{bundler_group_exclude.join(" ")}"
+        else
+          "--without #{bundler_group_exclude.join(" ")}"
+        end
+      end
+
       def copy_exclude
         @copy_exclude ||= Array(configuration.fetch("copy_exclude", []))
       end

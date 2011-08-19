@@ -133,6 +133,7 @@ describe "deploying an application" do
 
   before(:all) do
     @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
+    @custom_without_group = "bob"
 
     # set up EY::Serverside::Server like we're on a solo
     EY::Serverside::Server.reset
@@ -146,7 +147,8 @@ describe "deploying an application" do
         "stack"         => 'nginx_passenger',
         "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
         'app'           => 'foo',
-        'framework_env' => 'staging'
+        'framework_env' => 'staging',
+        "bundler"       => {"group_exclude" => ["development", "test", @custom_without_group]}
       })
 
     # pretend there is a shared bundled_gems directory
@@ -178,6 +180,12 @@ describe "deploying an application" do
     bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
     bundle_install_cmd.should_not be_nil
     bundle_install_cmd.should include('--deployment')
+  end
+
+  it "runs 'bundle install' with custom --without options" do
+    bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+    bundle_install_cmd.should_not be_nil
+    bundle_install_cmd.should include("--without development test #{@custom_without_group}")
   end
 
   it "creates a ruby version file" do
