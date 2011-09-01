@@ -3,4 +3,3 @@ pkg
 .bundle
 *.gem
 spec/fixtures/gitrepo
-Gemfile.lock

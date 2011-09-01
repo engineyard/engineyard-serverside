@@ -34,7 +34,7 @@ module EY
                       {}.to_json
                     end
     end
-
+    
     RemoteFailure = Class.new StandardError
 
     private
