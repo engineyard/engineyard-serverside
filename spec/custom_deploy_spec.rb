@@ -1,5 +1,4 @@
 require File.dirname(__FILE__) + '/spec_helper'
-require 'tmpdir'
 require 'fileutils'
 
 describe "the EY::Serverside::Deploy API" do
@@ -31,9 +30,12 @@ describe "the EY::Serverside::Deploy API" do
       def cleanup_old_releases()                   @call_order << 'cleanup_old_releases'                   end
       def conditionally_enable_maintenance_page()  @call_order << 'conditionally_enable_maintenance_page'  end
       def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
+      def generate_database_yml(path)              @call_order << 'generate_database_yml'                  end
     end
 
-    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new)
+    setup_dna_json
+
+    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new('app' => 'myfirstapp'))
     td.deploy
     td.call_order.should == %w(
       push_code
@@ -41,6 +43,7 @@ describe "the EY::Serverside::Deploy API" do
       create_revision_file
       bundle
       symlink_configs
+      generate_database_yml
       conditionally_enable_maintenance_page
       migrate
       symlink
