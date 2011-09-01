@@ -1,4 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper'
+require 'tmpdir'
+require 'fileutils'
 
 describe "the EY::Serverside::Deploy API" do
   it "calls tasks in the right order" do
@@ -53,15 +55,17 @@ describe "the EY::Serverside::Deploy API" do
     end
 
     before(:each) do
-      @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
+      @tempdir = Dir.mktmpdir('custom_deploy_spec.XXXXX')
       @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
       @deploy = TestQuietDeploy.new(@config)
     end
 
+    after do
+      FileUtils.rm_rf(@tempdir)
+    end
+
     def write_eydeploy(relative_path, contents = "def got_new_methods() 'from the file on disk' end")
-      FileUtils.mkdir_p(File.join(
-          @tempdir,
-          File.dirname(relative_path)))
+      FileUtils.mkdir_p(File.join(@tempdir, File.dirname(relative_path)))
 
       File.open(File.join(@tempdir, relative_path), 'w') do |f|
         f.write contents
