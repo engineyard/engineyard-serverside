@@ -57,6 +57,8 @@ module EY
 
       desc "deploy", "Deploy code from /data/<app>"
       def deploy(default_task=:deploy)
+        EY::Serverside::EnvVarsHook.run(options[:app])
+
         config = EY::Serverside::Deploy::Configuration.new(options)
         EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
 
@@ -93,6 +95,8 @@ module EY
 
       desc "hook [NAME]", "Run a particular deploy hook"
       def hook(hook_name)
+        EY::Serverside::EnvVarsHook.run(options[:app])
+
         EY::Serverside::DeployHook.new(options).run(hook_name)
       end
 
@@ -127,6 +131,8 @@ module EY
                                       :aliases  => ["-v"]
       desc "integrate", "Integrate other instances into this cluster"
       def integrate
+        EY::Serverside::EnvVarsHook.run(options[:app])
+
         EY::Serverside::LoggedOutput.verbose = options[:verbose]
         EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-integrate.log")
 
@@ -184,6 +190,8 @@ module EY
                                       :aliases  => ["-v"]
       desc "restart", "Restart app servers, conditionally enabling maintenance page"
       def restart
+        EY::Serverside::EnvVarsHook.run(options[:app])
+
         EY::Serverside::LoggedOutput.verbose = options[:verbose]
         EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-restart.log")
 
@@ -197,6 +205,8 @@ module EY
 
       desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
       def install_bundler(version)
+        EY::Serverside::EnvVarsHook.run(options[:app])
+
         egrep_escaped_version = version.gsub(/\./, '\.')
         # the grep "bundler " is so that gems like bundler08 don't get
         # their versions considered too
@@ -212,6 +222,8 @@ module EY
 
       desc "propagate", "Propagate the engineyard-serverside gem to the other instances in the cluster. This will install exactly version #{EY::Serverside::VERSION}."
       def propagate
+        EY::Serverside::EnvVarsHook.run(options[:app])
+
         config          = EY::Serverside::Deploy::Configuration.new
         gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
         local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)

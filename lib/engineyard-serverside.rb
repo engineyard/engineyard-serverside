@@ -19,6 +19,7 @@ require 'engineyard-serverside/bundle_installer'
 require 'engineyard-serverside/cli'
 require 'engineyard-serverside/configuration'
 require 'engineyard-serverside/deprecation'
+require 'engineyard-serverside/env_vars_hook'
 
 module EY
   module Serverside
