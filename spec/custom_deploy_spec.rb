@@ -26,6 +26,7 @@ describe "the EY::Serverside::Deploy API" do
       def bundle()                                 @call_order << 'bundle'                                 end
       def symlink_configs()                        @call_order << 'symlink_configs'                        end
       def migrate()                                @call_order << 'migrate'                                end
+      def compile_assets()                         @call_order << 'compile_assets'                         end
       def symlink()                                @call_order << 'symlink'                                end
       def restart()                                @call_order << 'restart'                                end
       def cleanup_old_releases()                   @call_order << 'cleanup_old_releases'                   end
@@ -43,6 +44,7 @@ describe "the EY::Serverside::Deploy API" do
       symlink_configs
       conditionally_enable_maintenance_page
       migrate
+      compile_assets
       symlink
       restart
       disable_maintenance_page

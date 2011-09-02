@@ -26,11 +26,13 @@ module EY
         with_failed_release_cleanup do
           create_revision_file
           run_with_callbacks(:bundle)
-          precompile_assets
           symlink_configs
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
+          run_with_callbacks(:compile_assets)
           callback(:before_symlink)
+          # We don't use run_with_callbacks for symlink because we need
+          # to clean up if it fails.
           symlink
         end
 
@@ -124,15 +126,6 @@ module EY
         @restart_failed = false
       end
 
-      def precompile_assets
-        assets_testdir="#{c.release_path}/app/assets"
-        if File.directory?(assets_testdir)
-          roles :app_master, :app, :solo do
-            run "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake precompile:assets"
-          end
-        end
-      end
-
       def restart_command
         "/engineyard/bin/app_#{c.app} deploy"
       end
@@ -173,6 +166,18 @@ module EY
           run "cd #{c.release_path} && bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
+        end
+      end
+
+      def compile_assets
+        roles :app_master, :app, :solo do
+          rails_app = "#{c.release_path}/config/application.rb"
+          asset_dir = "#{c.release_path}/app/assets"
+          if File.exists?(rails_app) && File.directory?(asset_dir)
+            cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
+            info "~> Precompiling assets for Rails: #{cmd}"
+            run(cmd)
+          end
         end
       end
 

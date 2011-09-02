@@ -8,7 +8,7 @@ module EY::Serverside::Strategies::IntegrationSpec
 
       deploy_hook_dir = File.join(cached_copy, 'deploy')
       FileUtils.mkdir_p(deploy_hook_dir)
-      %w[bundle migrate symlink restart].each do |action|
+      %w[bundle migrate symlink restart compile_assets].each do |action|
         %w[before after].each do |prefix|
           hook = "#{prefix}_#{action}"
           File.open(File.join(deploy_hook_dir, "#{hook}.rb"), 'w') do |f|
@@ -211,6 +211,8 @@ describe "deploying an application" do
     File.exist?(File.join(@deploy_dir, 'current', 'after_bundle.ran'  )).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'before_migrate.ran')).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'after_migrate.ran' )).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'before_compile_assets.ran')).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'after_compile_assets.ran' )).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'before_symlink.ran')).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'after_symlink.ran' )).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'before_restart.ran')).should be_true
