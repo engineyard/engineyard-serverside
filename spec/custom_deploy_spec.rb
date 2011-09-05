@@ -32,8 +32,10 @@ describe "the EY::Serverside::Deploy API" do
       def conditionally_enable_maintenance_page()  @call_order << 'conditionally_enable_maintenance_page'  end
       def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
     end
+    
+    setup_dna_json
 
-    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new)
+    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new('app' => 'myfirstapp'))
     td.deploy
     td.call_order.should == %w(
       push_code

@@ -1,0 +1,8 @@
+--- 
+specs-1: spec spec/real_deploy_spec.rb spec/deploy_hook_spec.rb spec/git_strategy_spec.rb spec/server_spec.rb spec/restart_spec.rb spec/custom_deploy_spec.rb spec/deprecation_spec.rb spec/lockfile_parser_spec.rb
+specs-2: spec spec/generate_configs_spec.rb:91
+specs-3: spec spec/generate_configs_spec.rb:113
+specs-4: spec spec/generate_configs_spec.rb:128
+specs-5: spec spec/generate_configs_spec.rb:157
+specs-6: spec spec/generate_configs_spec.rb:187
+specs-7: spec spec/generate_configs_spec.rb:191

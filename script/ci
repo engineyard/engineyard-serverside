@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Ripped off from AWSM
+
+set -x
+set -e
+
+unset -v RUBYOPT
+unset -v BUNDLE_GEMFILE
+unset -v GEM_HOME
+export HOME=`pwd`/home
+export GEM_HOME=$HOME/.gem
+export GEM_PATH=$HOME/.gembin
+export TEST_GROUP=$$
+export UI="ci"
+
+mkdir -p $HOME $HOME/.gembin $GEM_HOME
+
+env
+pwd
+
+gem install bundler --no-rdoc --no-ri -v 1.0.10
+
+gem env
+
+unit="$1"
+
+command=`ruby ./script/unit_assign.rb $unit`
+
+time bundle install --path $GEM_HOME --binstubs --deployment
+time bundle exec $command
