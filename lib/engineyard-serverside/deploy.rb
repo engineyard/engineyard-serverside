@@ -338,12 +338,12 @@ module EY
       public :get_bundler_installer
 
       def bundler_09_installer(version)
-        BundleInstaller.new(version, '--without=development --without=test')
+        BundleInstaller.new(version, c.bundler_group_exclusions(version))
       end
 
       def bundler_10_installer(version)
         BundleInstaller.new(version,
-          "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test")
+          "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} #{c.bundler_group_exclusions(version)}")
       end
     end   # DeployBase
 
