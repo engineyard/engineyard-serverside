@@ -50,7 +50,7 @@ namespace :partitioner do
     ci = (File.exist?('build_units.yml') ? YAML.load_file('build_units.yml') : {}) || {}
     ci.delete_if {|unit, specs| unit =~ /specs/}
     partitioner.buckets.each_with_index do |bucket, i|
-      ci["specs-#{i+1}"] = "rspec #{bucket.map(&:first).join(" ")}"
+      ci["specs-#{i+1}"] = "spec #{bucket.map(&:first).join(" ")}"
     end
     File.open("build_units.yml","w") do |f|
       YAML.dump(ci, f)
