@@ -168,21 +168,27 @@ describe "generate database.yml for a solo" do
     File.read(File.join(@deploy_dir, 'current', 'config', 'database.yml')).should == expected
   end
 
-  %w[shared shared/cached-copy].each do |base|
-    it "do not override the database.yml if a keepfile exists at #{base}/config/database.yml" do
-      deploy_with_gemfile('diy_database_yml', 'mysql', :solo, :keepfile_base => base)
+  def spec_not_override_shared_db_file(base)
+    deploy_with_gemfile('diy_database_yml', 'mysql', :solo, :keepfile_base => base)
 
-      expected = <<-EOS.gsub(/^\s{6}/, '')
-      production:
-        adapter:   foobarbaz
-        database:  myfirstapp
-        username:  deploy
-        password:  12345678
-        host:      localhost
-        reconnect: true
-      EOS
-      File.read(File.join(@deploy_dir, 'current', 'config', 'database.yml')).should == expected
-    end
+    expected = <<-EOS.gsub(/^\s{6}/, '')
+    production:
+      adapter:   foobarbaz
+      database:  myfirstapp
+      username:  deploy
+      password:  12345678
+      host:      localhost
+      reconnect: true
+    EOS
+    File.read(File.join(@deploy_dir, 'current', 'config', 'database.yml')).should == expected
+  end
+
+  it "do not override the database.yml if a keepfile exists at shared/config/database.yml" do
+    spec_not_override_shared_db_file('shared')
+  end
+
+  it "do not override the database.yml if a keepfile exists at shared/cached-copy/config/database.yml" do
+    spec_not_override_shared_db_file('shared/cached-copy')
   end
 end
 
