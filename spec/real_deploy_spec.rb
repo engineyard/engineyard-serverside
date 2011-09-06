@@ -131,91 +131,151 @@ describe "deploying an application" do
 
   end
 
-  before(:all) do
-    @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
+  context "that uses Bundler" do
+    before(:all) do
+      @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
 
-    # set up EY::Serverside::Server like we're on a solo
-    EY::Serverside::Server.reset
-    EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
+      # set up EY::Serverside::Server like we're on a solo
+      EY::Serverside::Server.reset
+      EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
 
-    # run a deploy
-    config = EY::Serverside::Deploy::Configuration.new({
+      # run a deploy
+      config = EY::Serverside::Deploy::Configuration.new({
+          "strategy"      => "IntegrationSpec",
+          "deploy_to"     => @deploy_dir,
+          "group"         => `id -gn`.strip,
+          "stack"         => 'nginx_passenger',
+          "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
+          'app'           => 'foo',
+          'framework_env' => 'staging'
+        })
+
+      # pretend there is a shared bundled_gems directory
+      FileUtils.mkdir_p(File.join(@deploy_dir, 'shared', 'bundled_gems'))
+      %w(RUBY_VERSION SYSTEM_VERSION).each do |name|
+        File.open(File.join(@deploy_dir, 'shared', 'bundled_gems', name), "w") { |f| f.write("old\n") }
+      end
+
+      @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
+      @deployer = FullTestDeploy.new(config)
+      @deployer.deploy
+    end
+
+    it "runs the right bundler command" do
+      install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
+      install_bundler_command_ran.should_not be_nil
+      install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.10"
+    end
+
+    it "creates a REVISION file" do
+      File.exist?(File.join(@deploy_dir, 'current', 'REVISION')).should be_true
+    end
+
+    it "restarts the app servers" do
+      File.exist?(File.join(@deploy_dir, 'current', 'restart')).should be_true
+    end
+
+    it "runs 'bundle install' with --deployment" do
+      bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+      bundle_install_cmd.should_not be_nil
+      bundle_install_cmd.should include('--deployment')
+    end
+
+    it "creates a ruby version file" do
+      File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
+    end
+
+    it "creates a system version file" do
+      File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
+    end
+
+    it "removes bundled_gems directory if the ruby version changed" do
+      clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
+      clear_bundle_cmd.should_not be_nil
+    end
+
+    it "removes bundled_gems directory if the system version changed" do
+      clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
+      clear_bundle_cmd.should_not be_nil
+    end
+
+    it "creates binstubs somewhere out of the way" do
+      File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
+    end
+
+    it "has the binstubs in the path when migrating" do
+      File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
+    end
+
+    it "runs all the hooks" do
+      File.exist?(File.join(@deploy_dir, 'current', 'before_bundle.ran' )).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'after_bundle.ran'  )).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'before_migrate.ran')).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'after_migrate.ran' )).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'before_compile_assets.ran')).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'after_compile_assets.ran' )).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'before_symlink.ran')).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'after_symlink.ran' )).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'before_restart.ran')).should be_true
+      File.exist?(File.join(@deploy_dir, 'current', 'after_restart.ran' )).should be_true
+    end
+  end
+
+  context "that uses Rails 3.1" do
+    def deploy_rails31(assets_enabled = true)
+      @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
+      # set up EY::Serverside::Server like we're on a solo
+      EY::Serverside::Server.reset
+      EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
+
+      # run a deploy
+      config = EY::Serverside::Deploy::Configuration.new({
         "strategy"      => "IntegrationSpec",
         "deploy_to"     => @deploy_dir,
         "group"         => `id -gn`.strip,
         "stack"         => 'nginx_passenger',
         "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
-        'app'           => 'foo',
+        'app'           => 'rails31',
         'framework_env' => 'staging'
       })
 
-    # pretend there is a shared bundled_gems directory
-    FileUtils.mkdir_p(File.join(@deploy_dir, 'shared', 'bundled_gems'))
-    %w(RUBY_VERSION SYSTEM_VERSION).each do |name| 
-      File.open(File.join(@deploy_dir, 'shared', 'bundled_gems', name), "w") { |f| f.write("old\n") }
+      # pretend there is a shared bundled_gems directory
+      FileUtils.mkdir_p(File.join(@deploy_dir, 'shared', 'bundled_gems'))
+      %w(RUBY_VERSION SYSTEM_VERSION).each do |name|
+        File.open(File.join(@deploy_dir, 'shared', 'bundled_gems', name), "w") { |f| f.write("old\n") }
+      end
+      FileUtils.mkdir_p(File.join(config.release_path, 'config'))
+      app_rb = File.join(config.release_path, 'config', 'application.rb')
+      app_rb_contents = <<-EOF
+module Rails31
+  class Application < Rails::Application
+    config.assets.enabled = #{assets_enabled ? 'true' : 'false'}
+  end
+end
+    EOF
+      File.open(app_rb, 'w') {|f| f.write(app_rb_contents)}
+      rakefile = File.join(config.release_path, 'Rakefile')
+      rakefile_contents = <<-EOF
+task 'assets:precompile' do
+  sh 'touch precompiled'
+end
+    EOF
+      File.open(rakefile, 'w') {|f| f.write(rakefile_contents)}
+      FileUtils.mkdir_p(File.join(config.release_path, 'app', 'assets'))
+
+      @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
+      @deployer = FullTestDeploy.new(config)
+      @deployer.deploy
     end
 
-    @binpath = $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    @deployer = FullTestDeploy.new(config)
-    @deployer.deploy
-  end
+    it "precompiles assets unless specified otherwise in the application config" do
+      deploy_rails31(true)
+      File.exist?(File.join(@deploy_dir, 'current', 'precompiled')).should be_true
+    end
 
-  it "runs the right bundler command" do
-    install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
-    install_bundler_command_ran.should_not be_nil
-    install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.10"
-  end
-
-  it "creates a REVISION file" do
-    File.exist?(File.join(@deploy_dir, 'current', 'REVISION')).should be_true
-  end
-
-  it "restarts the app servers" do
-    File.exist?(File.join(@deploy_dir, 'current', 'restart')).should be_true
-  end
-
-  it "runs 'bundle install' with --deployment" do
-    bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
-    bundle_install_cmd.should_not be_nil
-    bundle_install_cmd.should include('--deployment')
-  end
-
-  it "creates a ruby version file" do
-    File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
-  end
-
-  it "creates a system version file" do
-    File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
-  end
-
-  it "removes bundled_gems directory if the ruby version changed" do
-    clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
-    clear_bundle_cmd.should_not be_nil
-  end
-
-  it "removes bundled_gems directory if the system version changed" do
-    clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
-    clear_bundle_cmd.should_not be_nil
-  end
-
-  it "creates binstubs somewhere out of the way" do
-    File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
-  end
-
-  it "has the binstubs in the path when migrating" do
-    File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
-  end
-
-  it "runs all the hooks" do
-    File.exist?(File.join(@deploy_dir, 'current', 'before_bundle.ran' )).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'after_bundle.ran'  )).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'before_migrate.ran')).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'after_migrate.ran' )).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'before_compile_assets.ran')).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'after_compile_assets.ran' )).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'before_symlink.ran')).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'after_symlink.ran' )).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'before_restart.ran')).should be_true
-    File.exist?(File.join(@deploy_dir, 'current', 'after_restart.ran' )).should be_true
+    it "does not precompile assets if they are disabled in the application config" do
+      deploy_rails31(false)
+      File.exist?(File.join(@deploy_dir, 'current', 'precompiled')).should be_false
+    end
   end
 end
