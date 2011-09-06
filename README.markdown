@@ -31,7 +31,8 @@ To do QA testing of SS on an AppCloud, you need to release a preview of the Ruby
     $ ey-gem upload engineyard-serverside-1.4.3.pre.gem --server=public
     $ cd /path/to/myapp
     $ export ENGINEYARD_SERVERSIDE_VERSION=1.4.3.pre
-    $ ey ssh --all "sudo /usr/local/ey_resin/ruby/bin/gem install engineyard-serverside -v 1.4.3.pre"
+    $ ey ssh "sudo /usr/local/ey_resin/ruby/bin/gem sources -a http://gems.engineyard.com" --all
+    $ ey ssh "sudo /usr/local/ey_resin/ruby/bin/gem install engineyard-serverside -v 1.4.3.pre" --all
     $ ey deploy
 
 ## Bugs, patches and pull requests
