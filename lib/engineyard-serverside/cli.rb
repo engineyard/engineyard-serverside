@@ -215,9 +215,9 @@ module EY
       def propagate
         config          = EY::Serverside::Deploy::Configuration.new
         gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
-        local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
-        remote_gem_file = Dir.mktmpdir(gem_filename)
-        gem_binary      = File.join(Gem.default_bindir, 'gem')
+        local_gem_file  = File.join(::Gem.dir, 'cache', gem_filename)
+        remote_gem_file = File.join(Dir.tmpdir, gem_filename)
+        gem_binary      = File.join(::Gem.default_bindir, 'gem')
 
         barrier(*(EY::Serverside::Server.all.find_all do |server|
           !server.local?            # of course this machine has it

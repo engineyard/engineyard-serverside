@@ -58,9 +58,9 @@ describe "the EY::Serverside::Deploy API" do
     end
 
     before(:each) do
-      @tempdir = Dir.mktmpdir('custom_deploy_spec.XXXXX')
-      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
-      @deploy = TestQuietDeploy.new(@config)
+      @tempdir = Dir.tmpdir
+      @config  = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
+      @deploy  = TestQuietDeploy.new(@config)
     end
 
     after do

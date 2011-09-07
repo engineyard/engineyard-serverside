@@ -1,6 +1,8 @@
 $LOAD_PATH.push File.expand_path("../lib", File.dirname(__FILE__))
 
-Bundler.require :default, :test
+# Bundler.require :default, :test - FIXME when we return to ruby 1.8.7+
+require 'rubygems'
+require 'spec'
 require 'pp'
 require 'tmpdir'
 require 'engineyard-serverside'

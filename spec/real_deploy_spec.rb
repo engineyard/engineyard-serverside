@@ -63,7 +63,8 @@ end
 describe "deploying an application" do
 
   before(:all) do
-    @deploy_dir = Dir.mktmpdir("serverside-deploy-#{Time.now.to_i}-#{$$}")
+    @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
+    FileUtils.mkdir_p(@deploy_dir)
 
     # set up EY::Serverside::Server like we're on a solo
     EY::Serverside::Server.reset
@@ -94,12 +95,6 @@ describe "deploying an application" do
     @deployer.deploy
   end
 
-  it "runs the right bundler command" do
-    install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
-    install_bundler_command_ran.should_not be_nil
-    install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.10"
-  end
-
   it "creates a REVISION file" do
     File.exist?(File.join(@deploy_dir, 'current', 'REVISION')).should be_true
   end
@@ -112,28 +107,36 @@ describe "deploying an application" do
     File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
   end
 
-  it "runs 'bundle install' with --deployment" do
-    bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
-    bundle_install_cmd.should_not be_nil
-    bundle_install_cmd.should include('--deployment')
-  end
+  if RUBY_VERSION != '1.8.6'
+    it "runs the right bundler command" do
+      install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
+      install_bundler_command_ran.should_not be_nil
+      install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.10"
+    end
 
-  it "creates binstubs somewhere out of the way" do
-    File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
-  end
+    it "runs 'bundle install' with --deployment" do
+      bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+      bundle_install_cmd.should_not be_nil
+      bundle_install_cmd.should include('--deployment')
+    end
 
-  it "has the binstubs in the path when migrating" do
-    File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
-  end
+    it "creates binstubs somewhere out of the way" do
+      File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
+    end
 
-  it "removes bundled_gems directory if the ruby version changed" do
-    clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
-    clear_bundle_cmd.should_not be_nil
-  end
+    it "has the binstubs in the path when migrating" do
+      File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
+    end
 
-  it "removes bundled_gems directory if the system version changed" do
-    clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
-    clear_bundle_cmd.should_not be_nil
+    it "removes bundled_gems directory if the ruby version changed" do
+      clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
+      clear_bundle_cmd.should_not be_nil
+    end
+
+    it "removes bundled_gems directory if the system version changed" do
+      clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
+      clear_bundle_cmd.should_not be_nil
+    end
   end
 
   it "generates a database.yml file" do

@@ -20,4 +20,7 @@ Gem::Specification.new do |s|
 
   s.rubygems_version = %q{1.3.6}
   s.test_files = Dir.glob("spec/**/*")
+  
+  s.add_development_dependency("rake", "0.8.7")
+  s.add_development_dependency("rspec", "1.3.0")
 end

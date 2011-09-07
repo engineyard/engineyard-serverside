@@ -54,6 +54,7 @@ module EY
           need_later { server.run(Escape.shell_command(wrapper + [to_run])) }
         end
         barrier *results
+
         # MRI's truthiness check is an internal C thing that does not call
         # any methods... so Dataflow cannot proxy it & we must "x == true"
         # Rubinius, wherefore art thou!?
