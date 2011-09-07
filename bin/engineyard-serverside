@@ -4,6 +4,10 @@ begin
 rescue LoadError
 end
 
+# If someone calls this script directly, assuming it is a gem binstub, just nod our heads.
+if ARGV[0] && ARGV[0][0,1] == '_'
+  ARGV.shift
+end
 $LOAD_PATH.push(File.expand_path("../lib", File.dirname(__FILE__)))
 require 'engineyard-serverside'
 

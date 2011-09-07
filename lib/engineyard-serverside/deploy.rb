@@ -30,7 +30,10 @@ module EY
           generate_configs
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
+          run_with_callbacks(:compile_assets)
           callback(:before_symlink)
+          # We don't use run_with_callbacks for symlink because we need
+          # to clean up if it fails.
           symlink
         end
 
@@ -142,7 +145,7 @@ module EY
                                 bundler_10_installer missing_lock_version
                               end
 
-          sudo "#{$0} _#{EY::Serverside::VERSION}_ install_bundler #{bundler_installer.version}"
+          sudo "#{serverside_bin} _#{EY::Serverside::VERSION}_ install_bundler #{bundler_installer.version}"
 
           bundled_gems_path = File.join(c.shared_path, "bundled_gems")
           ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
@@ -166,6 +169,30 @@ module EY
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
         end
+      end
+
+      def compile_assets
+        roles :app_master, :app, :solo do
+          rails_app = "#{c.release_path}/config/application.rb"
+          asset_dir = "#{c.release_path}/app/assets"
+          if File.exists?(rails_app) && File.directory?(asset_dir)
+            unless app_disables_assets?(rails_app)
+              cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
+              info "~> Precompiling assets for Rails: #{cmd}"
+              run(cmd)
+            end
+          end
+        end
+      end
+
+      def app_disables_assets?(path)
+        disabled = nil
+        File.open(path) do |fd|
+          pattern = /^[^#].*config\.assets\.enabled\s+=\s+(false|nil)/
+          contents = fd.read
+          disabled = contents.match(pattern)
+        end
+        disabled
       end
 
       # task
@@ -334,7 +361,8 @@ module EY
       def callback(what)
         @callbacks_reached ||= true
         if File.exist?("#{c.release_path}/deploy/#{what}.rb")
-          run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
+          escaped_cmd = Escape.shell_command(base_callback_command_for(what))
+          run escaped_cmd do |server, cmd|
             per_instance_args = [
               '--current-roles', server.roles.join(' '),
               '--config', c.to_json,
@@ -348,11 +376,16 @@ module EY
       protected
 
       def base_callback_command_for(what)
-        [$0, version_specifier, 'hook', what.to_s,
+        [serverside_bin, version_specifier, 'hook', what.to_s,
           '--app', config.app.to_s,
           '--release-path', config.release_path.to_s,
           '--framework-env', c.environment.to_s,
         ].compact
+      end
+
+      def serverside_bin
+        basedir = File.expand_path('../../..', __FILE__)
+        File.join(basedir, 'bin', 'engineyard-serverside')
       end
 
       def version_specifier

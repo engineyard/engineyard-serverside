@@ -43,8 +43,8 @@ def setup_dna_json(options = {})
     'engineyard' => {
       "environment" => {
         "apps" => [{
-          "name"          => "myfirstapp",
-          "database_name" => "myfirstapp",
+          "name"          => options[:app_name] || "myfirstapp",
+          "database_name" => options[:app_name] || "myfirstapp",
           "type"          => "rack"
         }],
         "instances"     => dna_instances_for(options[:cluster_type] || :solo),
@@ -56,9 +56,10 @@ def setup_dna_json(options = {})
         "db_stack_name" => options[:db_stack_name] || "mysql",
         "db_host"       => "localhost"
       }
-    }    
+    }
   }.to_json
 end
+
 def dna_instances_for(cluster_type = :solo)
   case cluster_type
   when :solo
