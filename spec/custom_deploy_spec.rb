@@ -58,7 +58,7 @@ describe "the EY::Serverside::Deploy API" do
     end
 
     before(:each) do
-      @tempdir = Dir.tmpdir
+      @tempdir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
       @config  = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
       @deploy  = TestQuietDeploy.new(@config)
     end
