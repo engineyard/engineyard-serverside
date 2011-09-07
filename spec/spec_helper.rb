@@ -38,7 +38,7 @@ Kernel.system "tar xzf #{GITREPO_DIR}.tar.gz -C #{FIXTURES_DIR}"
 def setup_dna_json(options = {})
   EY::Serverside.dna_json = {
     'environment' => {
-      "framework_env" => "production",
+      "framework_env" => options[:framework_env] || "production"
     },
     'engineyard' => {
       "environment" => {
