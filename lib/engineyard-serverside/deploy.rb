@@ -130,7 +130,7 @@ module EY
 
       # task
       def bundle
-        if File.exist?("#{c.release_path}/Gemfile") && RUBY_VERSION != '1.8.6'
+        if File.exist?("#{c.release_path}/Gemfile")
           info "~> Gemfile detected, bundling gems"
           lockfile = File.join(c.release_path, "Gemfile.lock")
 
