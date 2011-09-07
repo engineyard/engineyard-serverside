@@ -153,8 +153,8 @@ module EY
           if File.directory?(bundled_gems_path)
             rebundle = false
 
-            rebundle = true if File.exist?(ruby_version_file) && File.read(ruby_version_file) != ruby_version
-            rebundle = true if File.exist?(system_version_file) && File.read(system_version_file) != system_version
+            rebundle = true if !File.exist?(ruby_version_file) || File.read(ruby_version_file) != ruby_version
+            rebundle = true if !File.exist?(system_version_file) || File.read(system_version_file) != system_version
 
             if rebundle
               info "~> Ruby version change detected, cleaning bundled gems"
