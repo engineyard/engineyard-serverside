@@ -231,7 +231,7 @@ module EY
           "mkdir -p #{release_to_link}/config",
           "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
           "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
-          "find #{c.shared_path}/config -type f -exec ln -s {} #{release_to_link}/config \\;",
+          "find #{c.shared_path}/config ! -name 'database.yml*' -type f -exec ln -s {} #{release_to_link}/config \\;",
           # database.yml generated or symlink created in #generate_database_yml
           "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
         ].each do |cmd|
