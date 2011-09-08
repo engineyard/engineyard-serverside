@@ -230,13 +230,7 @@ module EY
 
             if !server.run(has_gem_cmd)  # doesn't have this exact version
               puts "~> Installing engineyard-serverside on #{server.hostname}"
-
-              system(Escape.shell_command([
-                'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
-                "-o", "StrictHostKeyChecking=no",
-                local_gem_file,
-               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
-              ]))
+              server.scp(local_gem_file, remote_gem_file)
               server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
             end
           end

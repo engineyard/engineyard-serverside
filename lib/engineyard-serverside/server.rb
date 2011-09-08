@@ -87,10 +87,16 @@ module EY
         end
       end
 
-      def ssh_command
-        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
+      def ssh_command(bin = 'ssh')
+        "#{bin} -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
       end
 
+      def scp(local_file, remote_file)
+        return unless local?
+        cmd = ssh_command('scp')
+        args = Escape.shell_command([local_file, "#{user}@#{hostname}:#{remote_file}"])
+        system("#{cmd} #{args}")
+      end
     end
   end
 end

@@ -88,7 +88,7 @@ describe "generate database.yml for a solo" do
       end
     end
 
-    @binpath = $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
+    @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     @deployer = FullTestDeploy.new(@config)
     @deployer.db_gemfile_folder = db_gemfile_folder
     @deployer.db_keepfile = config_overrides[:keepfile_base] == 'shared/cached-copy'

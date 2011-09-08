@@ -177,6 +177,7 @@ module EY
           asset_dir = "#{c.release_path}/app/assets"
           if File.exists?(rails_app) && File.directory?(asset_dir)
             unless app_disables_assets?(rails_app)
+              keep_existing_assets
               cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
               info "~> Precompiling assets for Rails: #{cmd}"
               run(cmd)
@@ -193,6 +194,23 @@ module EY
           disabled = contents.match(pattern)
         end
         disabled
+      end
+
+      # To support operations like Unicorn's hot reload, it is useful to have
+      # the prior release's assets as well. Otherwise, while a deploy is running,
+      # clients may request stale assets that you just deleted.
+      # Making use of this requires a properly-configured front-end HTTP server.
+      def keep_existing_assets
+        current = File.join(c.shared_path, 'assets')
+        last_asset_path = File.join(c.shared_path, 'last_assets')
+        run <<-COMMAND
+if [ -d #{current} ]; then
+  rm -rf #{last_asset_path} && mv #{current} #{last_asset_path} && mkdir -p #{current};
+else
+  mkdir -p #{current} #{last_asset_path};
+fi;
+ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
+        COMMAND
       end
 
       # task
@@ -253,14 +271,13 @@ module EY
         [ "chmod -R g+w #{release_to_link}",
           "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
           "mkdir -p #{release_to_link}/tmp",
-          "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
           "mkdir -p #{release_to_link}/public",
           "mkdir -p #{release_to_link}/config",
+          "find #{c.shared_path}/config -type f -exec ln -s {} #{release_to_link}/config \\;",
+          "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
           "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
           "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
-          "find #{c.shared_path}/config ! -name 'database.yml*' -type f -exec ln -s {} #{release_to_link}/config \\;",
-          # database.yml generated or symlink created in #generate_database_yml
-          "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
+          "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml"
         ].each do |cmd|
           run cmd
         end
@@ -274,12 +291,12 @@ module EY
       end
 
       # Do nothing if there is no Gemfile.lock to determine what ORM gems are being used
-      # (falls back to using the symlinked shared/database.yml file)
+      # (falls back to using the existing shared config/database.yml file)
       def generate_database_yml(release_to_link)
         return if keep_database_yml?(release_to_link)
         if config["db_adapter"] || File.exist?("#{c.release_path}/Gemfile.lock")
           info "~> Generating database.yml from Gemfile.lock"
-          database_yml = "#{release_to_link}/config/database.yml"
+          database_yml = "#{c.shared_path}/config/database.yml"
           node         = EY::Serverside.node
           node_app     = node["engineyard"]["environment"]["apps"].find { |app| app['name'] == c['app'] }
           abort("Invalid application name for target environment: #{c['app']}") unless node_app
@@ -341,10 +358,18 @@ module EY
             end
             file << contents
           end
-        else
-          info "~> Symlinking database.yml config"
-          run "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml"
         end
+        # scp to all slaves
+        info "~> Propagating database.yml config"
+        slave_nodes = barrier(*(EY::Serverside::Server.all.find_all {|server| !server.role == 'app'}))
+        slave_nodes.map do |server|
+          need_later do
+            # Copy the local shared database.yml to the slave
+            server.scp(database_yml, database_yml)
+          end
+        end
+        info "~> Symlinking database.yml config"
+        run "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml"
       end
 
       # task

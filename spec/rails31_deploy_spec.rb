@@ -6,7 +6,10 @@ describe "Deploying a Rails 3.1 application" do
   before(:each) do
     @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
     FileUtils.mkdir_p(@deploy_dir)
+    prepare_new_deployment
+  end
 
+  def prepare_new_deployment
     # set up EY::Serverside::Server like we're on a solo
     EY::Serverside::Server.reset
     EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
@@ -33,7 +36,7 @@ describe "Deploying a Rails 3.1 application" do
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
   end
 
-  def deploy_rails31(assets_enabled = true)
+  def deploy_rails31(assets_enabled = true, asset_filename = 'hello')
     config = @deploy_config
     FileUtils.mkdir_p(File.join(config.release_path, 'config'))
       app_rb = File.join(config.release_path, 'config', 'application.rb')
@@ -48,23 +51,32 @@ EOF
       rakefile = File.join(config.release_path, 'Rakefile')
       rakefile_contents = <<-EOF
 task 'assets:precompile' do
-  sh 'touch precompiled'
+  sh 'touch precompiled && mkdir -p public/assets && touch public/assets/#{asset_filename} 2>/dev/null'
 end
 EOF
     File.open(rakefile, 'w') {|f| f.write(rakefile_contents)}
+
     FileUtils.mkdir_p(File.join(config.release_path, 'app', 'assets'))
 
     @deployer = FullTestDeploy.new(config)
     @deployer.deploy
   end
 
-  it "precompiles assets unless specified otherwise in the application config" do
+  it "saves public/assets as public/last_assets if it exists" do
     deploy_rails31(true)
-    File.exist?(File.join(@deploy_dir, 'current', 'precompiled')).should be_true
+    File.readable?(File.join(@deploy_dir, 'current', 'precompiled')).should be_true
+    File.symlink?(File.join(@deploy_dir, 'current', 'public', 'assets')).should be_true
+    File.symlink?(File.join(@deploy_dir, 'current', 'public', 'last_assets')).should be_true
+
+    prepare_new_deployment
+    deploy_rails31(true, 'not_hello')
+    File.exist?(File.join(@deploy_dir, 'current', 'public', 'assets', 'hello')).should be_false
+    File.exist?(File.join(@deploy_dir, 'current', 'public', 'last_assets', 'hello')).should be_true
   end
 
   it "does not precompile assets if they are disabled in the application config" do
     deploy_rails31(false)
     File.exist?(File.join(@deploy_dir, 'current', 'precompiled')).should be_false
+    File.directory?(File.join(@deploy_dir, 'current', 'public', 'last_assets')).should_not be_true
   end
 end
