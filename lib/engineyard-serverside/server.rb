@@ -92,10 +92,10 @@ module EY
       end
 
       def scp(local_file, remote_file)
-        return unless local?
         cmd = ssh_command('scp')
-        args = Escape.shell_command([local_file, "#{user}@#{hostname}:#{remote_file}"])
-        system("#{cmd} #{args}")
+        source = Escape.escape_single_word(local_file)
+        dest = Escape.escape_single_word("#{user}@#{hostname}:#{remote_file}")
+        system("#{cmd} #{source} #{dest}")
       end
     end
   end
