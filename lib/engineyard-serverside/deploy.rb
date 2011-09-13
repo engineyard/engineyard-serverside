@@ -294,7 +294,8 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
       # Do nothing if there is no Gemfile.lock to determine what ORM gems are being used
       # (falls back to using the existing shared config/database.yml file)
       def generate_database_yml(release_to_link)
-        return # TODO - Why is this so broken?
+        return # This work is overwritten by Chef every time a config is applied or upgraded.
+        # TODO - Teach this to know when it is running alongside a compatible cloud_cookbooks release.
         return if keep_database_yml?(release_to_link)
         if config["db_adapter"] || File.exist?("#{c.release_path}/Gemfile.lock")
           info "~> Generating database.yml from Gemfile.lock"
@@ -364,7 +365,7 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
         # scp to all slaves
         info "~> Propagating database.yml config"
         barrier(*(EY::Serverside::Server.all.select do |server|
-          server.role == 'app'
+          server.role == :app
         end.map do |server|
           need_later do
             # Copy the local shared database.yml to the slave
