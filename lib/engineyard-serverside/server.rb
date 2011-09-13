@@ -87,15 +87,18 @@ module EY
         end
       end
 
-      def ssh_command(bin = 'ssh')
-        "#{bin} -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
+      def ssh_command(bin = 'ssh', *args)
+        Escape.shell_command([bin, *ssh_args.concat(args)])
       end
 
+      def ssh_args
+        ["-i", "#{ENV['HOME']}/.ssh/internal", "-o", "StrictHostKeyChecking=no", "-o", "PasswordAuthentication=no"]
+      end
+      private :ssh_args
+
       def scp(local_file, remote_file)
-        cmd = ssh_command('scp')
-        source = Escape.escape_single_word(local_file)
-        dest = Escape.escape_single_word("#{user}@#{hostname}:#{remote_file}")
-        system("#{cmd} #{source} #{dest}")
+        scp_cmd = ssh_command('scp', local_file, "#{user}@#{hostname}:#{remote_file}")
+        system(scp_cmd)
       end
     end
   end

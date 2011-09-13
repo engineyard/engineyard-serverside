@@ -219,7 +219,7 @@ module EY
         remote_gem_file = File.join(Dir.tmpdir, gem_filename)
         gem_binary      = File.join(::Gem.default_bindir, 'gem')
 
-        barrier(*(EY::Serverside::Server.all.find_all do |server|
+        barrier(*(EY::Serverside::Server.all.select do |server|
           !server.local?            # of course this machine has it
         end.map do |server|
           need_later do
@@ -229,8 +229,9 @@ module EY
             has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
             if !server.run(has_gem_cmd)  # doesn't have this exact version
-              puts "~> Installing engineyard-serverside on #{server.hostname}"
+              puts "~> Copying engineyard-serverside to #{server.hostname}"
               server.scp(local_gem_file, remote_gem_file)
+              puts "~> Installing engineyard-serverside on #{server.hostname}"
               server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
             end
           end

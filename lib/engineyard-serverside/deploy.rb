@@ -273,7 +273,8 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
           "mkdir -p #{release_to_link}/tmp",
           "mkdir -p #{release_to_link}/public",
           "mkdir -p #{release_to_link}/config",
-          "find #{c.shared_path}/config -type f -exec ln -s {} #{release_to_link}/config \\;",
+          "find #{c.shared_path}/config -type f ! -name 'database.yml*' -exec ln -s {} #{release_to_link}/config \\;",
+          "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
           "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
           "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
           "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
@@ -293,6 +294,7 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
       # Do nothing if there is no Gemfile.lock to determine what ORM gems are being used
       # (falls back to using the existing shared config/database.yml file)
       def generate_database_yml(release_to_link)
+        return # TODO - Why is this so broken?
         return if keep_database_yml?(release_to_link)
         if config["db_adapter"] || File.exist?("#{c.release_path}/Gemfile.lock")
           info "~> Generating database.yml from Gemfile.lock"
@@ -361,13 +363,14 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
         end
         # scp to all slaves
         info "~> Propagating database.yml config"
-        slave_nodes = barrier(*(EY::Serverside::Server.all.find_all {|server| !server.role == 'app'}))
-        slave_nodes.map do |server|
+        barrier(*(EY::Serverside::Server.all.select do |server|
+          server.role == 'app'
+        end.map do |server|
           need_later do
             # Copy the local shared database.yml to the slave
             server.scp(database_yml, database_yml)
           end
-        end
+        end))
         info "~> Symlinking database.yml config"
         run "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml"
       end

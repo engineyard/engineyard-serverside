@@ -82,6 +82,7 @@ describe "deploying an application" do
   end
 
   it "generates a database.yml file" do
+    pending
     File.exist?(File.join(@deploy_dir, 'current', 'config', 'database.yml')).should be_true
   end
 

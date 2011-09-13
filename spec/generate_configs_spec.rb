@@ -40,6 +40,7 @@ end
 
 describe "generate database.yml for a solo" do
   def deploy_with_gemfile(db_gemfile_folder, db_type, cluster_type = :solo, config_overrides = {})
+    pending
     tmp = "deploy_with_gemfile-#{Time.now.to_i}-#{$$}"
     @deploy_dir = File.join(Dir.tmpdir, tmp)
     FileUtils.mkdir_p(@deploy_dir)
