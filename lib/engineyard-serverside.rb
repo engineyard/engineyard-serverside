@@ -4,8 +4,6 @@ $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/json_pure/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/dataflow', File.dirname(__FILE__))
 
-require 'core-ext/string' if RUBY_VERSION == '1.8.6'
-
 require 'escape'
 require 'json'
 require 'dataflow'
@@ -36,7 +34,7 @@ module EY
                       {}.to_json
                     end
     end
-    
+
     RemoteFailure = Class.new StandardError
 
     private

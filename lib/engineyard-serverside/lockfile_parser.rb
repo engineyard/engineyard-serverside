@@ -79,11 +79,11 @@ module EY
           when '='
             bundler_version
           when '>='
-            ::Gem::Version.new(bundler_version) > ::Gem::Version.new(DEFAULT) ? bundler_version : DEFAULT
+            Gem::Version.new(bundler_version) > Gem::Version.new(DEFAULT) ? bundler_version : DEFAULT
           when '~>'
-            bundler_gem_version = ::Gem::Version.new(bundler_version)
+            bundler_gem_version = Gem::Version.new(bundler_version)
             recommendation = bundler_gem_version.spermy_recommendation.gsub(/~>\s*(.+)$/, '\1.')
-            DEFAULT.start_with?(recommendation) && ::Gem::Version.new(DEFAULT) > bundler_gem_version ? DEFAULT : bundler_version
+            DEFAULT.start_with?(recommendation) && Gem::Version.new(DEFAULT) > bundler_gem_version ? DEFAULT : bundler_version
           end
         end
 

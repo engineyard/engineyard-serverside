@@ -1,5 +1,4 @@
 require File.dirname(__FILE__) + '/spec_helper'
-require 'fileutils'
 
 describe "the EY::Serverside::Deploy API" do
   it "calls tasks in the right order" do
@@ -25,18 +24,14 @@ describe "the EY::Serverside::Deploy API" do
       def bundle()                                 @call_order << 'bundle'                                 end
       def symlink_configs()                        @call_order << 'symlink_configs'                        end
       def migrate()                                @call_order << 'migrate'                                end
-      def compile_assets()                         @call_order << 'compile_assets'                         end
       def symlink()                                @call_order << 'symlink'                                end
       def restart()                                @call_order << 'restart'                                end
       def cleanup_old_releases()                   @call_order << 'cleanup_old_releases'                   end
       def conditionally_enable_maintenance_page()  @call_order << 'conditionally_enable_maintenance_page'  end
       def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
-      def generate_database_yml(path)              @call_order << 'generate_database_yml'                  end
     end
 
-    setup_dna_json
-
-    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new('app' => 'myfirstapp'))
+    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new)
     td.deploy
     td.call_order.should == %w(
       push_code
@@ -44,10 +39,8 @@ describe "the EY::Serverside::Deploy API" do
       create_revision_file
       bundle
       symlink_configs
-      generate_database_yml
       conditionally_enable_maintenance_page
       migrate
-      compile_assets
       symlink
       restart
       disable_maintenance_page
@@ -60,17 +53,15 @@ describe "the EY::Serverside::Deploy API" do
     end
 
     before(:each) do
-      @tempdir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
-      @config  = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
-      @deploy  = TestQuietDeploy.new(@config)
-    end
-
-    after do
-      FileUtils.rm_rf(@tempdir)
+      @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
+      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
+      @deploy = TestQuietDeploy.new(@config)
     end
 
     def write_eydeploy(relative_path, contents = "def got_new_methods() 'from the file on disk' end")
-      FileUtils.mkdir_p(File.join(@tempdir, File.dirname(relative_path)))
+      FileUtils.mkdir_p(File.join(
+          @tempdir,
+          File.dirname(relative_path)))
 
       File.open(File.join(@tempdir, relative_path), 'w') do |f|
         f.write contents

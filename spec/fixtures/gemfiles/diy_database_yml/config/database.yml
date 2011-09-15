@@ -1,7 +1,0 @@
-production:
-  adapter:   foobarbaz
-  database:  myfirstapp
-  username:  deploy
-  password:  12345678
-  host:      localhost
-  reconnect: true

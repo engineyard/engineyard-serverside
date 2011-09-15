@@ -1,6 +1,5 @@
 require 'thor'
 require 'pathname'
-require 'tmpdir'
 
 module EY
   module Serverside
@@ -215,11 +214,11 @@ module EY
       def propagate
         config          = EY::Serverside::Deploy::Configuration.new
         gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
-        local_gem_file  = File.join(::Gem.dir, 'cache', gem_filename)
+        local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
         remote_gem_file = File.join(Dir.tmpdir, gem_filename)
-        gem_binary      = File.join(::Gem.default_bindir, 'gem')
+        gem_binary      = File.join(Gem.default_bindir, 'gem')
 
-        barrier(*(EY::Serverside::Server.all.select do |server|
+        barrier(*(EY::Serverside::Server.all.find_all do |server|
           !server.local?            # of course this machine has it
         end.map do |server|
           need_later do
@@ -229,9 +228,14 @@ module EY
             has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
             if !server.run(has_gem_cmd)  # doesn't have this exact version
-              puts "~> Copying engineyard-serverside to #{server.hostname}"
-              server.scp(local_gem_file, remote_gem_file)
               puts "~> Installing engineyard-serverside on #{server.hostname}"
+
+              system(Escape.shell_command([
+                'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
+                "-o", "StrictHostKeyChecking=no",
+                local_gem_file,
+               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
+              ]))
               server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
             end
           end

@@ -1,7 +1,0 @@
-diff --git a/ext/openssl/openssl_missing.h b/ext/openssl/openssl_missing.h
-index 2ebf61a..8a0202a 100644
---- a/ext/openssl/openssl_missing.h
-+++ b/ext/openssl/openssl_missing.h
-@@ -123,2 +122,0 @@ int BN_mod_sub(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m, BN_
--int BN_rand_range(BIGNUM *r, BIGNUM *range);
--int BN_pseudo_rand_range(BIGNUM *r, BIGNUM *range);

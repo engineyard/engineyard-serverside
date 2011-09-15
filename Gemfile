@@ -1,7 +1,8 @@
-source 'http://rubygems.org'
+source 'http://gemcutter.org'
 
-gem 'rake', '0.8.7'
+gem 'rake'
 
 group :test do
-  gem 'rspec', '1.3.0', :require => 'spec'
+  gem 'rspec', '~> 1.3.0', :require => 'spec'
+  gem "ruby-debug"
 end

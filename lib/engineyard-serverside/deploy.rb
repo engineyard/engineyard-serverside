@@ -27,13 +27,9 @@ module EY
           create_revision_file
           run_with_callbacks(:bundle)
           symlink_configs
-          generate_configs
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
-          run_with_callbacks(:compile_assets)
           callback(:before_symlink)
-          # We don't use run_with_callbacks for symlink because we need
-          # to clean up if it fails.
           symlink
         end
 
@@ -140,12 +136,11 @@ module EY
           bundler_installer = if File.exist?(lockfile)
                                 get_bundler_installer(lockfile)
                               else
-                                missing_lock_version = EY::Serverside::LockfileParser::Parse10::DEFAULT
-                                warn_about_missing_lockfile missing_lock_version
-                                bundler_10_installer missing_lock_version
+                                warn_about_missing_lockfile
+                                bundler_09_installer(default_09_bundler)
                               end
 
-          sudo "#{serverside_bin} _#{EY::Serverside::VERSION}_ install_bundler #{bundler_installer.version}"
+          sudo "#{$0} _#{EY::Serverside::VERSION}_ install_bundler #{bundler_installer.version}"
 
           bundled_gems_path = File.join(c.shared_path, "bundled_gems")
           ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
@@ -169,57 +164,6 @@ module EY
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
         end
-
-        if File.exist?("#{c.release_path}/package.json")
-          unless run("which npm")
-            error "~> package.json detected, BUT npm not installed"
-          else
-            info "~> package.json detected, installing npm packages"
-            run "cd #{c.release_path} && npm install"
-          end
-        end
-      end
-
-      def compile_assets
-        roles :app_master, :app, :solo do
-          rails_app = "#{c.release_path}/config/application.rb"
-          asset_dir = "#{c.release_path}/app/assets"
-          if File.exists?(rails_app) && File.directory?(asset_dir)
-            unless app_disables_assets?(rails_app)
-              keep_existing_assets
-              cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
-              info "~> Precompiling assets for Rails: #{cmd}"
-              run(cmd)
-            end
-          end
-        end
-      end
-
-      def app_disables_assets?(path)
-        disabled = nil
-        File.open(path) do |fd|
-          pattern = /^[^#].*config\.assets\.enabled\s+=\s+(false|nil)/
-          contents = fd.read
-          disabled = contents.match(pattern)
-        end
-        disabled
-      end
-
-      # To support operations like Unicorn's hot reload, it is useful to have
-      # the prior release's assets as well. Otherwise, while a deploy is running,
-      # clients may request stale assets that you just deleted.
-      # Making use of this requires a properly-configured front-end HTTP server.
-      def keep_existing_assets
-        current = File.join(c.shared_path, 'assets')
-        last_asset_path = File.join(c.shared_path, 'last_assets')
-        run <<-COMMAND
-if [ -d #{current} ]; then
-  rm -rf #{last_asset_path} && mv #{current} #{last_asset_path} && mkdir -p #{current};
-else
-  mkdir -p #{current} #{last_asset_path};
-fi;
-ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
-        COMMAND
       end
 
       # task
@@ -274,115 +218,25 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
         run create_revision_file_command
       end
 
-      # symlink to shared path; may be overridden by #generate_configs
       def symlink_configs(release_to_link=c.release_path)
         info "~> Symlinking configs"
         [ "chmod -R g+w #{release_to_link}",
           "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
           "mkdir -p #{release_to_link}/tmp",
+          "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
           "mkdir -p #{release_to_link}/public",
           "mkdir -p #{release_to_link}/config",
-          "find #{c.shared_path}/config -type f ! -name 'database.yml*' -exec ln -s {} #{release_to_link}/config \\;",
-          "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
-          "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
           "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
           "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
-          "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml"
+          "find #{c.shared_path}/config -type f -exec ln -s {} #{release_to_link}/config \\;",
+          "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
+          "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
         ].each do |cmd|
           run cmd
         end
 
         sudo "chown -R #{c.user}:#{c.group} #{release_to_link}"
         run "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi"
-      end
-
-      def generate_configs(release_to_link=c.release_path)
-        generate_database_yml(release_to_link)
-      end
-
-      # Do nothing if there is no Gemfile.lock to determine what ORM gems are being used
-      # (falls back to using the existing shared config/database.yml file)
-      def generate_database_yml(release_to_link)
-        return # This work is overwritten by Chef every time a config is applied or upgraded.
-        # TODO - Teach this to know when it is running alongside a compatible cloud_cookbooks release.
-        return if keep_database_yml?(release_to_link)
-        if config["db_adapter"] || File.exist?("#{c.release_path}/Gemfile.lock")
-          info "~> Generating database.yml from Gemfile.lock"
-          database_yml = "#{c.shared_path}/config/database.yml"
-          node         = EY::Serverside.node
-          node_app     = node["engineyard"]["environment"]["apps"].find { |app| app['name'] == c['app'] }
-          abort("Invalid application name for target environment: #{c['app']}") unless node_app
-
-          db_stack_name   = node[:engineyard][:environment][:db_stack_name]
-          instances       = node[:engineyard][:environment][:instances]
-          db_master       = {"public_hostname" => "localhost"} # you know, just in case
-          db_slaves       = []
-          instances.each do |i|
-            case i['role']
-            when 'db_master', 'solo'
-              db_master = i
-            when 'db_slave'
-              db_slaves << i
-            end
-          end
-          db_host         = db_master["public_hostname"]
-          db_slaves_hosts = db_slaves.map {|slave| slave["public_hostname"]}
-
-          if config["db_adapter"]
-            adapter = config["db_adapter"]
-          elsif bundler_gems_include?("mysql2")
-            adapter = "mysql2"
-          elsif bundler_gems_include?("mysql")
-            adapter = "mysql"
-          elsif bundler_gems_include?("pg")
-            adapter = "postgresql"
-          elsif bundler_gems_include?("jdbc-mysql")
-            adapter = "mysql"
-          elsif bundler_gems_include?("jdbc-postgres")
-            adapter = "postgresql"
-          elsif db_stack_name && db_stack_name =~ /postgres/
-            adapter = "postgresql"
-          else
-            adapter = "mysql"
-          end
-
-          File.open(database_yml, "w") do |file|
-            contents = <<-EOS.gsub(/^\s{12}/, '')
-            #{node[:engineyard][:environment][:framework_env]}:
-              adapter:   #{adapter}
-              database:  #{node_app[:database_name]}
-              username:  #{node[:engineyard][:environment][:ssh_username]}
-              password:  #{node[:engineyard][:environment][:ssh_password]}
-              host:      #{db_host}
-              reconnect: true
-            EOS
-            db_slaves_hosts.each_with_index do |host, n|
-              slave_name = n.zero? ? "slave" : "slave_#{n}"
-              contents << <<-EOS.gsub(/^\s{14}/, '')
-              #{slave_name}:
-                adapter:   #{adapter}
-                database:  #{node_app[:database_name]}
-                username:  #{node[:engineyard][:environment][:ssh_username]}
-                password:  #{node[:engineyard][:environment][:ssh_password]}
-                host:      #{host}
-                reconnect: true
-              EOS
-            end
-            file << contents
-          end
-        end
-        # scp to all slaves
-        info "~> Propagating database.yml config"
-        barrier(*(EY::Serverside::Server.all.select do |server|
-          server.role == :app
-        end.map do |server|
-          need_later do
-            # Copy the local shared database.yml to the slave
-            server.scp(database_yml, database_yml)
-          end
-        end))
-        info "~> Symlinking database.yml config"
-        run "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml"
       end
 
       # task
@@ -399,8 +253,7 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
       def callback(what)
         @callbacks_reached ||= true
         if File.exist?("#{c.release_path}/deploy/#{what}.rb")
-          escaped_cmd = Escape.shell_command(base_callback_command_for(what))
-          run escaped_cmd do |server, cmd|
+          run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
             per_instance_args = [
               '--current-roles', server.roles.join(' '),
               '--config', c.to_json,
@@ -414,16 +267,11 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
       protected
 
       def base_callback_command_for(what)
-        [serverside_bin, version_specifier, 'hook', what.to_s,
+        [$0, version_specifier, 'hook', what.to_s,
           '--app', config.app.to_s,
           '--release-path', config.release_path.to_s,
           '--framework-env', c.environment.to_s,
         ].compact
-      end
-
-      def serverside_bin
-        basedir = File.expand_path('../../..', __FILE__)
-        File.join(basedir, 'bin', 'engineyard-serverside')
       end
 
       def version_specifier
@@ -462,7 +310,7 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
         raise
       end
 
-      def warn_about_missing_lockfile(missing_lock_version)
+      def warn_about_missing_lockfile
         info "!>"
         info "!> WARNING: Gemfile.lock is missing!"
         info "!> You can get different gems in production than what you tested with."
@@ -472,52 +320,30 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
         info "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
         info "!> If you don't have a Gemfile.lock, run \"bundle lock\" to create one."
         info "!>"
-        info "!> This deployment will use bundler #{missing_lock_version} to run 'bundle install'."
+        info "!> This deployment will use bundler #{default_09_bundler} to run 'bundle install'."
         info "!>"
       end
 
-      def keep_database_yml?(release_to_link=c.release_path)
-        File.exists?(File.join(release_to_link, "config", "keep.database.yml"))
-      end
-
-      # returns true if "bundle list" includes all gems requested
-      def bundler_gems_include?(*gems)
-        lockfile = File.join(c.release_path, "Gemfile.lock")
-        @lockfile_contents ||= File.read(lockfile)
-
-        # Parsing Gemfile.lock which looks like
-        # GEM
-        #   remote: http://rubygems.org/
-        #   specs:
-        #     activemodel (3.0.10)
-        #       activesupport (= 3.0.10)
-        #       builder (~> 2.1.2)
-        #       i18n (~> 0.5.0)
-        #
-        gems.inject(true) {|found_all, gem| found_all && (@lockfile_contents =~ / #{gem} \(/)}
-      end
-
-      def get_bundler_installer(lockfile, options = '')
+      def get_bundler_installer(lockfile)
         parser = LockfileParser.new(File.read(lockfile))
         case parser.lockfile_version
         when :bundler09
-          bundler_09_installer(parser.bundler_version, options)
+          bundler_09_installer(parser.bundler_version)
         when :bundler10
-          bundler_10_installer(parser.bundler_version, options)
+          bundler_10_installer(parser.bundler_version)
         else
           raise "Unknown lockfile version #{parser.lockfile_version}"
         end
       end
       public :get_bundler_installer
 
-      def bundler_09_installer(version, options = '')
-        default_options = '--without=development --without=test'
-        BundleInstaller.new(version, default_options + options)
+      def bundler_09_installer(version)
+        BundleInstaller.new(version, '--without=development --without=test')
       end
 
-      def bundler_10_installer(version, options = '')
-        default_options = "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test"
-        BundleInstaller.new(version, default_options + options)
+      def bundler_10_installer(version)
+        BundleInstaller.new(version,
+          "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test")
       end
     end   # DeployBase
 
