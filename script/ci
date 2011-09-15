@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -x
+set -e
+export LANG=en_US.UTF-8
+
+source use_ruby.sh
+use_ruby resin
+
+gem install bundler --no-rdoc --no-ri
+bundle
+
+time bundle exec rake --trace
