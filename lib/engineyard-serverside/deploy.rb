@@ -140,7 +140,7 @@ module EY
                                 bundler_09_installer(default_09_bundler)
                               end
 
-          sudo "#{$0} _#{EY::Serverside::VERSION}_ install_bundler #{bundler_installer.version}"
+          sudo "#{serverside_bin} install_bundler #{bundler_installer.version}"
 
           bundled_gems_path = File.join(c.shared_path, "bundled_gems")
           ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
@@ -267,17 +267,17 @@ module EY
       protected
 
       def base_callback_command_for(what)
-        [$0, version_specifier, 'hook', what.to_s,
+        [serverside_bin, 'hook', what.to_s,
           '--app', config.app.to_s,
           '--release-path', config.release_path.to_s,
           '--framework-env', c.environment.to_s,
         ].compact
       end
 
-      def version_specifier
-        "_#{EY::Serverside::VERSION}_"
+      def serverside_bin
+        basedir = File.expand_path('../../..', __FILE__)
+        File.join(basedir, 'bin', 'engineyard-serverside')
       end
-
 
       def puts_deploy_failure
         if @cleanup_failed

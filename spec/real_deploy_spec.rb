@@ -155,7 +155,7 @@ describe "deploying an application" do
       File.open(File.join(@deploy_dir, 'shared', 'bundled_gems', name), "w") { |f| f.write("old\n") }
     end
 
-    @binpath = $0 = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
+    @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     @deployer = FullTestDeploy.new(config)
     @deployer.deploy
   end
@@ -163,7 +163,7 @@ describe "deploying an application" do
   it "runs the right bundler command" do
     install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
     install_bundler_command_ran.should_not be_nil
-    install_bundler_command_ran.should == "#{@binpath} _#{EY::Serverside::VERSION}_ install_bundler 1.0.10"
+    install_bundler_command_ran.should == "#{@binpath} install_bundler 1.0.10"
   end
 
   it "creates a REVISION file" do
