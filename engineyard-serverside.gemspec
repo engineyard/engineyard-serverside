@@ -17,6 +17,8 @@ Gem::Specification.new do |s|
   s.executables = ["engineyard-serverside"]
   s.default_executable = "engineyard-serverside"
   s.require_path = 'lib'
+  s.add_development_dependency('rspec', '= 1.3.2')
+  s.add_development_dependency('rake')
 
   s.rubygems_version = %q{1.3.6}
   s.test_files = Dir.glob("spec/**/*")
