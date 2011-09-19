@@ -1,3 +1,12 @@
+if String.instance_methods.include?(:force_encoding)
+  $string_encodings = true
+else
+  # KCODE is gone in 1.9-like implementations, but we
+  # still need to set it for 1.8.
+  $KCODE = 'U'
+  $string_encodings = false
+end
+
 $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/open4/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
@@ -22,22 +31,17 @@ require 'engineyard-serverside/deprecation'
 
 module EY
   module Serverside
-    
+    RemoteFailure = Class.new StandardError
+
     def self.node
       @node ||= deep_indifferentize(JSON.parse(dna_json))
     end
 
     def self.dna_json
-      @dna_json ||= if File.exist?('/etc/chef/dna.json')
-                      `sudo cat /etc/chef/dna.json`
-                    else
-                      {}.to_json
-                    end
+      @dna_json ||= read_encoded_dna
     end
 
-    RemoteFailure = Class.new StandardError
-
-    private
+    private # doesn't work how people think, but hey..
     def self.deep_indifferentize(thing)
       if thing.kind_of?(Hash)
         indifferent_hash = Thor::CoreExt::HashWithIndifferentAccess.new
@@ -51,6 +55,19 @@ module EY
         thing
       end
     end
-    
+
+    def self.dna_path
+      '/etc/chef/dna.json'
+    end
+
+    def self.read_encoded_dna
+      json = if File.exist?(dna_path)
+               `sudo cat #{dna_path}`
+             else
+               '{}'
+             end
+      json.force_encoding('UTF-8') if $string_encodings
+      json
+    end
   end
 end
