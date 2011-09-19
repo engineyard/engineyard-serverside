@@ -7,9 +7,8 @@ require 'engineyard-serverside'
 module EY
   module Serverside
     def self.dna_json=(j)
-      @dna_json = j;
+      @dna_json = j
       @node = nil
-      j
     end
 
     module LoggedOutput

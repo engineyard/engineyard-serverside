@@ -151,7 +151,7 @@ describe "deploying an application" do
 
     # pretend there is a shared bundled_gems directory
     FileUtils.mkdir_p(File.join(@deploy_dir, 'shared', 'bundled_gems'))
-    %w(RUBY_VERSION SYSTEM_VERSION).each do |name| 
+    %w(RUBY_VERSION SYSTEM_VERSION).each do |name|
       File.open(File.join(@deploy_dir, 'shared', 'bundled_gems', name), "w") { |f| f.write("old\n") }
     end
 
