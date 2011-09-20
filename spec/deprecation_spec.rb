@@ -40,6 +40,6 @@ describe EY::Serverside do
   end
 
   it "doesn't interfere with unrelated constants" do
-    lambda{ EY::WTFNotDefined }.should raise_error(NameError, /uninitialized constant EY::WTFNotDefined/)
+    lambda{ EY::WTFNotDefined }.should raise_error(NameError, /uninitialized constant.*EY::WTFNotDefined/)
   end
 end
