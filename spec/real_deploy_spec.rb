@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper'
+require 'spec_helper'
 
 module EY::Serverside::Strategies::IntegrationSpec
   module Helpers
@@ -157,6 +157,7 @@ describe "deploying an application" do
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     @deployer = FullTestDeploy.new(config)
+    $stdout.print "\n"
     @deployer.deploy
   end
 

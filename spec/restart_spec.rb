@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper'
+require 'spec_helper'
 
 class TestRestartDeploy < EY::Serverside::Deploy
   attr_reader :call_order

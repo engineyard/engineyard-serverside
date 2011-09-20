@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper'
+require 'spec_helper'
 
 describe "the EY::Serverside::Deploy API" do
   it "calls tasks in the right order" do

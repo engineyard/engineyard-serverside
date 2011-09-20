@@ -37,7 +37,7 @@ module EY
         end
         def safe_yaml_load(loadable)
           YAML.load(loadable) #won't always raise... soemtimes parses the contents as 1 big string
-        rescue ArgumentError => e  # not yaml
+        rescue ArgumentError, SyntaxError # not yaml
           nil
         end
       end

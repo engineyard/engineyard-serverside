@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper'
+require 'spec_helper'
 
 describe "the bundler version retrieved from the lockfile" do
   def get_full_path(file)

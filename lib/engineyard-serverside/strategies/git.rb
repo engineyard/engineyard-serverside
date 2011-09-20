@@ -101,7 +101,11 @@ module EY
         end
 
         def branch?(ref)
-          `#{git} branch -r`.map { |x| x.strip }.include?("origin/#{ref}")
+          remote_branches = `#{git} branch -r`
+          remote_branches.each_line do |line|
+            return true if line.include?("origin/#{ref}")
+          end
+          false
         end
 
         def set_up_git_ssh(app)
