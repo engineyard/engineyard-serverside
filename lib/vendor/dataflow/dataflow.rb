@@ -6,7 +6,7 @@ module Dataflow
     attr_accessor :forker
   end
   self.forker = Thread.method(:fork)
-  
+
   def self.included(cls)
     class << cls
       def declare(*readers)
@@ -21,7 +21,7 @@ module Dataflow
       end
     end
   end
-  
+
   def local(&block)
     return Variable.new unless block_given?
     vars = Array.new(block.arity) { Variable.new }
@@ -60,13 +60,17 @@ module Dataflow
   # initialized instance variables in get/set methods for memory and
   # performance reasons
   class Variable
-    instance_methods.each { |m| undef_method m unless m =~ /^__/ }
+    # Briefly disable the warning we would get when undefining object_id.
+    # We actually rely on the ability to do that, so...
+    v = $VERBOSE; $VERBOSE = nil
+    instance_methods.each { |m| undef_method(m) unless m =~ /^__|instance_eval/ }
+    $VERBOSE = v # back to sanity
     LOCK = Monitor.new
     def initialize(&block) @__trigger__ = block if block_given? end
-    
+
     # Lazy-load conditions to be nice on memory usage
     def __binding_condition__() @__binding_condition__ ||= LOCK.new_cond end
-    
+
     def __unify__(value)
       LOCK.synchronize do
         __activate_trigger__ if @__trigger__
@@ -91,7 +95,7 @@ module Dataflow
 
     def __wait__
       LOCK.synchronize do
-        unless @__bound__          
+        unless @__bound__
           if @__trigger__
             __activate_trigger__
           else

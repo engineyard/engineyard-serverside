@@ -17,7 +17,7 @@ describe 'Unifying a bound value' do
           unify var2, type
           var.should == var2
           var2.should == var
-          lambda {unify var, var2}.should_not raise_error        
+          lambda {unify var, var2}.should_not raise_error
         end
       end
 
