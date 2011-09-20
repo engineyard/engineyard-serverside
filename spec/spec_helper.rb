@@ -3,6 +3,7 @@ $LOAD_PATH.push File.expand_path("../lib", File.dirname(__FILE__))
 Bundler.require :default, :test
 require 'pp'
 require 'engineyard-serverside'
+require File.expand_path('../support/integration', __FILE__)
 
 module EY
   module Serverside
@@ -15,7 +16,12 @@ module EY
       def info(_) end
 
       def logged_system(cmd)
-        system("#{cmd} 2>/dev/null")
+        output = `#{cmd} 2>&1`
+        successful = ($? == 0)
+        if ENV['VERBOSE'] && !successful
+          $stderr.puts "\nCommand `#{cmd}` exited with status #{$?.exitstatus}: '#{output.strip}'"
+        end
+        successful
       end
     end
 
@@ -33,6 +39,8 @@ Kernel.system "tar xzf #{GITREPO_DIR}.tar.gz -C #{FIXTURES_DIR}"
 
 Spec::Runner.configure do |config|
   config.before(:all) do
+    $DISABLE_GEMFILE = false
+    $DISABLE_LOCKFILE = false
     EY::Serverside.dna_json = {}.to_json
   end
 end
