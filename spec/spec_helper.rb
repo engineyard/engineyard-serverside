@@ -1,6 +1,11 @@
 $LOAD_PATH.push File.expand_path("../lib", File.dirname(__FILE__))
 
-Bundler.require :default, :test
+if defined?(Bundler)
+  Bundler.require :default, :test
+else
+  require 'rubygems'
+end
+
 require 'pp'
 require 'engineyard-serverside'
 require File.expand_path('../support/integration', __FILE__)
