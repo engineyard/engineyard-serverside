@@ -80,16 +80,26 @@ describe "Deploying an application that uses Bundler" do
     before(:all) do
       $DISABLE_GEMFILE = false
       $DISABLE_LOCKFILE = true
-      # deploy_test_application
+      deploy_test_application
+    end
+
+    it "default to Bundler 1.0.10" do
+      install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
+      install_bundler_command_ran.should_not be_nil
+      install_bundler_command_ran.should == "#{@binpath} install_bundler 1.0.10"
+    end
+
+    it "runs 'bundle install' without --deployment" do
+      bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+      bundle_install_cmd.should_not be_nil
+      bundle_install_cmd.should_not include('--deployment')
     end
 
     it "creates a ruby version file" do
-      pending "regression, to be fixed momentarily"
       File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
     end
 
     it "creates a system version file" do
-      pending "regression, to be fixed momentarily"
       File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
     end
   end

@@ -2,6 +2,9 @@ require 'yaml'
 module EY
   module Serverside
     class LockfileParser
+      def self.default_version
+        Parse10::DEFAULT
+      end
 
       attr_reader :bundler_version, :lockfile_version
 

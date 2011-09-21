@@ -137,7 +137,7 @@ module EY
                                 get_bundler_installer(lockfile)
                               else
                                 warn_about_missing_lockfile
-                                bundler_09_installer(default_09_bundler)
+                                get_default_bundler_installer
                               end
 
           sudo "#{serverside_bin} install_bundler #{bundler_installer.version}"
@@ -320,7 +320,7 @@ module EY
         info "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
         info "!> If you don't have a Gemfile.lock, run \"bundle lock\" to create one."
         info "!>"
-        info "!> This deployment will use bundler #{default_09_bundler} to run 'bundle install'."
+        info "!> This deployment will use bundler #{LockfileParser.default_version} to run 'bundle install'."
         info "!>"
       end
 
@@ -337,13 +337,23 @@ module EY
       end
       public :get_bundler_installer
 
+      def get_default_bundler_installer
+        # deployment mode is not supported without a Gemfile.lock, so we turn that off.
+        bundler_10_installer(LockfileParser.default_version, deployment_mode = false)
+      end
+      public :get_default_bundler_installer
+
       def bundler_09_installer(version)
         BundleInstaller.new(version, '--without=development --without=test')
       end
 
-      def bundler_10_installer(version)
-        BundleInstaller.new(version,
-          "--deployment --path #{c.shared_path}/bundled_gems --binstubs #{c.binstubs_path} --without development test")
+      # Set +deploymemt_mode+ to false to avoid passing the --deployment flag.
+      def bundler_10_installer(version, deployment_mode = true)
+        options = ["--path #{c.shared_path}/bundled_gems",
+                   "--binstubs #{c.binstubs_path}",
+                   "--without development test"]
+        options.unshift('--deployment') if deployment_mode
+        BundleInstaller.new(version, options.join(' '))
       end
     end   # DeployBase
 
