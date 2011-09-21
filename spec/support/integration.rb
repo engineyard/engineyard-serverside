@@ -75,7 +75,7 @@ module EY::Serverside::Strategies::IntegrationSpec
 
       deploy_hook_dir = File.join(cached_copy, 'deploy')
       FileUtils.mkdir_p(deploy_hook_dir)
-      %w[bundle migrate symlink restart].each do |action|
+      %w[bundle compile_assets migrate symlink restart].each do |action|
         %w[before after].each do |prefix|
           hook = "#{prefix}_#{action}"
           File.open(File.join(deploy_hook_dir, "#{hook}.rb"), 'w') do |f|

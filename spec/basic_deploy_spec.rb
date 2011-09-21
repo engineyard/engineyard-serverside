@@ -39,6 +39,8 @@ describe "Deploying an application without Bundler" do
     File.exist?(File.join(@deploy_dir, 'current', 'after_bundle.ran'  )).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'before_migrate.ran')).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'after_migrate.ran' )).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'before_compile_assets.ran')).should be_true
+    File.exist?(File.join(@deploy_dir, 'current', 'after_compile_assets.ran' )).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'before_symlink.ran')).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'after_symlink.ran' )).should be_true
     File.exist?(File.join(@deploy_dir, 'current', 'before_restart.ran')).should be_true
