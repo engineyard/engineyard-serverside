@@ -9,16 +9,13 @@ describe "the bundler version retrieved from the lockfile" do
     EY::Serverside::DeployBase.new(@config).get_bundler_installer(get_full_path(file)).version
   end
 
-  it "returns the default version for an 0.9 lockfile without a bundler dependency" do
-    get_version('0.9-no-bundler').should == EY::Serverside::LockfileParser::Parse09::DEFAULT
-  end
-
-  it "gets the version from an 0.9 lockfile with a bundler dependency" do
-    get_version('0.9-with-bundler').should == '0.9.24'
+  it "raises an error with pre 0.9 bundler lockfiles" do
+    lambda { get_version('0.9-no-bundler') }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
+    lambda { get_version('0.9-with-bundler') }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
   end
 
   it "returns the default version for a 1.0 lockfile without a bundler dependency" do
-    get_version('1.0-no-bundler').should == EY::Serverside::LockfileParser::Parse10::DEFAULT
+    get_version('1.0-no-bundler').should == EY::Serverside::LockfileParser::DEFAULT
   end
 
   it "gets the version from a 1.0.0.rc.1 lockfile w/dependency on 1.0.0.rc.1" do
@@ -42,18 +39,14 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   it "raises an error if it can't parse the file" do
-    lambda { get_version('not-a-lockfile') }.should raise_error(RuntimeError, /Unknown lockfile format/)
-  end
-
-  it "raises an error if it can't parse evil yaml" do
-    lambda { get_version('evil-yaml') }.should raise_error(RuntimeError, /Unknown lockfile format/)
+    lambda { get_version('not-a-lockfile') }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
   end
 
   context "fetching the right version number" do
-    subject { EY::Serverside::LockfileParser::Parse10.new(get_full_path('1.0.6-no-bundler')) }
+    subject { EY::Serverside::LockfileParser.new(File.read(get_full_path('1.0.6-no-bundler'))) }
 
     it "uses the default version when there is no bundler version" do
-      subject.fetch_version(nil, nil).should == EY::Serverside::LockfileParser::Parse10::DEFAULT
+      subject.fetch_version(nil, nil).should == EY::Serverside::LockfileParser::DEFAULT
     end
 
     it "uses the given version when the qualifier is `='" do
@@ -73,7 +66,7 @@ describe "the bundler version retrieved from the lockfile" do
     end
 
     it "uses the default version when the given version is lower" do
-      subject.fetch_version('1.0.1', '>=').should == EY::Serverside::LockfileParser::Parse10::DEFAULT
+      subject.fetch_version('1.0.1', '>=').should == EY::Serverside::LockfileParser::DEFAULT
     end
 
     it "selects only the first version expression" do
