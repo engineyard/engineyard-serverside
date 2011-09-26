@@ -6,6 +6,7 @@ describe "the EY::Serverside::Deploy API" do
       # This happens before require_custom_tasks, so it's not
       # overrideable. That's why it's not in @call_order.
       def update_repository_cache() end
+      def check_repository() end
 
       # cheat a bit; we don't actually want to do these things
       def require_custom_tasks() end

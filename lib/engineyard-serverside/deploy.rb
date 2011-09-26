@@ -14,6 +14,7 @@ module EY
       def deploy
         debug "Starting deploy at #{Time.now.asctime}"
         update_repository_cache
+        check_repository
         cached_deploy
       end
 
@@ -48,6 +49,16 @@ module EY
         debug "Finished failing to deploy at #{Time.now.asctime}"
         puts_deploy_failure
         raise
+      end
+
+      def check_repository
+        if gemfile? && lockfile
+          unless lockfile.any_database_adapter?
+            info "!> WARNING: Gemfile.lock does not contain any recognized database adapter!"
+            info "!> We expected to find mysql2, mysql or other database adapter gem."
+            info "!> This could prevent booting of applications that use MySQL or Postgres."
+          end
+        end
       end
 
       def restart_with_maintenance_page
@@ -249,6 +260,10 @@ module EY
 
       protected
 
+      def gemfile?
+        File.exist?("#{c.release_path}/Gemfile")
+      end
+
       def base_callback_command_for(what)
         [serverside_bin, 'hook', what.to_s,
           '--app', config.app.to_s,
@@ -299,35 +314,31 @@ module EY
         info "!> You can get different gems in production than what you tested with."
         info "!> You can get different gems on every deployment even if your Gemfile hasn't changed."
         info "!> Deploying may take a long time."
+        info "!> There is a slight, but very serious chance of a Zerg rush overtaking your base."
         info "!>"
         info "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
-        info "!> If you don't have a Gemfile.lock, run \"bundle lock\" to create one."
         info "!>"
         info "!> This deployment will use bundler #{LockfileParser.default_version} to run 'bundle install'."
         info "!>"
       end
 
-      def get_bundler_installer(lockfile)
-        parser = LockfileParser.new(File.read(lockfile))
-        case parser.lockfile_version
-        when :bundler09
-          bundler_09_installer(parser.bundler_version)
-        when :bundler10
-          bundler_10_installer(parser.bundler_version)
+      def get_bundler_installer
+        if lockfile
+          bundler_10_installer(lockfile.bundler_version)
         else
-          raise "Unknown lockfile version #{parser.lockfile_version}"
+          warn_about_missing_lockfile
+          # deployment mode is not supported without a Gemfile.lock, so we turn that off.
+          bundler_10_installer(LockfileParser.default_version, deployment_mode = false)
         end
       end
-      public :get_bundler_installer
 
-      def get_default_bundler_installer
-        # deployment mode is not supported without a Gemfile.lock, so we turn that off.
-        bundler_10_installer(LockfileParser.default_version, deployment_mode = false)
-      end
-      public :get_default_bundler_installer
-
-      def bundler_09_installer(version)
-        BundleInstaller.new(version, '--without=development --without=test')
+      def lockfile
+        lockfile_path = File.join(c.release_path, "Gemfile.lock")
+        if File.exist?(lockfile_path)
+          @lockfile_parser ||= LockfileParser.new(File.read(lockfile_path))
+        else
+          nil
+        end
       end
 
       # Set +deploymemt_mode+ to false to avoid passing the --deployment flag.
@@ -340,16 +351,10 @@ module EY
       end
 
       def check_ruby_bundler
-        if File.exist?("#{c.release_path}/Gemfile")
+        if gemfile?
           info "~> Gemfile detected, bundling gems"
-          lockfile = File.join(c.release_path, "Gemfile.lock")
 
-          bundler_installer = if File.exist?(lockfile)
-                                get_bundler_installer(lockfile)
-                              else
-                                warn_about_missing_lockfile
-                                get_default_bundler_installer
-                              end
+          bundler_installer = get_bundler_installer
 
           sudo "#{clean_environment} #{serverside_bin} install_bundler #{bundler_installer.version}"
 

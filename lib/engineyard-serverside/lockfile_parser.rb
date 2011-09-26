@@ -11,26 +11,33 @@ module EY
       attr_reader :bundler_version, :lockfile_version
 
       def initialize(lockfile_contents)
-        parse(lockfile_contents)
+        @contents = lockfile_contents
+        parse
       end
 
-      def parse(contents)
-        parse_from_metadata(contents) ||
-          parse_from_dependencies(contents) ||
-          raise("Malformed or pre bundler-1.0.0 Gemfile.lock: #{contents[0,50]}...")
+      def any_database_adapter?
+        %w[mysql2 mysql do_mysql pg do_postgres].any? do |gem|
+          @contents.index(/^\s+#{gem}\s\([^\)]+\)$/)
+        end
       end
 
-      def slice_section(contents, header)
-        if start = contents.index(/^#{header}/)
-          finish = contents.index(/(^\S|\Z)/, start + header.length)
-          contents.slice(start..finish)
+      def parse
+        parse_from_metadata ||
+          parse_from_dependencies ||
+          raise("Malformed or pre bundler-1.0.0 Gemfile.lock: #{@contents[0,50]}...")
+      end
+
+      def slice_section(header)
+        if start = @contents.index(/^#{header}/)
+          finish = @contents.index(/(^\S|\Z)/, start + header.length)
+          @contents.slice(start..finish)
         else
           ""
         end
       end
 
-      def parse_from_metadata(contents)
-        section = slice_section(contents, 'METADATA')
+      def parse_from_metadata
+        section = slice_section('METADATA')
 
         if section.empty?
           return nil
@@ -41,8 +48,8 @@ module EY
         @bundler_version = result ? result.first : DEFAULT
       end
 
-      def parse_from_dependencies(contents)
-        section = slice_section(contents, 'DEPENDENCIES')
+      def parse_from_dependencies
+        section = slice_section('DEPENDENCIES')
 
         if section.empty?
           return nil
