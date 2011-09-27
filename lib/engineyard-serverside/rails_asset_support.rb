@@ -2,21 +2,38 @@ module EY
   module Serverside
     module RailsAssetSupport
       def compile_assets
+        asset_dir = "#{c.release_path}/app/assets"
+        return unless app_needs_assets?
+        rails_version = bundled_rails_version
         roles :app_master, :app, :solo do
-          rails_app = "#{c.release_path}/config/application.rb"
-          asset_dir = "#{c.release_path}/app/assets"
-          if File.exists?(rails_app) && File.directory?(asset_dir)
-            return if app_disables_assets?(rails_app)
-            if app_builds_own_assets?
-              info "~> public/assets already exists, skipping pre-compilation."
-              return
-            end
-            keep_existing_assets
-            cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
-            info "~> Precompiling assets for Rails: #{cmd}"
-            run(cmd)
+          keep_existing_assets
+          cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
+          if rails_version
+            info "~> Precompiling assets for rails v#{version}"
+          else
+            info "~> [WARN] Precompiling assets even though Rails was not bundled."
           end
+          run(cmd)
         end
+      end
+
+      def app_needs_assets?
+        app_rb_path = File.join(c.release_path, 'config', 'application.rb')
+        return unless File.readable?(app_rb_path) # Not a Rails app in the first place.
+        return unless File.directory?(File.join(c.release_path, 'app', 'assets'))
+        if app_builds_own_assets?
+          info "~> public/assets already exists, skipping pre-compilation."
+          return
+        end
+        if app_disables_assets?(app_rb_path)
+          info "~> application.rb has disabled asset compilation. Skipping."
+          return
+        end
+        unless app_has_asset_task?
+          info "~> No 'assets:precompile' Rake task found. Skipping."
+          return
+        end
+        true
       end
 
       def app_disables_assets?(path)
@@ -27,6 +44,16 @@ module EY
           disabled = contents.match(pattern)
         end
         disabled
+      end
+
+      # Runs 'rake -T' to see if there is an assets:precompile task.
+      def app_has_asset_task?
+        # We just run this locally on the app master; everybody else should
+        # have the same code anyway.
+        task_check = "PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake -T assets:precompile |grep 'assets:precompile'"
+        cmd = "cd #{c.release_path} && #{task_check}"
+        logged_system "cd #{c.release_path} && #{task_check}"
+        $? == 0
       end
 
       def app_builds_own_assets?
@@ -51,7 +78,8 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
         COMMAND
        end
 
-      def bundled_rails_version(lockfile_path)
+      def bundled_rails_version(lockfile_path = nil)
+        lockfile_path ||= File.join(c.release_path, 'Gemfile.lock')
         lockfile = File.open(lockfile_path) {|f| f.read}
         lockfile.each_line do |line|
           # scan for gemname (version) toplevel deps.

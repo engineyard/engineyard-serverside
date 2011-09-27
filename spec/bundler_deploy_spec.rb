@@ -1,6 +1,11 @@
 require 'spec_helper'
 
 describe "Deploying an application that uses Bundler" do
+  before(:each) do
+    @bundler_version = ::EY::Serverside::LockfileParser.default_version
+    @version_pattern = Regexp.quote(@bundler_version)
+  end
+
   def deploy_test_application
     @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
 
@@ -40,11 +45,11 @@ describe "Deploying an application that uses Bundler" do
     it "runs the right bundler command" do
       install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
       install_bundler_command_ran.should_not be_nil
-      install_bundler_command_ran.should == "#{@binpath} install_bundler 1.0.10"
+      install_bundler_command_ran.should include("#{@binpath} install_bundler #{@bundler_version}")
     end
 
     it "runs 'bundle install' with --deployment" do
-      bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+      bundle_install_cmd = @deployer.commands.grep(/bundle _#{@version_pattern}_ install/).first
       bundle_install_cmd.should_not be_nil
       bundle_install_cmd.should include('--deployment')
     end
@@ -83,14 +88,15 @@ describe "Deploying an application that uses Bundler" do
       deploy_test_application
     end
 
-    it "default to Bundler 1.0.10" do
+    it "installs the proper Bundler version" do
+      @bundler_version.should == "1.0.10" # Something should break when the default changes.
       install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
       install_bundler_command_ran.should_not be_nil
-      install_bundler_command_ran.should == "#{@binpath} install_bundler 1.0.10"
+      install_bundler_command_ran.should include("#{@binpath} install_bundler #{@bundler_version}")
     end
 
     it "runs 'bundle install' without --deployment" do
-      bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+      bundle_install_cmd = @deployer.commands.grep(/bundle _#{@version_pattern}_ install/).first
       bundle_install_cmd.should_not be_nil
       bundle_install_cmd.should_not include('--deployment')
     end

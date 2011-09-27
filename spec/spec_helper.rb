@@ -23,8 +23,12 @@ module EY
       def logged_system(cmd)
         output = `#{cmd} 2>&1`
         successful = ($? == 0)
-        if ENV['VERBOSE'] && !successful
-          $stderr.puts "\nCommand `#{cmd}` exited with status #{$?.exitstatus}: '#{output.strip}'"
+        if ENV['VERBOSE']
+          if successful
+            $stdout.puts "#{cmd}\n#{output.strip}".chomp
+          else
+            $stderr.puts "\nCommand `#{cmd}` exited with status #{$?.exitstatus}: '#{output.strip}'"
+          end
         end
         successful
       end

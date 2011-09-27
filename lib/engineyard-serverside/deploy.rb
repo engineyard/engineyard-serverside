@@ -132,6 +132,10 @@ module EY
         "/engineyard/bin/app_#{c.app} deploy"
       end
 
+      def clean_environment
+        "env -i PATH=$PATH HOME=$HOME GEM_PATH=$GEM_PATH GEM_HOME=$GEM_HOME"
+      end
+
       # task
       def bundle
         if File.exist?("#{c.release_path}/Gemfile")
@@ -145,7 +149,7 @@ module EY
                                 get_default_bundler_installer
                               end
 
-          sudo "#{serverside_bin} install_bundler #{bundler_installer.version}"
+          sudo "#{clean_environment} #{serverside_bin} install_bundler #{bundler_installer.version}"
 
           bundled_gems_path = File.join(c.shared_path, "bundled_gems")
           ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
@@ -165,7 +169,7 @@ module EY
             end
           end
 
-          run "cd #{c.release_path} && ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
+          run "cd #{c.release_path} && #{clean_environment} ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
         end
@@ -224,24 +228,31 @@ module EY
       end
 
       def symlink_configs(release_to_link=c.release_path)
-        info "~> Symlinking configs"
-        [ "chmod -R g+w #{release_to_link}",
-          "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids",
-          "mkdir -p #{release_to_link}/tmp",
-          "ln -nfs #{c.shared_path}/log #{release_to_link}/log",
-          "mkdir -p #{release_to_link}/public",
-          "mkdir -p #{release_to_link}/config",
-          "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system",
-          "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids",
-          "find #{c.shared_path}/config -type f -exec ln -s {} #{release_to_link}/config \\;",
-          "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml",
-          "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml",
-        ].each do |cmd|
-          run cmd
+        info "~> Preparing shared resources for release"
+        symlink_tasks(release_to_link).each do |what, cmd|
+          info "~> #{what}"
+          run(cmd)
         end
+        owner = [c.user, c.group].join(':')
+        info "~> Setting ownership to #{owner}"
+        sudo "chown -R #{owner} #{release_to_link}"
+      end
 
-        sudo "chown -R #{c.user}:#{c.group} #{release_to_link}"
-        run "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi"
+      def symlink_tasks(release_to_link)
+        [
+          ["Set group write permissions", "chmod -R g+w #{release_to_link}"],
+          ["Remove revision-tracked shared directories from deployment", "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids"],
+          ["Create tmp directory", "mkdir -p #{release_to_link}/tmp"],
+          ["Symlink shared log directory", "ln -nfs #{c.shared_path}/log #{release_to_link}/log"],
+          ["Create public directory if needed", "mkdir -p #{release_to_link}/public"],
+          ["Create config directory if needed", "mkdir -p #{release_to_link}/config"],
+          ["Create system directory if needed", "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system"],
+          ["Symlink shared pids directory", "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids"],
+          ["Symlink other shared config files", "find #{c.shared_path}/config -type f -not -name 'database.yml' -exec ln -s {} #{release_to_link}/config \\;"],
+          ["Symlink mongrel_cluster.yml", "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml"],
+          ["Symlink database.yml", "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml"],
+          ["Symlink newrelic.yml if needed", "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi"],
+        ]
       end
 
       # task

@@ -51,10 +51,13 @@ class FullTestDeploy < EY::Serverside::Deploy
   def bundle
     my_env = ENV.to_hash
 
-    ENV.delete("BUNDLE_GEMFILE")
-    ENV.delete("BUNDLE_BIN_PATH")
-
-    result = super
+    if defined?(Bundler)
+      Bundler.with_clean_env do
+        result = super
+      end
+    else
+      result = super
+    end
 
     ENV.replace(my_env)
     result
@@ -64,6 +67,11 @@ class FullTestDeploy < EY::Serverside::Deploy
     installer = super
     installer.options << ' --quiet'   # stfu already!
     installer
+  end
+
+  def deploy
+    yield if block_given?
+    super
   end
 end
 
@@ -78,7 +86,9 @@ module EY::Serverside::Strategies::IntegrationSpec
       %w[bundle compile_assets migrate symlink restart].each do |action|
         %w[before after].each do |prefix|
           hook = "#{prefix}_#{action}"
-          File.open(File.join(deploy_hook_dir, "#{hook}.rb"), 'w') do |f|
+          hook_path = File.join(deploy_hook_dir, "#{hook}.rb")
+          next if File.exist?(hook_path)
+          File.open(hook_path, 'w') do |f|
             f.write(%Q{run 'touch "#{c.release_path}/#{hook}.ran"'})
           end
         end
@@ -99,13 +109,12 @@ module EY::Serverside::Strategies::IntegrationSpec
 
     def gemfile_contents
       <<-EOF
-source :gemcutter
-
-gem "bundler", "~> 1.0.0.rc.6"
-gem "rake"
+source 'http://rubygems.org'
+gem 'rake', '= 0.8.7'
 EOF
     end
 
+    # Generated using Bundler v1.0.10
     def lockfile_contents
       <<-EOF
 GEM
@@ -117,8 +126,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.0.0.rc.6)
-  rake
+  rake (= 0.8.7)
 EOF
     end
 
