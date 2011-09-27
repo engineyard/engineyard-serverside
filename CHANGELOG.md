@@ -1,3 +1,9 @@
+## 1.4.16
+
+Bugfixes:
+
+  - Deployment previously failed when the git repo had only a single commit.
+
 ## 1.4.15
 
 Features:

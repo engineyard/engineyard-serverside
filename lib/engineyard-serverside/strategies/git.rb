@@ -84,7 +84,7 @@ module EY
         end
 
         def short_log_message(rev)
-          `#{git} log --pretty=oneline --abbrev-commit '#{rev}^..#{rev}'`.strip
+          `#{git} log --pretty=oneline --abbrev-commit -n 1 '#{rev}'`.strip
         end
 
       private
