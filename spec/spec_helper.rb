@@ -47,6 +47,12 @@ FileUtils.rm_rf GITREPO_DIR if File.exists? GITREPO_DIR
 Kernel.system "tar xzf #{GITREPO_DIR}.tar.gz -C #{FIXTURES_DIR}"
 
 Spec::Runner.configure do |config|
+  `which npm 2>&1`
+  $NPM_INSTALLED = ($? == 0)
+  unless $NPM_INSTALLED
+    $stderr.puts "npm not found; skipping Node.js specs."
+  end
+
   config.before(:all) do
     $DISABLE_GEMFILE = false
     $DISABLE_LOCKFILE = false

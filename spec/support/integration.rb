@@ -145,3 +145,30 @@ EOF
   end
 end
 
+module EY::Serverside::Strategies::NodeIntegrationSpec
+  module Helpers
+    include EY::Serverside::Strategies::IntegrationSpec::Helpers
+
+    def generate_gemfile_in(dir)
+      generate_package_json_in(dir)
+      super(dir)
+    end
+
+    def generate_package_json_in(dir)
+      npm_file = File.join(dir, 'package.json')
+      File.open(npm_file, 'w') {|f| f.write(npm_content)}
+    end
+
+    def npm_content
+      <<-EOF
+{
+  "name": "node-example",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "2.2.0"
+  }
+}
+EOF
+    end
+  end
+end
