@@ -2,11 +2,13 @@
 require 'base64'
 require 'fileutils'
 require 'json'
+require 'engineyard-serverside/rails_asset_support'
 
 module EY
   module Serverside
     class DeployBase < Task
       include LoggedOutput
+      include ::EY::Serverside::RailsAssetSupport
 
       # default task
       def deploy
@@ -29,7 +31,10 @@ module EY
           symlink_configs
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
+          run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
           callback(:before_symlink)
+          # We don't use run_with_callbacks for symlink because we need
+          # to clean up manually if it fails.
           symlink
         end
 
@@ -160,7 +165,7 @@ module EY
             end
           end
 
-          run "cd #{c.release_path} && bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
+          run "cd #{c.release_path} && ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
         end
@@ -364,6 +369,5 @@ module EY
         super
       end
     end
-
   end
 end

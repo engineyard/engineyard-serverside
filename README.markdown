@@ -25,3 +25,5 @@ Due to the nature of --development, that gem install command can take a VERY lon
 If you get tired of waiting, you can manually install the indicated versions of
 rake and rspec. Check the gemspec for current requirements.
 At the time of this writing, rspec 1.3.0 was the last version known to work on 1.8.6.
+
+Set the 'VERBOSE' environment variable to something to get full output from failing commands.
