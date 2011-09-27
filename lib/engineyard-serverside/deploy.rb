@@ -133,7 +133,7 @@ module EY
       end
 
       def clean_environment
-        "env -i PATH=$PATH HOME=$HOME GEM_PATH=$GEM_PATH GEM_HOME=$GEM_HOME"
+        "env -i PATH=$PATH HOME=$HOME"
       end
 
       # task

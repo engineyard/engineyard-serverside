@@ -9,7 +9,7 @@ module EY
           keep_existing_assets
           cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
           if rails_version
-            info "~> Precompiling assets for rails v#{version}"
+            info "~> Precompiling assets for rails v#{rails_version}"
           else
             info "~> [WARN] Precompiling assets even though Rails was not bundled."
           end
