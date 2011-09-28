@@ -138,50 +138,8 @@ module EY
 
       # task
       def bundle
-        if File.exist?("#{c.release_path}/Gemfile")
-          info "~> Gemfile detected, bundling gems"
-          lockfile = File.join(c.release_path, "Gemfile.lock")
-
-          bundler_installer = if File.exist?(lockfile)
-                                get_bundler_installer(lockfile)
-                              else
-                                warn_about_missing_lockfile
-                                get_default_bundler_installer
-                              end
-
-          sudo "#{clean_environment} #{serverside_bin} install_bundler #{bundler_installer.version}"
-
-          bundled_gems_path = File.join(c.shared_path, "bundled_gems")
-          ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
-          system_version_file = File.join(bundled_gems_path, "SYSTEM_VERSION")
-          ruby_version = `ruby -v`
-          system_version = `uname -m`
-
-          if File.directory?(bundled_gems_path)
-            rebundle = false
-
-            rebundle = true if File.exist?(ruby_version_file) && File.read(ruby_version_file) != ruby_version
-            rebundle = true if File.exist?(system_version_file) && File.read(system_version_file) != system_version
-
-            if rebundle
-              info "~> Ruby version change detected, cleaning bundled gems"
-              run "rm -Rf #{bundled_gems_path}"
-            end
-          end
-
-          run "cd #{c.release_path} && #{clean_environment} ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
-
-          run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
-        end
-
-        if File.exist?("#{c.release_path}/package.json")
-          unless run("which npm")
-            abort "*** [Error] package.json detected, but npm was not installed"
-          else
-            info "~> package.json detected, installing npm packages"
-            run "cd #{c.release_path} && npm install"
-          end
-        end
+        check_ruby_bundler
+        check_node_npm
       end
 
       # task
@@ -379,6 +337,55 @@ module EY
                    "--without development test"]
         options.unshift('--deployment') if deployment_mode
         BundleInstaller.new(version, options.join(' '))
+      end
+
+      def check_ruby_bundler
+        if File.exist?("#{c.release_path}/Gemfile")
+          info "~> Gemfile detected, bundling gems"
+          lockfile = File.join(c.release_path, "Gemfile.lock")
+
+          bundler_installer = if File.exist?(lockfile)
+                                get_bundler_installer(lockfile)
+                              else
+                                warn_about_missing_lockfile
+                                get_default_bundler_installer
+                              end
+
+          sudo "#{clean_environment} #{serverside_bin} install_bundler #{bundler_installer.version}"
+
+          bundled_gems_path = File.join(c.shared_path, "bundled_gems")
+          ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
+          system_version_file = File.join(bundled_gems_path, "SYSTEM_VERSION")
+          ruby_version = `ruby -v`
+          system_version = `uname -m`
+
+          if File.directory?(bundled_gems_path)
+            rebundle = false
+
+            rebundle = true if File.exist?(ruby_version_file) && File.read(ruby_version_file) != ruby_version
+            rebundle = true if File.exist?(system_version_file) && File.read(system_version_file) != system_version
+
+            if rebundle
+              info "~> Ruby version change detected, cleaning bundled gems"
+              run "rm -Rf #{bundled_gems_path}"
+            end
+          end
+
+          run "cd #{c.release_path} && #{clean_environment} ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
+
+          run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
+        end
+      end
+
+      def check_node_npm
+        if File.exist?("#{c.release_path}/package.json")
+          unless run("which npm")
+            abort "*** [Error] package.json detected, but npm was not installed"
+          else
+            info "~> package.json detected, installing npm packages"
+            run "cd #{c.release_path} && npm install"
+          end
+        end
       end
     end   # DeployBase
 
