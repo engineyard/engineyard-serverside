@@ -55,6 +55,14 @@ module EY
           system(Escape.shell_command(["sudo", "sh", "-l", "-c", cmd]))
         end
 
+        def info(*args)
+          $stderr.puts *args
+        end
+
+        def debug(*args)
+          $stdout.puts *args
+        end
+
         # convenience functions for running on certain instance types
         def on_app_master(&blk)                 on_roles(%w[solo app_master],          &blk) end
         def on_app_servers(&blk)                on_roles(%w[solo app_master app],      &blk) end
