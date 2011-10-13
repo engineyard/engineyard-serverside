@@ -144,7 +144,7 @@ module EY
       end
 
       def clean_environment
-        "env -i PATH=$PATH HOME=$HOME"
+        "unset BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE"
       end
 
       # task
@@ -356,7 +356,7 @@ module EY
 
           bundler_installer = get_bundler_installer
 
-          sudo "#{clean_environment} #{serverside_bin} install_bundler #{bundler_installer.version}"
+          sudo "#{clean_environment} && #{serverside_bin} install_bundler #{bundler_installer.version}"
 
           bundled_gems_path = File.join(c.shared_path, "bundled_gems")
           ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
@@ -376,7 +376,7 @@ module EY
             end
           end
 
-          run "cd #{c.release_path} && #{clean_environment} ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
+          run "#{clean_environment} && cd #{c.release_path} && ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
         end
