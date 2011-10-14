@@ -146,7 +146,7 @@ module EY
       def clean_environment
         "unset BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE"
         # GIT_SSH needs to be defined in the environment for customers with private bundler repos in their Gemfile.
-        ENV['GIT_SSH'] = "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -i ~/.ssh/#{app}-deploy-key"
+        ENV['GIT_SSH'] = "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -i ~/.ssh/#{c[:app]}-deploy-key"
       end
 
       # task
