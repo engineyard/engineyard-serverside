@@ -108,6 +108,9 @@ describe "Deploying an application that uses Bundler" do
     it "creates a system version file" do
       File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
     end
+    it "Sets GIT_SSH environment variable" do
+      ENV['GIT_SSH'].nil? == false && ENV['GIT_SSH'].empty? == false
+    end
   end
 end
 

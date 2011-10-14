@@ -111,6 +111,7 @@ module EY
         def set_up_git_ssh(app)
           # Not sure if we'll need this, but just in case.
           ENV['GIT_SSH'] = "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -i ~/.ssh/#{app}-deploy-key"
+          return
         end
 
       end
