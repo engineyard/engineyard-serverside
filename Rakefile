@@ -78,6 +78,7 @@ end
 desc "Release gem"
 task :release do
   new_version = bump
+  release_changelog(new_version)
   run_commands(
     "git add ChangeLog.md lib/engineyard-serverside/version.rb",
     "git commit -m 'Bump version for release #{new_version}'",

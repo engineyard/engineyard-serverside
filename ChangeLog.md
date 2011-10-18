@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## 1.5.2 (2011-10-18)
+
   * Improve clarity of warning output.
 
 ## 1.5.1 (2011-10-13)
