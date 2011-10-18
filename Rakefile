@@ -57,6 +57,18 @@ def run_commands(*cmds)
   end
 end
 
+def release_changelog(version)
+  clog = Pathname.new('ChangeLog.md')
+  new_clog = clog.read.sub(/^## NEXT$/, <<-SUB.chomp)
+## NEXT
+
+  *
+
+## v#{version} (#{Date.today})
+  SUB
+  clog.open('w') { |f| f.puts new_clog }
+end
+
 desc "Bump version of this gem"
 task :bump do
   ver = bump
@@ -67,7 +79,7 @@ desc "Release gem"
 task :release do
   new_version = bump
   run_commands(
-    "git add lib/engineyard-serverside/version.rb",
+    "git add ChangeLog.md lib/engineyard-serverside/version.rb",
     "git commit -m 'Bump version for release #{new_version}'",
     "gem build engineyard-serverside.gemspec")
 
