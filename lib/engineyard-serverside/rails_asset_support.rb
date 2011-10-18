@@ -11,7 +11,7 @@ module EY
           if rails_version
             info "~> Precompiling assets for rails v#{rails_version}"
           else
-            info "~> [WARN] Precompiling assets even though Rails was not bundled."
+            warning "Precompiling assets even though Rails was not bundled."
           end
           run(cmd)
         end

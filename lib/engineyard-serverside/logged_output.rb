@@ -41,6 +41,10 @@ module EY
         EY::Serverside::LoggedOutput.verbose?
       end
 
+      def warning(msg)
+        info "\nWARNING: #{msg}\n".gsub(/^/,'!> ')
+      end
+
       def info(msg)
         with_logfile do |log|
           Tee.new($stdout, log) << (msg + "\n")

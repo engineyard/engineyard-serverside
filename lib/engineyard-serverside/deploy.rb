@@ -54,9 +54,11 @@ module EY
       def check_repository
         if gemfile? && lockfile
           unless lockfile.any_database_adapter?
-            info "!> WARNING: Gemfile.lock does not contain any recognized database adapter!"
-            info "!> We expected to find mysql2, mysql or other database adapter gem."
-            info "!> This could prevent booting of applications that use MySQL or Postgres."
+            warning <<-WARN
+Gemfile.lock does not contain a recognized databaseadapter.
+A database-adapter gem such as mysql2, mysql, or do_mysql was expected.
+This can prevent applications that use MySQL or PostreSQL from booting.
+            WARN
           end
         end
       end
@@ -173,10 +175,10 @@ module EY
           run_with_callbacks(:symlink)
           sudo "rm -rf #{rolled_back_release}"
           bundle
-          info "~> Restarting with previous release"
+          info "~> Restarting with previous release."
           with_maintenance_page { run_with_callbacks(:restart) }
         else
-          info "~> Already at oldest release, nothing to roll back to"
+          info "~> Already at oldest release, nothing to roll back to."
           exit(1)
         end
       end
@@ -197,7 +199,7 @@ module EY
         info "~> Copying to #{c.release_path}"
         run("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
 
-        info "~> Ensuring proper ownership"
+        info "~> Ensuring proper ownership."
         sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
       end
 
@@ -206,7 +208,7 @@ module EY
       end
 
       def symlink_configs(release_to_link=c.release_path)
-        info "~> Preparing shared resources for release"
+        info "~> Preparing shared resources for release."
         symlink_tasks(release_to_link).each do |what, cmd|
           info "~> #{what}"
           run(cmd)
@@ -235,7 +237,7 @@ module EY
 
       # task
       def symlink(release_to_link=c.release_path)
-        info "~> Symlinking code"
+        info "~> Symlinking code."
         run "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
         @symlink_changed = true
       rescue Exception
@@ -279,19 +281,21 @@ module EY
 
       def puts_deploy_failure
         if @cleanup_failed
-          info "~> [Relax] Your site is running new code, but cleaning up old deploys failed"
+          info "~> [Relax] Your site is running new code, but clean up of old deploys failed."
         elsif @maintenance_up
           info "~> [Attention] Maintenance page still up, consider the following before removing:"
-          info " * any deploy hooks ran, be careful if they were destructive" if @callbacks_reached
-          info " * any migrations ran, be careful if they were destructive" if @migrations_reached
+          info " * Deploy hooks ran. This might cause problems for reverting to old code." if @callbacks_reached
+          info " * Migrations ran. This might cause problems for reverting to old code." if @migrations_reached
           if @symlink_changed
-            info " * your new code is symlinked as current"
+            info " * Your new code is symlinked as current."
           else
-            info " * your old code is still symlinked as current"
+            info " * Your old code is still symlinked as current."
           end
-          info " * application servers failed to restart" if @restart_failed
+          info " * Application servers failed to restart." if @restart_failed
+          info ""
+          info "~> Need help? File a ticket for support."
         else
-          info "~> [Relax] Your site is still running old code and nothing destructive could have occurred"
+          info "~> [Relax] Your site is still running old code and nothing destructive has occurred."
         end
       end
 
@@ -309,17 +313,14 @@ module EY
       end
 
       def warn_about_missing_lockfile
-        info "!>"
-        info "!> WARNING: Gemfile.lock is missing!"
-        info "!> You can get different gems in production than what you tested with."
-        info "!> You can get different gems on every deployment even if your Gemfile hasn't changed."
-        info "!> Deploying may take a long time."
-        info "!> There is a slight, but very serious chance of a Zerg rush overtaking your base."
-        info "!>"
-        info "!> Fix this by running \"git add Gemfile.lock; git commit\" and deploying again."
-        info "!>"
-        info "!> This deployment will use bundler #{LockfileParser.default_version} to run 'bundle install'."
-        info "!>"
+        warning <<-WARN
+Gemfile.lock is missing!
+You can get different versions of gems in production than what you tested with.
+You can get different versions of gems on every deployment even if your Gemfile hasn't changed.
+Deploying will take longer.
+
+To fix this problem, commit your Gemfile.lock to your repository.
+        WARN
       end
 
       def get_bundler_installer
