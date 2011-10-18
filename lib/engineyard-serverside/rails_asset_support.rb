@@ -29,10 +29,6 @@ module EY
           info "~> application.rb has disabled asset compilation. Skipping."
           return
         end
-        unless app_has_asset_task?
-          info "~> No 'assets:precompile' Rake task found. Skipping."
-          return
-        end
         true
       end
 
@@ -44,16 +40,6 @@ module EY
           disabled = contents.match(pattern)
         end
         disabled
-      end
-
-      # Runs 'rake -T' to see if there is an assets:precompile task.
-      def app_has_asset_task?
-        # We just run this locally on the app master; everybody else should
-        # have the same code anyway.
-        task_check = "PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake -T assets:precompile |grep 'assets:precompile'"
-        cmd = "cd #{c.release_path} && #{task_check}"
-        logged_system "cd #{c.release_path} && #{task_check}"
-        $? == 0
       end
 
       def app_builds_own_assets?
