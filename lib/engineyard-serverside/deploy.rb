@@ -55,7 +55,7 @@ module EY
         if gemfile? && lockfile
           unless lockfile.any_database_adapter?
             warning <<-WARN
-Gemfile.lock does not contain a recognized databaseadapter.
+Gemfile.lock does not contain a recognized database adapter.
 A database-adapter gem such as mysql2, mysql, or do_mysql was expected.
 This can prevent applications that use MySQL or PostreSQL from booting.
             WARN
