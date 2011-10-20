@@ -52,14 +52,32 @@ module EY
       end
 
       def check_repository
-        if gemfile? && lockfile
-          unless lockfile.any_database_adapter?
-            warning <<-WARN
+        if gemfile?
+          info "~> Gemfile found."
+          if lockfile
+            info "~> Gemfile.lock found."
+            unless lockfile.any_database_adapter?
+              warning <<-WARN
 Gemfile.lock does not contain a recognized database adapter.
 A database-adapter gem such as mysql2, mysql, or do_mysql was expected.
 This can prevent applications that use MySQL or PostreSQL from booting.
+
+To fix, add any needed adapter to your Gemfile, bundle, commit, and redeploy.
+Applications that don't use MySQL or PostgreSQL can safely ignore this warning.
+              WARN
+            end
+          else
+            warning <<-WARN
+Gemfile.lock is missing!
+You can get different versions of gems in production than what you tested with.
+You can get different versions of gems on every deployment even if your Gemfile hasn't changed.
+Deploying will take longer.
+
+To fix this problem, commit your Gemfile.lock to your repository and redeploy.
             WARN
           end
+        else
+          info "~> No Gemfile. Deploying without bundler support."
         end
       end
 
@@ -312,22 +330,10 @@ This can prevent applications that use MySQL or PostreSQL from booting.
         raise
       end
 
-      def warn_about_missing_lockfile
-        warning <<-WARN
-Gemfile.lock is missing!
-You can get different versions of gems in production than what you tested with.
-You can get different versions of gems on every deployment even if your Gemfile hasn't changed.
-Deploying will take longer.
-
-To fix this problem, commit your Gemfile.lock to your repository.
-        WARN
-      end
-
       def get_bundler_installer
         if lockfile
           bundler_10_installer(lockfile.bundler_version)
         else
-          warn_about_missing_lockfile
           # deployment mode is not supported without a Gemfile.lock, so we turn that off.
           bundler_10_installer(LockfileParser.default_version, deployment_mode = false)
         end
@@ -353,7 +359,7 @@ To fix this problem, commit your Gemfile.lock to your repository.
 
       def check_ruby_bundler
         if gemfile?
-          info "~> Gemfile detected, bundling gems"
+          info "~> Bundling gems..."
 
           bundler_installer = get_bundler_installer
 
