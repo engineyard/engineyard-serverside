@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe "the bundler version retrieved from the lockfile" do
   def load_lockfile(file)
-    File.read(File.expand_path("../support/lockfiles/#{file}", __FILE__))
+    File.read(File.expand_path("../fixtures/lockfiles/#{file}", __FILE__))
   end
 
   def get_parser(file)
