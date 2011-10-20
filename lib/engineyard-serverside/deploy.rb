@@ -330,13 +330,20 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         raise
       end
 
-      def get_bundler_installer
+      def bundler_config
+        version = LockfileParser.default_version
+        options = [
+          "--path #{c.shared_path}/bundled_gems",
+          "--binstubs #{c.binstubs_path}",
+          "--without development test"
+        ]
+
         if lockfile
-          bundler_10_installer(lockfile.bundler_version)
-        else
-          # deployment mode is not supported without a Gemfile.lock, so we turn that off.
-          bundler_10_installer(LockfileParser.default_version, deployment_mode = false)
+          version = lockfile.bundler_version
+          options.unshift('--deployment') # deployment mode is not supported without a Gemfile.lock
         end
+
+        return [version, options.join(' ')]
       end
 
       def lockfile
@@ -348,22 +355,13 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         end
       end
 
-      # Set +deploymemt_mode+ to false to avoid passing the --deployment flag.
-      def bundler_10_installer(version, deployment_mode = true)
-        options = ["--path #{c.shared_path}/bundled_gems",
-                   "--binstubs #{c.binstubs_path}",
-                   "--without development test"]
-        options.unshift('--deployment') if deployment_mode
-        BundleInstaller.new(version, options.join(' '))
-      end
-
       def check_ruby_bundler
         if gemfile?
           info "~> Bundling gems..."
 
-          bundler_installer = get_bundler_installer
+          bundler_version, install_switches = bundler_config
 
-          sudo "#{clean_environment} && #{serverside_bin} install_bundler #{bundler_installer.version}"
+          sudo "#{clean_environment} && #{serverside_bin} install_bundler #{bundler_version}"
 
           bundled_gems_path = File.join(c.shared_path, "bundled_gems")
           ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
@@ -383,7 +381,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
             end
           end
 
-          run "#{clean_environment} && cd #{c.release_path} && ruby -S bundle _#{bundler_installer.version}_ install #{bundler_installer.options}"
+          run "#{clean_environment} && cd #{c.release_path} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
 
           run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
         end

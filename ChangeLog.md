@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Refactor how bundler options are loaded.
 
 ## 1.5.2 (2011-10-18)
 
