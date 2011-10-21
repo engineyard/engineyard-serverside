@@ -19,7 +19,7 @@ describe EY::Serverside do
   end
 
   it "preserves the old constants" do
-    names = %w[BundleInstaller CLI Deploy DeployBase Deploy::Configuration
+    names = %w[CLI Deploy DeployBase Deploy::Configuration
                DeployHook LockfileParser LoggedOutput Server Task
                Strategies Strategies::Git]
 
