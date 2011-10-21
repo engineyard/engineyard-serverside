@@ -5,8 +5,9 @@ module EY
   module Serverside
     class Deploy::Configuration
       DEFAULT_CONFIG = Thor::CoreExt::HashWithIndifferentAccess.new({
-        "branch"       => "master",
-        "strategy"     => "Git",
+        "branch"         => "master",
+        "strategy"       => "Git",
+        "bundle_without" => "test development",
       })
 
       attr_reader :configuration
@@ -71,6 +72,10 @@ module EY
 
       def migration_command
         configuration['migrate'] == "migrate" ? DEFAULT_CONFIG["migrate"] : configuration['migrate']
+      end
+
+      def bundle_without
+        configuration['bundle_without']
       end
 
       def user

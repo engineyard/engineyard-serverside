@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * bundle\_without: ey.yml option allows you to specify custom bundle install --without string (list of space separated groups, replaces the default 'test development')
   * Refactor how bundler options are loaded.
 
 ## 1.5.2 (2011-10-18)

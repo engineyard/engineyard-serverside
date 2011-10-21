@@ -15,14 +15,15 @@ describe "Deploying an application that uses Bundler" do
 
     # run a deploy
     config = EY::Serverside::Deploy::Configuration.new({
-        "strategy"      => "IntegrationSpec",
-        "deploy_to"     => @deploy_dir,
-        "group"         => `id -gn`.strip,
-        "stack"         => 'nginx_passenger',
-        "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
-        'app'           => 'foo',
-        'framework_env' => 'staging'
-      })
+      "strategy"       => "IntegrationSpec",
+      "deploy_to"      => @deploy_dir,
+      "group"          => `id -gn`.strip,
+      "stack"          => 'nginx_passenger',
+      "migrate"        => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
+      'app'            => 'foo',
+      'framework_env'  => 'staging',
+      'bundle_without' => 'release test',
+    })
 
     # pretend there is a shared bundled_gems directory
     FileUtils.mkdir_p(File.join(@deploy_dir, 'shared', 'bundled_gems'))
@@ -66,6 +67,12 @@ describe "Deploying an application that uses Bundler" do
 
     it "has the binstubs in the path when migrating" do
       File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
+    end
+
+    it "runs 'bundle install' with custom --without options" do
+      bundle_install_cmd = @deployer.commands.grep(/bundle _\S+_ install/).first
+      bundle_install_cmd.should_not be_nil
+      bundle_install_cmd.should include("--without release test")
     end
 
     it "creates a ruby version file" do

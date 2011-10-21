@@ -335,7 +335,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         options = [
           "--path #{c.bundled_gems_path}",
           "--binstubs #{c.binstubs_path}",
-          "--without development test"
+          "--without #{c.bundle_without}"
         ]
 
         if lockfile
