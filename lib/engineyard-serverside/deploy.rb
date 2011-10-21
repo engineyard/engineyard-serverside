@@ -333,7 +333,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       def bundler_config
         version = LockfileParser.default_version
         options = [
-          "--path #{c.shared_path}/bundled_gems",
+          "--path #{c.bundled_gems_path}",
           "--binstubs #{c.binstubs_path}",
           "--without development test"
         ]
@@ -363,27 +363,24 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
           sudo "#{clean_environment} && #{serverside_bin} install_bundler #{bundler_version}"
 
-          bundled_gems_path = File.join(c.shared_path, "bundled_gems")
-          ruby_version_file = File.join(bundled_gems_path, "RUBY_VERSION")
-          system_version_file = File.join(bundled_gems_path, "SYSTEM_VERSION")
-          ruby_version = `ruby -v`
+          ruby_version   = `ruby -v`
           system_version = `uname -m`
 
-          if File.directory?(bundled_gems_path)
+          if File.directory?(c.bundled_gems_path)
             rebundle = false
 
-            rebundle = true if File.exist?(ruby_version_file) && File.read(ruby_version_file) != ruby_version
-            rebundle = true if File.exist?(system_version_file) && File.read(system_version_file) != system_version
+            rebundle = true if File.exist?(c.ruby_version_file)   && File.read(c.ruby_version_file)   != ruby_version
+            rebundle = true if File.exist?(c.system_version_file) && File.read(c.system_version_file) != system_version
 
             if rebundle
               info "~> Ruby version change detected, cleaning bundled gems"
-              run "rm -Rf #{bundled_gems_path}"
+              run "rm -Rf #{c.bundled_gems_path}"
             end
           end
 
           run "#{clean_environment} && cd #{c.release_path} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
 
-          run "mkdir -p #{bundled_gems_path} && ruby -v > #{ruby_version_file} && uname -m > #{system_version_file}"
+          run "mkdir -p #{c.bundled_gems_path} && ruby -v > #{c.ruby_version_file} && uname -m > #{c.system_version_file}"
         end
       end
 

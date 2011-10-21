@@ -130,6 +130,18 @@ module EY
         File.join(deploy_to, "shared")
       end
 
+      def bundled_gems_path
+        File.join(shared_path, "bundled_gems")
+      end
+
+      def ruby_version_file
+        File.join(bundled_gems_path, "RUBY_VERSION")
+      end
+
+      def system_version_file
+        File.join(bundled_gems_path, "SYSTEM_VERSION")
+      end
+
       def release_dir
         File.join(deploy_to, "releases")
       end
