@@ -14,7 +14,6 @@ module EY
       def deploy
         debug "Starting deploy at #{Time.now.asctime}"
         update_repository_cache
-        check_repository
         cached_deploy
       end
 
@@ -25,6 +24,7 @@ module EY
 
         info "~> Starting full deploy"
         copy_repository_cache
+        check_repository
 
         with_failed_release_cleanup do
           create_revision_file
