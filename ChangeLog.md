@@ -4,6 +4,10 @@
 
   *
 
+## v1.5.4 (2011-10-21)
+
+  *
+
 ## v1.5.3 (2011-10-21)
 
   * bundle\_without: ey.yml option allows you to specify custom bundle install --without string (list of space separated groups, replaces the default 'test development')
