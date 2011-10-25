@@ -5,7 +5,6 @@ module EY
     module Strategies
       class Git
         module Helpers
-
           def update_repository_cache
             unless strategy.fetch && strategy.checkout
               abort "*** [Error] Git could not checkout (#{strategy.to_checkout}) ***"
@@ -42,7 +41,6 @@ module EY
 
         def initialize(opts)
           @opts = opts
-          set_up_git_ssh(@opts[:app])
         end
 
         def usable_repository?
@@ -107,13 +105,6 @@ module EY
           end
           false
         end
-
-        def set_up_git_ssh(app)
-          # Not sure if we'll need this, but just in case.
-          ENV['GIT_SSH'] = "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -i ~/.ssh/#{app}-deploy-key"
-          return
-        end
-
       end
     end
   end
