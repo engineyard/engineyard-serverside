@@ -115,6 +115,11 @@ describe "Deploying an application that uses Bundler" do
     it "creates a system version file" do
       File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
     end
+
+    it "Sets GIT_SSH environment variable" do
+      install_cmd = @deployer.commands.grep(/GIT_SSH/).first
+      install_cmd.should match(/export GIT_SSH.*install_bundler/)
+    end
   end
 end
 
