@@ -29,10 +29,14 @@ module EY
           info "~> application.rb has disabled asset compilation. Skipping."
           return
         end
+# This check is very expensive, and has been deemed not worth the time.
+# Leaving this here in case someone comes up with a faster way.
+=begin
         unless app_has_asset_task?
           info "~> No 'assets:precompile' Rake task found. Skipping."
           return
         end
+=end
         true
       end
 
