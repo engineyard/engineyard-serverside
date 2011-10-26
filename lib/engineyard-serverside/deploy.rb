@@ -166,14 +166,12 @@ module EY
         path = ssh_wrapper_path
         identity_file = "~/.ssh/#{c.app}-deploy-key"
 <<-WRAP
-if [ ! -x #{path} ]; then
-echo $(cat <<SSH
+echo $(cat <<'SSH'
 #!/bin/sh
-unset SSH_AUTH_SOCK
-ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' $*
+\\nunset SSH_AUTH_SOCK
+\\nssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' $*
 SSH) > #{path};
-chmod 0700 #{path}
-fi
+chmod 0700 #{path};
 WRAP
       end
 
