@@ -163,9 +163,14 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         "/engineyard/bin/app_#{c.app} deploy"
       end
 
+      # GIT_SSH needs to be defined in the environment for customers with private bundler repos in their Gemfile.
       def clean_environment
-        # GIT_SSH needs to be defined in the environment for customers with private bundler repos in their Gemfile.
-        %Q[export GIT_SSH="ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -i ~/.ssh/#{c.app}-deploy-key" && unset BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
+        %Q[export GIT_SSH="#{ssh_command}" && unset BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
+      end
+
+      # We specify 'IdentitiesOnly' to avoid failures on systems with > 5 private keys available.
+      def ssh_command
+        %Q[ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile ~/.ssh/#{c.app}-deploy-key' -o 'IdentitiesOnly yes']
       end
 
       # task
