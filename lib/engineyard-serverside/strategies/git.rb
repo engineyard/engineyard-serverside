@@ -20,6 +20,8 @@ module EY
           end
 
           def strategy
+            # Ensure the git ssh config is up to date with the current app.
+            ENV['GIT_SSH'] = ssh_executable
             klass = Module.nesting[1]
             # Use [] to access attributes instead of calling methods so
             # that we get nils instead of NoMethodError.

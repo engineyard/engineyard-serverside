@@ -145,18 +145,48 @@ module EY
 
       # GIT_SSH needs to be defined in the environment for customers with private bundler repos in their Gemfile.
       def clean_environment
-        %Q[export GIT_SSH="#{ssh_command}" && unset BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
+        %Q[export GIT_SSH="#{ssh_executable}" && unset BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
+      end
+
+      # If we don't have a local version of the ssh wrapper script yet,
+      # create it on all the servers that will need it.
+      # TODO - This logic likely fails when people change deploy keys.
+      def ssh_executable
+        path = ssh_wrapper_path
+        unless File.executable?(path)
+          roles :app_master, :app, :solo, :util do
+            run(generate_ssh_wrapper)
+          end
+        end
+        path
       end
 
       # We specify 'IdentitiesOnly' to avoid failures on systems with > 5 private keys available.
-      def ssh_command
-        %Q[ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile ~/.ssh/#{c.app}-deploy-key' -o 'IdentitiesOnly yes']
+      def generate_ssh_wrapper
+        path = ssh_wrapper_path
+        identity_file = "~/.ssh/#{c.app}-deploy-key"
+<<-WRAP
+if [ ! -x #{path} ]; then
+echo $(cat <<SSH
+#!/bin/sh
+unset SSH_AUTH_SOCK
+ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' $*
+SSH) > #{path};
+chmod 0700 #{path}
+fi
+WRAP
+      end
+
+      def ssh_wrapper_path
+        "#{c.shared_path}/config/#{c.app}-ssh-wrapper"
       end
 
       # task
       def bundle
-        check_ruby_bundler
-        check_node_npm
+        roles :app_master, :app, :solo, :util do
+          check_ruby_bundler
+          check_node_npm
+        end
       end
 
       # task
