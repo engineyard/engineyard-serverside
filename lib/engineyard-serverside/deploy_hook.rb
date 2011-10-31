@@ -25,8 +25,8 @@ module EY
       end
 
       def syntax_error(file)
-        valid = Kernel.system("ruby -c #{file} 2>/tmp/ey_invalid_deploy_hook | grep 'Syntax OK' --quiet")
-        File.new("/tmp/ey_invalid_deploy_hook").gets unless valid
+        output = `ruby -c #{file} 2>&1`
+        output unless output =~ /Syntax OK/
       end
 
       class CallbackContext
