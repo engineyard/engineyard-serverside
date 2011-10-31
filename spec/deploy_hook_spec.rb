@@ -194,7 +194,7 @@ describe "the deploy-hook API" do
     it "returns a brief problem description for hook files containing valid Ruby syntax" do
       hook_path = File.expand_path('../fixtures/invalid_hook.rb', __FILE__)
       desc = "spec/fixtures/invalid_hook.rb:1: syntax error, unexpected '^'"
-      match = /\A.*#{Regexp.escape desc}\Z/
+      match = /#{Regexp.escape desc}/
       @hook.syntax_error(hook_path).should =~ match
     end
   end
