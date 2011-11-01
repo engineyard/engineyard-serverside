@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v1.5.10 (2011-11-01)
+
   * Re-bundle gems if there is no version file found with which to compare.
   * Don't fail is pre-compilation fails. Let users know we're going to try to precompile assets.
 
