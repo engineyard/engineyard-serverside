@@ -403,8 +403,8 @@ WRAP
           if File.directory?(c.bundled_gems_path)
             rebundle = false
 
-            rebundle = true if File.exist?(c.ruby_version_file)   && File.read(c.ruby_version_file)   != ruby_version
-            rebundle = true if File.exist?(c.system_version_file) && File.read(c.system_version_file) != system_version
+            rebundle = true if !File.exist?(c.ruby_version_file)   || File.read(c.ruby_version_file)   != ruby_version
+            rebundle = true if !File.exist?(c.system_version_file) || File.read(c.system_version_file) != system_version
 
             if rebundle
               info "~> Ruby version change detected, cleaning bundled gems"
