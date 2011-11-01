@@ -7,7 +7,7 @@ module EY
         rails_version = bundled_rails_version
         roles :app_master, :app, :solo do
           keep_existing_assets
-          cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
+          cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile || true"
           if rails_version
             info "~> Precompiling assets for rails v#{rails_version}"
           else
@@ -20,7 +20,13 @@ module EY
       def app_needs_assets?
         app_rb_path = File.join(c.release_path, 'config', 'application.rb')
         return unless File.readable?(app_rb_path) # Not a Rails app in the first place.
-        return unless File.directory?(File.join(c.release_path, 'app', 'assets'))
+
+        if File.directory?(File.join(c.release_path, 'app', 'assets'))
+          info "~> app/assets/ found. Attempting Rails asset pre-compilation."
+        else
+          return false
+        end
+
         if app_builds_own_assets?
           info "~> public/assets already exists, skipping pre-compilation."
           return

@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Don't fail is pre-compilation fails. Let users know we're going to try to precompile assets.
 
 ## v1.5.9 (2011-10-26)
 
