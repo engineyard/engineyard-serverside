@@ -4,6 +4,10 @@
 
   *
 
+## v1.5.12 (2011-11-02)
+
+  *
+
 ## v1.5.11 (2011-11-02)
 
   * Add ey_services_config_deploy.yml file through EY::InstanceAPI during deploy.
