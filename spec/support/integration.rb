@@ -109,25 +109,28 @@ module EY::Serverside::Strategies::IntegrationSpec
 
     def gemfile_contents
       <<-EOF
-source 'http://rubygems.org'
-gem 'rake', '= 0.8.7'
-EOF
+source :rubygems
+gem 'rake'
+gem 'pg'
+      EOF
     end
 
-    # Generated using Bundler v1.0.10
+    # Generated using Bundler v1.0.21
     def lockfile_contents
       <<-EOF
 GEM
   remote: http://rubygems.org/
   specs:
-    rake (0.8.7)
+    pg (0.11.0)
+    rake (0.9.2.2)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  rake (= 0.8.7)
-EOF
+  pg
+  rake
+      EOF
     end
 
     def generate_gemfile_in(dir)
