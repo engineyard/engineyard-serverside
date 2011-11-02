@@ -54,6 +54,10 @@ module EY
         EY::Serverside.node
       end
 
+      def app
+        configuration['app'].to_s
+      end
+
       def revision
         IO.read(File.join(latest_release, 'REVISION'))
       end

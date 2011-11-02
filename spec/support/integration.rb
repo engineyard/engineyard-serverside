@@ -10,11 +10,13 @@ class FullTestDeploy < EY::Serverside::Deploy
 
   # stfu
   def info(msg)
+    puts msg
     @infos << msg
   end
 
   # no really, stfu
   def debug(msg)
+    puts msg
     @debugs << msg
   end
 
@@ -63,15 +65,31 @@ class FullTestDeploy < EY::Serverside::Deploy
     result
   end
 
-  def get_bundler_installer
-    installer = super
-    installer.options << ' --quiet'   # stfu already!
-    installer
-  end
-
   def deploy
     yield if block_given?
     super
+  end
+
+  class MockFetcher
+    def initialize(&block)
+      @block = block
+    end
+
+    def get(app)
+      @block.call(app)
+    end
+  end
+
+  def services_fetcher
+    @mock_fetcher ||= MockFetcher.new { |app| {"some_service_for_#{app}" => {"some_var" => 'some_value'}} }
+  end
+
+  def set_services_fetcher_value(value)
+    @mock_fetcher = MockFetcher.new { |app| value }
+  end
+
+  def services_fetcher_breaks!
+    @mock_fetcher = MockFetcher.new { |app| raise "Server Broken" }
   end
 end
 
