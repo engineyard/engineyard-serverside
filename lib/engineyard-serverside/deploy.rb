@@ -3,7 +3,13 @@ require 'base64'
 require 'fileutils'
 require 'json'
 require 'engineyard-serverside/rails_asset_support'
-require 'ey_instance_api_client'
+
+begin
+  require 'ey_instance_api_client'
+rescue LoadError
+  puts "Using Ruby #{RUBY_VERSION}"
+  # engineyard-serverside SOMETIMES runs under the system ruby instead of resin ruby
+end
 
 module EY
   module Serverside
