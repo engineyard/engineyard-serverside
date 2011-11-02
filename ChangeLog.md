@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v1.5.11 (2011-11-02)
+
   * Add ey_services_config_deploy.yml file through EY::InstanceAPI during deploy.
   * Bump default bundler version to 1.0.21
 
