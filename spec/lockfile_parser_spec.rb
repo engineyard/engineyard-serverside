@@ -80,7 +80,7 @@ describe "the bundler version retrieved from the lockfile" do
     end
 
     it "uses the default version when we get a pessimistic qualifier and is lower than the default version" do
-      subject.fetch_version('1.0.1', '~>').should == '1.0.10'
+      subject.fetch_version('1.0.1', '~>').should == '1.0.21'
     end
 
     it "uses the given version when we get a pessimistic qualifier that doesn't match the default version" do

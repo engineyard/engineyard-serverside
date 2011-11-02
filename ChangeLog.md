@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Bump default bundler version to 1.0.21
 
 ## v1.5.10 (2011-11-01)
 

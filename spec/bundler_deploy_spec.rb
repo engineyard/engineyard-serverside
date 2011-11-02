@@ -96,7 +96,7 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "installs the proper Bundler version" do
-      @bundler_version.should == "1.0.10" # Something should break when the default changes.
+      @bundler_version.should == "1.0.21" # Something should break when the default changes.
       install_bundler_command_ran = @deployer.commands.detect{ |command| command.index("install_bundler") }
       install_bundler_command_ran.should_not be_nil
       install_bundler_command_ran.should include("#{@binpath} install_bundler #{@bundler_version}")
