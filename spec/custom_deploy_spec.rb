@@ -23,6 +23,7 @@ describe "the EY::Serverside::Deploy API" do
       def copy_repository_cache()                  @call_order << 'copy_repository_cache'                  end
       def create_revision_file()                   @call_order << 'create_revision_file'                   end
       def bundle()                                 @call_order << 'bundle'                                 end
+      def setup_services()                         @call_order << 'setup_services'                         end
       def symlink_configs()                        @call_order << 'symlink_configs'                        end
       def migrate()                                @call_order << 'migrate'                                end
       def compile_assets()                         @call_order << 'compile_assets'                         end
@@ -40,6 +41,7 @@ describe "the EY::Serverside::Deploy API" do
       copy_repository_cache
       create_revision_file
       bundle
+      setup_services
       symlink_configs
       conditionally_enable_maintenance_page
       migrate

@@ -16,7 +16,6 @@ Gem::Specification.new do |s|
   s.executables = ["engineyard-serverside"]
   s.default_executable = "engineyard-serverside"
   s.require_path = 'lib'
-  s.add_dependency('ey_instance_api_client', '= 0.1.5')
   s.add_development_dependency('rspec', '= 1.3.2')
   s.add_development_dependency('rake')
 

@@ -51,14 +51,4 @@ describe "Deploying an application without Bundler" do
     @deploy_dir.join('current', 'after_restart.ran' ).should exist
   end
 
-  it "creates and symlinks ey_services_config_deploy.yml" do
-    shared_services_file    = @deploy_dir.join('shared',  'config', 'ey_services_config_deploy.yml')
-    symlinked_services_file = @deploy_dir.join('current', 'config', 'ey_services_config_deploy.yml')
-
-    shared_services_file.should exist
-    shared_services_file.should_not be_symlink
-
-    symlinked_services_file.should exist
-    symlinked_services_file.should be_symlink
-  end
 end

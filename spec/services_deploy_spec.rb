@@ -38,37 +38,58 @@ describe "Deploying an application with services" do
       @symlinked_services_file = @deploy_dir.join('current', 'config', 'ey_services_config_deploy.yml')
 
       @deployer = setup_deploy
-      @deployer.set_services_fetcher_value({"a_service" => {"b_key" => "c_value"}})
+      @deployer.mock_services_setup!("echo 'somefilecontents' > #{@shared_services_file}")
       @deployer.deploy
     end
 
     it "creates and symlinks ey_services_config_deploy.yml" do
       @shared_services_file.should exist
       @shared_services_file.should_not be_symlink
-      @shared_services_file.read.should == YAML.dump({"a_service" => {"b_key" => "c_value"}})
+      @shared_services_file.read.should == "somefilecontents\n"
 
       @symlinked_services_file.should exist
       @symlinked_services_file.should be_symlink
-      @shared_services_file.read.should == YAML.dump({"a_service" => {"b_key" => "c_value"}})
+      @shared_services_file.read.should == "somefilecontents\n"
 
       @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+    end
+
+    describe "followed by a deploy that can't find the command" do
+      before do
+        @deployer = setup_deploy
+        @deployer.mock_services_command_check!("which nonexistatncommand")
+        @deployer.deploy
+      end
+
+      it "silently fails" do
+        @shared_services_file.should exist
+        @shared_services_file.should_not be_symlink
+        @shared_services_file.read.should == "somefilecontents\n"
+
+        @symlinked_services_file.should exist
+        @symlinked_services_file.should be_symlink
+        @shared_services_file.read.should == "somefilecontents\n"
+
+        @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+      end
+
     end
 
     describe "followed by a deploy that fails to fetch services" do
       before do
         @deployer = setup_deploy
-        @deployer.services_fetcher_breaks!
+        @deployer.mock_services_setup!("notarealcommandsoitwillexitnonzero")
         @deployer.deploy
       end
 
       it "logs a warning and symlinks the existing config file" do
         @shared_services_file.should exist
         @shared_services_file.should_not be_symlink
-        @shared_services_file.read.should == YAML.dump({"a_service" => {"b_key" => "c_value"}})
+        @shared_services_file.read.should == "somefilecontents\n"
 
         @symlinked_services_file.should exist
         @symlinked_services_file.should be_symlink
-        @shared_services_file.read.should == YAML.dump({"a_service" => {"b_key" => "c_value"}})
+        @shared_services_file.read.should == "somefilecontents\n"
 
         @deployer.infos.should be_any { |info| info =~ /WARNING: External services configuration not updated/ }
       end
@@ -78,18 +99,18 @@ describe "Deploying an application with services" do
     describe "followed by another successfull deploy" do
       before do
         @deployer = setup_deploy
-        @deployer.set_services_fetcher_value({"other_service" => nil})
+        @deployer.mock_services_setup!("echo 'otherfilecontents' > #{@shared_services_file}")
         @deployer.deploy
       end
 
       it "replaces the config with the new one (and symlinks)" do
         @shared_services_file.should exist
         @shared_services_file.should_not be_symlink
-        @shared_services_file.read.should == YAML.dump({"other_service" => nil })
+        @shared_services_file.read.should == "otherfilecontents\n"
 
         @symlinked_services_file.should exist
         @symlinked_services_file.should be_symlink
-        @shared_services_file.read.should == YAML.dump({"other_service" => nil})
+        @shared_services_file.read.should == "otherfilecontents\n"
 
         @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
       end
@@ -98,34 +119,4 @@ describe "Deploying an application with services" do
 
   end
 
-
-#  it "creates and symlinks ey_services_config_deploy.yml" do
-#    shared_services_file    = @deploy_dir.join('shared',  'config', 'ey_services_config_deploy.yml')
-#    symlinked_services_file = @deploy_dir.join('current', 'config', 'ey_services_config_deploy.yml')
-#
-#    @deployer.deploy
-#
-#    shared_services_file.should exist
-#    shared_services_file.should_not be_symlink
-#
-#    symlinked_services_file.should exist
-#    symlinked_services_file.should be_symlink
-#  end
-#
-#  it "prints a warning if it couldn't access the services api" do
-#    @deployer.deploy
-#
-#    shared_services_file    = @deploy_dir.join('shared',  'config', 'ey_services_config_deploy.yml')
-#    symlinked_services_file = @deploy_dir.join('current', 'config', 'ey_services_config_deploy.yml')
-#
-#    @deployer.services_fetcher_breaks!
-#    @deployer.deploy
-#
-#
-#    shared_services_file.should exist
-#    shared_services_file.should_not be_symlink
-#
-#    symlinked_services_file.should exist
-#    symlinked_services_file.should be_symlink
-#  end
 end

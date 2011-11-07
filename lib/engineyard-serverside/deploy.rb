@@ -4,13 +4,6 @@ require 'fileutils'
 require 'json'
 require 'engineyard-serverside/rails_asset_support'
 
-begin
-  require 'ey_instance_api_client'
-rescue LoadError
-  puts "Using Ruby #{RUBY_VERSION}"
-  # engineyard-serverside SOMETIMES runs under the system ruby instead of resin ruby
-end
-
 module EY
   module Serverside
     class DeployBase < Task
@@ -36,7 +29,7 @@ module EY
         with_failed_release_cleanup do
           create_revision_file
           run_with_callbacks(:bundle)
-          fetch_configs
+          setup_services
           symlink_configs
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
@@ -267,16 +260,22 @@ WRAP
         run create_revision_file_command
       end
 
-      def services_fetcher
-        EY::InstanceAPIClient::Services.new
+      def services_command_check
+        "which /usr/local/ey_resin/ruby/bin/ey-services-setup"
       end
 
-      def fetch_configs
-        info "~> Fetching configuration resources."
-        services_data = services_fetcher.get(config.app)
-        File.open("#{c.shared_path}/config/ey_services_config_deploy.yml", "w") do |f|
-          YAML.dump(services_data, f)
+      def services_setup_command
+        "/usr/local/ey_resin/ruby/bin/ey-services-setup #{config.app}"
+      end
+
+      def setup_services
+        info "~> Setting up external services."
+        begin
+          sudo(services_command_check)
+        rescue StandardError => e
+          info "Could not setup services. Upgrade your environment to get services configuration."
         end
+        result = sudo(services_setup_command)
       rescue StandardError => e
         warning <<-WARNING
 External services configuration not updated. Using previous version.
