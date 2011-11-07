@@ -274,8 +274,9 @@ WRAP
           sudo(services_command_check)
         rescue StandardError => e
           info "Could not setup services. Upgrade your environment to get services configuration."
+          return
         end
-        result = sudo(services_setup_command)
+        sudo(services_setup_command)
       rescue StandardError => e
         warning <<-WARNING
 External services configuration not updated. Using previous version.
