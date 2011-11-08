@@ -29,6 +29,11 @@ module EY
                                       :desc     => "Application to deploy",
                                       :aliases  => ["-a"]
 
+      method_option :deploy_user,     :type     => :string,
+                                      :required => true,
+                                      :desc     => "Username for user deploying",
+                                      :aliases  => ["-u"]
+
       method_option :framework_env,   :type     => :string,
                                       :desc     => "Ruby web framework environment",
                                       :aliases  => ["-e"]
