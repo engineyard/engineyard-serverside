@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Really seriously fix 32/64 bit system problems this time.
 
 ## v1.5.13 (2011-11-07)
 

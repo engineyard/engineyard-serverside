@@ -430,9 +430,6 @@ Deploy again if your services configuration appears incomplete or out of date.
       end
 
       def clean_bundle_on_system_version_change
-        ruby_version   = "ruby -v"
-        system_version = "uname -m"
-
         # diff exits with 0 for same and 1/2 for different/file not found.
         check_ruby   = "#{c.ruby_version_command} | diff - #{c.ruby_version_file} >/dev/null 2>&1"
         check_system = "#{c.system_version_command} | diff - #{c.system_version_file} >/dev/null 2>&1"
@@ -443,9 +440,6 @@ Deploy again if your services configuration appears incomplete or out of date.
       end
 
       def write_system_version
-        ruby_version   = "ruby -v"
-        system_version = "uname -m"
-
         store_ruby_version   = "#{c.ruby_version_command} > #{c.ruby_version_file}"
         store_system_version = "#{c.system_version_command} > #{c.system_version_file}"
 
