@@ -419,29 +419,37 @@ Deploy again if your services configuration appears incomplete or out of date.
         if gemfile?
           info "~> Bundling gems..."
 
+          clean_bundle_on_system_version_change
+
           bundler_version, install_switches = bundler_config
-
           sudo "#{clean_environment} && #{serverside_bin} install_bundler #{bundler_version}"
+          run  "#{clean_environment} && cd #{c.release_path} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
 
-          ruby_version   = `ruby -v`
-          system_version = `uname -m`
-
-          if File.directory?(c.bundled_gems_path)
-            rebundle = false
-
-            rebundle = true if !File.exist?(c.ruby_version_file)   || File.read(c.ruby_version_file)   != ruby_version
-            rebundle = true if !File.exist?(c.system_version_file) || File.read(c.system_version_file) != system_version
-
-            if rebundle
-              info "~> Ruby version change detected, cleaning bundled gems"
-              run "rm -Rf #{c.bundled_gems_path}"
-            end
-          end
-
-          run "#{clean_environment} && cd #{c.release_path} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
-
-          run "mkdir -p #{c.bundled_gems_path} && ruby -v > #{c.ruby_version_file} && uname -m > #{c.system_version_file}"
+          write_system_version
         end
+      end
+
+      def clean_bundle_on_system_version_change
+        ruby_version   = "ruby -v"
+        system_version = "uname -m"
+
+        # diff exits with 0 for same and 1/2 for different/file not found.
+        check_ruby   = "#{c.ruby_version_command} | diff - #{c.ruby_version_file} >/dev/null 2>&1"
+        check_system = "#{c.system_version_command} | diff - #{c.system_version_file} >/dev/null 2>&1"
+        say_cleaning = "echo 'System version change detected, cleaning bundled gems.'"
+        clean_bundle = "rm -Rf #{c.bundled_gems_path}"
+
+        run "#{check_ruby} && #{check_system} || #{say_cleaning} && #{clean_bundle}"
+      end
+
+      def write_system_version
+        ruby_version   = "ruby -v"
+        system_version = "uname -m"
+
+        store_ruby_version   = "#{c.ruby_version_command} > #{c.ruby_version_file}"
+        store_system_version = "#{c.system_version_command} > #{c.system_version_file}"
+
+        run "mkdir -p #{c.bundled_gems_path} && #{store_ruby_version} && #{store_system_version}"
       end
 
       def check_node_npm

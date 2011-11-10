@@ -147,8 +147,16 @@ module EY
         File.join(bundled_gems_path, "RUBY_VERSION")
       end
 
+      def ruby_version_command
+        "ruby -v"
+      end
+
       def system_version_file
         File.join(bundled_gems_path, "SYSTEM_VERSION")
+      end
+
+      def system_version_command
+        "uname -m"
       end
 
       def release_dir
