@@ -183,6 +183,10 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       end
 
       # We specify 'IdentitiesOnly' to avoid failures on systems with > 5 private keys available.
+      # We set UserKnownHostsFile to /dev/null because StrickHostKeyChecking no doesn't
+      # ignore existing entries in known_hosts; we want to actively ignore all such.
+      # Learned this at http://lists.mindrot.org/pipermail/openssh-unix-dev/2009-February/027271.html
+      # (Thanks Jim L.)
       def generate_ssh_wrapper
         path = ssh_wrapper_path
         identity_file = "~/.ssh/#{c.app}-deploy-key"
@@ -190,7 +194,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
-ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' $*
+ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' -o 'UserKnownHostsFile /dev/null' $*
 SSH
 chmod 0700 #{path}
 WRAP
