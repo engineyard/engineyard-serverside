@@ -397,6 +397,7 @@ Deploy again if your services configuration appears incomplete or out of date.
       def bundler_config
         version = LockfileParser.default_version
         options = [
+          "--gemfile #{c.gemfile_path}",
           "--path #{c.bundled_gems_path}",
           "--binstubs #{c.binstubs_path}",
           "--without #{c.bundle_without}"

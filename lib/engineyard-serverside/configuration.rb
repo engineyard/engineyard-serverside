@@ -143,6 +143,10 @@ module EY
         File.join(shared_path, "bundled_gems")
       end
 
+      def gemfile_path
+        File.join(release_path, "Gemfile")
+      end
+
       def ruby_version_file
         File.join(bundled_gems_path, "RUBY_VERSION")
       end
