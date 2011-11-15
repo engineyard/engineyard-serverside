@@ -4,6 +4,10 @@
 
   *
 
+## v1.5.16 (2011-11-15)
+
+  *
+
 ## v1.5.15 (2011-11-10)
 
   * Last release was built with a rubygems that has the Syck problem. Re-releasing. (This gem was never released into the wild)
