@@ -115,7 +115,8 @@ describe "the deploy-hook API" do
       :deploy_to,
       :user,
       :revision,
-      :environment].each do |attribute|
+      :environment,
+      :deploy_user].each do |attribute|
       it "has the #{attribute.inspect} attribute for compatibility with chef-deploy" do
         run_hook { @configuration.has_key?(attribute) }.should be_true
       end

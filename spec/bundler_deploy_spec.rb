@@ -23,6 +23,7 @@ describe "Deploying an application that uses Bundler" do
       'app'            => 'foo',
       'framework_env'  => 'staging',
       'bundle_without' => 'release test',
+      'deploy_user'    => 'testuser'
     })
 
     # pretend there is a shared bundled_gems directory

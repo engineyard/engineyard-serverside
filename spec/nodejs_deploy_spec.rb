@@ -15,7 +15,8 @@ describe "Deploying an application that uses Node.js and NPM" do
         "group"         => `id -gn`.strip,
         "stack"         => 'nginx_nodejs',
         'app'           => 'nodeapp',
-        'framework_env' => 'staging'
+        'framework_env' => 'staging',
+        'deploy_user'   => 'testuser'
       })
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))

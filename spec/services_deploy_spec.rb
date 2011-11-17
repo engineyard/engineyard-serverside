@@ -20,7 +20,8 @@ describe "Deploying an application with services" do
         "stack"         => 'nginx_passenger',
         "migrate"       => nil,
         'app'           => 'foo',
-        'framework_env' => 'staging'
+        'framework_env' => 'staging',
+        'deploy_user'   => 'testuser'
       })
 
     EY::Serverside::LoggedOutput.verbose = true
