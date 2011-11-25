@@ -441,7 +441,7 @@ Deploy again if your services configuration appears incomplete or out of date.
         say_cleaning = "echo 'System version change detected, cleaning bundled gems.'"
         clean_bundle = "rm -Rf #{c.bundled_gems_path}"
 
-        run "#{check_ruby} && #{check_system} || #{say_cleaning} && #{clean_bundle}"
+        run "#{check_ruby} && #{check_system} || (#{say_cleaning} && #{clean_bundle})"
       end
 
       def write_system_version
