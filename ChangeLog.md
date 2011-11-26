@@ -6,7 +6,7 @@
 
 ## v1.5.18 (2011-11-26)
 
-  *
+  * Fix a bug where gems were cleaned on every run.
 
 ## v1.5.17 (2011-11-16)
 
