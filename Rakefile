@@ -35,8 +35,6 @@ task :install_on, [:instance] do |t, args|
 end
 
 def bump
-  version_file = "module EY\n  module Serverside\n    VERSION = '_VERSION_GOES_HERE_'\n  end\nend\n"
-
   new_version = if EY::Serverside::VERSION =~ /\.pre$/
                   EY::Serverside::VERSION.gsub(/\.pre$/, '')
                 else
@@ -45,8 +43,16 @@ def bump
                   digits.join('.') + ".pre"
                 end
 
+  version_file = <<-EOV
+module EY
+  module Serverside
+    VERSION = '#{new_version}'
+  end
+end
+  EOV
+
   File.open('lib/engineyard-serverside/version.rb', 'w') do |f|
-    f.write version_file.gsub(/_VERSION_GOES_HERE_/, new_version)
+    f.write version_file
   end
   new_version
 end
@@ -93,10 +99,12 @@ task :release do
     "git commit -m 'Add .pre for next release'",
     "git tag v#{new_version} HEAD^")
 
+  puts <<-PUSHGEM
+## To publish the gem: #########################################################
 
-  puts '********************************************************************************'
-  puts
-  puts "Don't forget to `gem push` and `git push --tags`!"
-  puts
-  puts '********************************************************************************'
+    gem push engineyard-serverside-#{new_version}.gem
+    git push origin master v#{new_version}
+
+## No public changes yet. ######################################################
+  PUSHGEM
 end
