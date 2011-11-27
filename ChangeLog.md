@@ -4,6 +4,10 @@
 
   *
 
+## v1.5.19 (2011-11-26)
+
+  *
+
 ## v1.5.18 (2011-11-26)
 
   * Fix a bug where gems were cleaned on every run.
