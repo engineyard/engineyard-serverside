@@ -438,7 +438,7 @@ Deploy again if your services configuration appears incomplete or out of date.
         # diff exits with 0 for same and 1/2 for different/file not found.
         check_ruby   = "#{c.ruby_version_command} | diff - #{c.ruby_version_file} >/dev/null 2>&1"
         check_system = "#{c.system_version_command} | diff - #{c.system_version_file} >/dev/null 2>&1"
-        say_cleaning = "echo 'System version change detected, cleaning bundled gems.'"
+        say_cleaning = "echo 'New deploy or system version change detected, cleaning bundled gems.'"
         clean_bundle = "rm -Rf #{c.bundled_gems_path}"
 
         run "#{check_ruby} && #{check_system} || (#{say_cleaning} && #{clean_bundle})"
