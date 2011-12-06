@@ -174,10 +174,8 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # TODO - This logic likely fails when people change deploy keys.
       def ssh_executable
         path = ssh_wrapper_path
-        unless File.executable?(path)
-          roles :app_master, :app, :solo, :util do
-            run(generate_ssh_wrapper)
-          end
+        roles :app_master, :app, :solo, :util do
+          run(generate_ssh_wrapper)
         end
         path
       end
@@ -191,7 +189,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         path = ssh_wrapper_path
         identity_file = "~/.ssh/#{c.app}-deploy-key"
 <<-WRAP
-cat > #{path} <<'SSH'
+[[ -x #{path} ]] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
 ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' -o 'UserKnownHostsFile /dev/null' $*
