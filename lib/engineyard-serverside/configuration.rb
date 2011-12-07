@@ -17,7 +17,7 @@ module EY
 
       def initialize(opts={})
         @release_path = opts[:release_path]
-        config = JSON.parse(opts["config"] || "{}")
+        config = JSON.parse(opts.delete("config") || "{}")
         @configuration = DEFAULT_CONFIG.merge(config).merge(opts)
       end
 
