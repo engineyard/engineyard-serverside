@@ -4,6 +4,10 @@
 
   *
 
+## v1.5.21 (2011-12-07)
+
+  *
+
 ## v1.5.20 (2011-12-07)
 
   * Fix a bug where added instances would sometimes be unable to bundle.
