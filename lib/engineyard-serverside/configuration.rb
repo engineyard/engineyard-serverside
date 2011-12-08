@@ -15,7 +15,8 @@ module EY
 
       attr_writer :release_path
 
-      def initialize(opts={})
+      def initialize(options={})
+        opts = options.dup
         @release_path = opts[:release_path]
         config = JSON.parse(opts.delete("config") || "{}")
         @configuration = DEFAULT_CONFIG.merge(config).merge(opts)
