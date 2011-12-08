@@ -6,7 +6,7 @@
 
 ## v1.5.20 (2011-12-07)
 
-  *
+  * Fix a bug where added instances would sometimes be unable to bundle.
 
 ## v1.5.19 (2011-11-26)
 
