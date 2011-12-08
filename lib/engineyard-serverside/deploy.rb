@@ -161,7 +161,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       end
 
       def restart_command
-        "/engineyard/bin/app_#{c.app} deploy"
+        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{c.app} deploy}
       end
 
       # GIT_SSH needs to be defined in the environment for customers with private bundler repos in their Gemfile.

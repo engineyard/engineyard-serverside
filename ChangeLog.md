@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Add LANG to restart command.
 
 ## v1.5.21 (2011-12-07)
 
