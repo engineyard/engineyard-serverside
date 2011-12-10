@@ -30,9 +30,6 @@ module EY
       end
 
       class CallbackContext
-        attr_reader :configuration
-        alias_method :config, :configuration
-
         def initialize(config)
           @configuration = config
           @node = node
