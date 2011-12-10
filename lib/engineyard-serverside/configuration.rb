@@ -87,6 +87,10 @@ module EY
         configuration['user'] || ENV['USER']
       end
 
+      def deploy_user
+        configuration['deploy_user']
+      end
+
       def group
         configuration['group'] || user
       end

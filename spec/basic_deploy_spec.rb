@@ -18,7 +18,8 @@ describe "Deploying an application without Bundler" do
         "stack"         => 'nginx_passenger',
         "migrate"       => nil,
         'app'           => 'foo',
-        'framework_env' => 'staging'
+        'framework_env' => 'staging',
+        'deploy_user'   => 'testuser'
       })
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))

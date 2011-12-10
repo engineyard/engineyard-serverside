@@ -18,7 +18,8 @@ describe "Deploying a Rails 3.1 application" do
       "stack"         => 'nginx_passenger',
       "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
       'app'           => 'rails31',
-      'framework_env' => 'staging'
+      'framework_env' => 'staging',
+      'deploy_user'   => 'testuser'
     })
 
     # pretend there is a shared bundled_gems directory
