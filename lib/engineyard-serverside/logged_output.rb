@@ -1,5 +1,3 @@
-require 'open4'
-
 module EY
   module Serverside
     module LoggedOutput
