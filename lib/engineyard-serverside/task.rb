@@ -1,7 +1,6 @@
 module EY
   module Serverside
     class Task
-      include Dataflow
 
       attr_reader :config
       alias :c :config
@@ -48,18 +47,18 @@ module EY
 
       private
 
-      def run_on_roles(cmd, wrapper=%w[sh -l -c])
-        results = EY::Serverside::Server.from_roles(@roles).map do |server|
-          to_run = block_given? ? yield(server, cmd.dup) : cmd
-          need_later { server.run(Escape.shell_command(wrapper + [to_run])) }
+      def run_on_roles(cmd, wrapper=%w[sh -l -c], &block)
+        servers = EY::Serverside::Server.from_roles(@roles)
+        futures = EY::Serverside::Future.call(servers, block_given?) do |server, exec_block|
+          to_run = exec_block ? block.call(server, cmd.dup) : cmd
+          server.run(Escape.shell_command(wrapper + [to_run]))
         end
-        barrier *results
-        # MRI's truthiness check is an internal C thing that does not call
-        # any methods... so Dataflow cannot proxy it & we must "x == true"
-        # Rubinius, wherefore art thou!?
-        results.all?{|x| x == true } || raise(EY::Serverside::RemoteFailure.new(cmd))
-      end
 
+        unless EY::Serverside::Future.success?(futures)
+          failures = futures.select {|f| f.error? }.map {|f| f.inspect}.join("\n")
+          raise EY::Serverside::RemoteFailure.new(failures)
+        end
+      end
     end
   end
 end
