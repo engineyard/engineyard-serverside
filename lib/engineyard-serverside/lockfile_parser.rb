@@ -16,9 +16,15 @@ module EY
       end
 
       def any_database_adapter?
-        %w[mysql2 mysql do_mysql pg do_postgres].any? do |gem|
+        any_ruby_adapter = %w[mysql2 mysql do_mysql pg do_postgres sqlite3].any? do |gem|
           @contents.index(/^\s+#{gem}\s\([^\)]+\)$/)
         end
+
+        any_jruby_adapter = %w[mysql postgresql sqlite3].any? do |adapter|
+          @contents.index(/^\s+jdbc-#{gem}\s\([^\)]+\)$/) || @contents.index(/^\s+activerecord-jdbc#{gem}-adapter\s\([^\)]+\)$/)
+        end
+
+        any_ruby_adapter || any_jruby_adapter
       end
 
       def parse
