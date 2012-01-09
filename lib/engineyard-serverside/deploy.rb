@@ -166,7 +166,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
       # GIT_SSH needs to be defined in the environment for customers with private bundler repos in their Gemfile.
       def clean_environment
-        %Q[export GIT_SSH="#{ssh_executable}" && export LANG="en_US.UTF-8" && unset BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
+        %Q[export GIT_SSH="#{ssh_executable}" && export LANG="en_US.UTF-8" && unset RUBYOPT BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
       end
 
       # If we don't have a local version of the ssh wrapper script yet,
