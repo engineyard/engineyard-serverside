@@ -77,6 +77,27 @@ EOF
     end
   end
 
+  context "and failing with errors" do
+    before(:all) do
+      begin
+        deploy_test_application(with_assets = false) do
+          deploy_dir = File.join(@config.shared_path, 'cached-copy', 'deploy')
+          FileUtils.mkdir_p(deploy_dir)
+          hook = File.join(deploy_dir, 'before_migrate.rb')
+          hook_contents = %Q[raise 'aaaaaaahhhhh']
+          File.open(hook, 'w') {|f| f.puts(hook_contents) }
+          File.chmod(0755, hook)
+        end
+      rescue EY::Serverside::RemoteFailure
+      end
+    end
+
+    it "retains the failed release" do
+      release_name = File.basename(@config.release_path)
+      File.directory?(File.join(@deploy_dir, 'releases_failed', release_name)).should be_true
+    end
+  end
+
   context "with existing precompilation in a deploy hook" do
     before(:all) do
       deploy_test_application do
