@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*
+# -*- encoding: utf-8 -*-
 lib = File.expand_path('../lib/', __FILE__)
 $:.unshift lib unless $:.include?(lib)
 require 'engineyard-serverside/version'
@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rspec', '= 1.3.2')
   s.add_development_dependency('rake', '>= 0.9.2.2')
 
-  s.required_rubygems_version = %q{1.3.6}
+  s.required_rubygems_version = %q{>= 1.3.6}
   s.test_files = Dir.glob("spec/**/*")
 end
