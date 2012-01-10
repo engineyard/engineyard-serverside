@@ -168,6 +168,10 @@ module EY
         File.join(deploy_to, "releases")
       end
 
+      def failed_release_dir
+        File.join(deploy_to, "releases_failed")
+      end
+
       def release_path
         @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end

@@ -388,7 +388,8 @@ Deploy again if your services configuration appears incomplete or out of date.
       def with_failed_release_cleanup
         yield
       rescue Exception
-        sudo "rm -rf #{c.release_path}"
+        info "~> Release #{c.release_path} failed, saving release to #{c.failed_release_dir}."
+        sudo "mkdir -p #{c.failed_release_dir} && mv #{c.release_path} #{c.failed_release_dir}"
         raise
       end
 

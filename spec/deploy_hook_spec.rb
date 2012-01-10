@@ -54,13 +54,14 @@ describe "the deploy-hook API" do
 
   context "capistrano-ish methods" do
     it "has them" do
-      run_hook { respond_to?(:latest_release)   }.should be_true
-      run_hook { respond_to?(:previous_release) }.should be_true
-      run_hook { respond_to?(:all_releases)     }.should be_true
-      run_hook { respond_to?(:current_path)     }.should be_true
-      run_hook { respond_to?(:shared_path)      }.should be_true
-      run_hook { respond_to?(:release_dir)      }.should be_true
-      run_hook { respond_to?(:release_path)     }.should be_true
+      run_hook { respond_to?(:latest_release)    }.should be_true
+      run_hook { respond_to?(:previous_release)  }.should be_true
+      run_hook { respond_to?(:all_releases)      }.should be_true
+      run_hook { respond_to?(:current_path)      }.should be_true
+      run_hook { respond_to?(:shared_path)       }.should be_true
+      run_hook { respond_to?(:release_dir)       }.should be_true
+      run_hook { respond_to?(:failed_release_dir)}.should be_true
+      run_hook { respond_to?(:release_path)      }.should be_true
     end
   end
 
