@@ -212,9 +212,19 @@ WRAP
 
       # task
       def cleanup_old_releases
+        clean_release_directory(c.release_dir)
+        clean_release_directory(c.failed_release_dir)
+      end
+
+      # Remove all but the most-recent +count+ releases from the specified
+      # release directory.
+      # IMPORTANT: This expects the release directory naming convention to be
+      # something with a sensible lexical order. Violate that at your peril.
+      def clean_release_directory(dir, count = 3)
         @cleanup_failed = true
-        info "~> Cleaning up old releases"
-        sudo "ls #{c.release_dir} | head -n -3 | xargs -I{} rm -rf #{c.release_dir}/{}"
+        ordinal = count.succ.to_s
+        info "~> Cleaning release directory: #{dir}"
+        sudo "ls -r #{dir} | tail -n +#{ordinal} | xargs -I@ rm -rf #{dir}/@"
         @cleanup_failed = false
       end
 
