@@ -90,7 +90,7 @@ module EY::Serverside::Strategies::IntegrationSpec
   module Helpers
 
     def update_repository_cache
-      cached_copy = File.join(c.shared_path, 'cached-copy')
+      cached_copy = c.repository_cache
 
       deploy_hook_dir = File.join(cached_copy, 'deploy')
       FileUtils.mkdir_p(deploy_hook_dir)
@@ -164,7 +164,6 @@ module EY::Serverside::Strategies::NodeIntegrationSpec
     include EY::Serverside::Strategies::IntegrationSpec::Helpers
 
     def generate_gemfile_in(dir)
-      generate_package_json_in(dir)
       super(dir)
     end
 

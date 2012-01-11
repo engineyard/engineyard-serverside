@@ -81,7 +81,7 @@ EOF
     before(:all) do
       begin
         deploy_test_application(with_assets = false) do
-          deploy_dir = File.join(@config.shared_path, 'cached-copy', 'deploy')
+          deploy_dir = File.join(@config.repository_cache, 'deploy')
           FileUtils.mkdir_p(deploy_dir)
           hook = File.join(deploy_dir, 'before_migrate.rb')
           hook_contents = %Q[raise 'aaaaaaahhhhh']
@@ -101,7 +101,7 @@ EOF
   context "with existing precompilation in a deploy hook" do
     before(:all) do
       deploy_test_application do
-        deploy_dir = File.join(@config.shared_path, 'cached-copy', 'deploy')
+        deploy_dir = File.join(@config.repository_cache, 'deploy')
         FileUtils.mkdir_p(deploy_dir)
         hook = File.join(deploy_dir, 'before_migrate.rb')
         hook_contents = %Q[run 'touch custom_compiled && mkdir public/assets']

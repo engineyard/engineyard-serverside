@@ -37,6 +37,9 @@ module EY
         end
       end
 
+      # Returns +true+ if the command is successful,
+      # raises EY::Serverside::RemoteFailure with a list of failures
+      # otherwise.
       def run(cmd, &blk)
         run_on_roles(cmd, &blk)
       end
@@ -58,6 +61,7 @@ module EY
           failures = futures.select {|f| f.error? }.map {|f| f.inspect}.join("\n")
           raise EY::Serverside::RemoteFailure.new(failures)
         end
+        true
       end
     end
   end

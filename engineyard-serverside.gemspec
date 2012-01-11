@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency('rspec', '1.3.2')
   s.add_development_dependency('rake', '>=0.9.2.2')
+  s.add_development_dependency('rdoc')
 
   s.required_rubygems_version = %q{>= 1.3.6}
   s.test_files = Dir.glob("spec/**/*")

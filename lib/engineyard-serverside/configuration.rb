@@ -88,7 +88,7 @@ module EY
       end
 
       def repository_cache
-        configuration['repository_cache'] || File.join(deploy_to, "/shared/cached-copy")
+        configuration['repository_cache'] || File.join(deploy_to, 'shared', 'cached-copy')
       end
 
       def deploy_to

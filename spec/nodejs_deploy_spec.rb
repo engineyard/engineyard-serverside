@@ -20,7 +20,10 @@ describe "Deploying an application that uses Node.js and NPM" do
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     @deployer = FullTestDeploy.new(config)
-    @deployer.deploy
+    @deployer.deploy do
+      FileUtils.mkdir_p(config.repository_cache) # block runs before deploy
+      @deployer.generate_package_json_in(config.repository_cache)
+    end
   end
 
   before(:all) do

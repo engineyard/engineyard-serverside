@@ -1,9 +1,3 @@
-begin
-  require 'rdoc/task'
-rescue LoadError => ex
-  require 'rake/rdoctask' # older than RDoc 2.4.2
-end
-
 require 'spec/rake/spectask'
 Spec::Rake::SpecTask.new(:spec) do |spec|
   spec.libs << 'lib' << 'spec'
@@ -15,7 +9,15 @@ $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'
 require 'engineyard-serverside/version'
 
-Rake::RDocTask.new do |rdoc|
+begin
+  require 'rdoc/task'
+  rdoc_task = RDoc::Task
+rescue LoadError => ex
+  require 'rake/rdoctask' # older than RDoc 2.4.2
+  rdoc_task = Rake::RDocTask
+end
+
+rdoc_task.new do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "engineyard-serverside #{EY::Serverside::VERSION}"
   rdoc.rdoc_files.include('README*')

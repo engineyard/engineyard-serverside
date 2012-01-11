@@ -263,7 +263,7 @@ WRAP
       # task
       def copy_repository_cache
         info "~> Copying to #{c.release_path}"
-        run("mkdir -p #{c.release_path} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
+        run("mkdir -p #{c.release_path} #{c.failed_release_dir} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
 
         info "~> Ensuring proper ownership."
         sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
@@ -279,6 +279,10 @@ WRAP
 
       def services_setup_command
         "/usr/local/ey_resin/ruby/bin/ey-services-setup #{config.app}"
+      end
+
+      def node_package_manager_command_check
+        "which npm"
       end
 
       def setup_services
@@ -400,7 +404,7 @@ Deploy again if your services configuration appears incomplete or out of date.
         yield
       rescue Exception
         info "~> Release #{c.release_path} failed, saving release to #{c.failed_release_dir}."
-        sudo "mkdir -p #{c.failed_release_dir} && mv #{c.release_path} #{c.failed_release_dir}"
+        sudo "mv #{c.release_path} #{c.failed_release_dir}"
         raise
       end
 
@@ -463,7 +467,7 @@ Deploy again if your services configuration appears incomplete or out of date.
 
       def check_node_npm
         if File.exist?("#{c.release_path}/package.json")
-          unless run("which npm")
+          unless run(node_package_manager_command_check)
             abort "*** [Error] package.json detected, but npm was not installed"
           else
             info "~> package.json detected, installing npm packages"
