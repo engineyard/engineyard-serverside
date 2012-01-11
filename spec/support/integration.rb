@@ -6,6 +6,8 @@ class FullTestDeploy < EY::Serverside::Deploy
     @infos = []
     @debugs = []
     @commands = []
+    @gemfile_contents = nil
+    @lockfile_contents = nil
   end
 
   # stfu
@@ -84,6 +86,14 @@ class FullTestDeploy < EY::Serverside::Deploy
     @mock_services_setup_command = value
   end
 
+  def mock_gemfile_contents(gemfile_contents)
+    @gemfile_contents = gemfile_contents
+  end
+
+  def mock_lockfile_contents(lockfile_contents)
+    @lockfile_contents = lockfile_contents
+  end
+
 end
 
 module EY::Serverside::Strategies::IntegrationSpec
@@ -119,21 +129,23 @@ module EY::Serverside::Strategies::IntegrationSpec
     end
 
     def gemfile_contents
-      <<-EOF
+      @gemfile_contents || <<-EOF
 source :rubygems
 gem 'rake'
 gem 'pg'
+gem 'ey_config'
       EOF
     end
 
     # Generated using Bundler v1.0.21
     def lockfile_contents
-      <<-EOF
+      @lockfile_contents || <<-EOF
 GEM
   remote: http://rubygems.org/
   specs:
     pg (0.11.0)
     rake (0.9.2.2)
+    ey_config (0.0.1)
 
 PLATFORMS
   ruby
@@ -141,6 +153,7 @@ PLATFORMS
 DEPENDENCIES
   pg
   rake
+  ey_config
       EOF
     end
 
