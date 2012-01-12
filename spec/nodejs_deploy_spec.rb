@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe "Deploying an application that uses Node.js and NPM" do
   def deploy_test_application
-    @deploy_dir = Dir.mktmpdir( "serverside-deploy-#{Time.now.to_i}-#{$$}")
+    @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
 
     # set up EY::Serverside::Server like we're on a solo
     EY::Serverside::Server.reset

@@ -1,8 +1,16 @@
+require 'thor'
 require 'pathname'
 
 module EY
   module Serverside
     class CLI < Thor
+      include Dataflow
+
+      def self.start(*)
+        super
+      rescue RemoteFailure
+        exit(1)
+      end
 
       method_option :migrate,         :type     => :string,
                                       :desc     => "Run migrations with this deploy",
@@ -48,14 +56,14 @@ module EY
                                       :aliases  => ["-v"]
 
       desc "deploy", "Deploy code from /data/<app>"
-      def deploy(default_task = :deploy)
+      def deploy(default_task=:deploy)
         config = EY::Serverside::Deploy::Configuration.new(options)
         EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
 
         EY::Serverside::LoggedOutput.verbose = options[:verbose]
         EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-deploy.log")
 
-        propagate
+        invoke :propagate
 
         EY::Serverside::Deploy.new(config).send(default_task)
       end
@@ -136,7 +144,7 @@ module EY
 
         EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
 
-        propagate
+        invoke :propagate
 
         EY::Serverside::Server.all.each do |server|
           server.sync_directory app_dir
@@ -182,7 +190,7 @@ module EY
         config = EY::Serverside::Deploy::Configuration.new(options)
         EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
 
-        propagate
+        invoke :propagate
 
         EY::Serverside::Deploy.new(config).restart_with_maintenance_page
       end
@@ -204,22 +212,34 @@ module EY
 
       desc "propagate", "Propagate the engineyard-serverside gem to the other instances in the cluster. This will install exactly version #{EY::Serverside::VERSION}."
       def propagate
-        ey_server_side = Dependency.new('engineyard-serverside', EY::Serverside::VERSION)
-        servers = EY::Serverside::Server.all.find_all { |server| !server.local? }
+        config          = EY::Serverside::Deploy::Configuration.new
+        gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
+        local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
+        remote_gem_file = File.join(Dir.tmpdir, gem_filename)
+        gem_binary      = File.join(Gem.default_bindir, 'gem')
 
-        futures = EY::Serverside::Future.call(servers) do |server|
-          installed = server.gem?(ey_server_side.name, ey_server_side.version)
-          unless installed
-            unless server.gem?(ey_server_side.name, ey_server_side.version)
-              puts "~> Installing #{ey_server_side.name} on #{server.hostname}"
-              server.copy(ey_server_side.local_path, ey_server_side.remote_path)
-              installed = server.install_gem(ey_server_side.remote_path)
+        barrier(*(EY::Serverside::Server.all.find_all do |server|
+          !server.local?            # of course this machine has it
+        end.map do |server|
+          need_later do
+            egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
+            # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
+            # 0.5.11, and mistakenly thinking 0.5.1 is there
+            has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
+
+            if !server.run(has_gem_cmd)  # doesn't have this exact version
+              puts "~> Installing engineyard-serverside on #{server.hostname}"
+
+              system(Escape.shell_command([
+                'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
+                "-o", "StrictHostKeyChecking=no",
+                local_gem_file,
+               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
+              ]))
+              server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
             end
           end
-          installed
-        end
-
-        EY::Serverside::Future.success?(futures)
+        end))
       end
 
       private
@@ -232,18 +252,6 @@ module EY
             :user => config.user,
           }
         }
-      end
-
-      class Dependency
-        attr_reader :name, :version
-        def initialize(name, version)
-          @name = name
-          @version = version
-        end
-
-        def gemname; "#{name}-#{version}.gem"; end
-        def local_path; File.expand_path(File.join('cache', gemname), Gem.dir); end
-        def remote_path; File.expand_path(gemname, Dir.tmpdir); end
       end
     end
   end

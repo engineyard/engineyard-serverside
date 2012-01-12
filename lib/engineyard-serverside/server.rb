@@ -83,36 +83,12 @@ module EY
         if local?
           logged_system(command)
         else
-          logged_system(ssh_command + Escape.shell_command(["#{user}@#{hostname}", command]))
+          logged_system(ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command]))
         end
       end
 
-      def copy(local_file, remote_file)
-        logged_system(scp_command + Escape.shell_command([local_file, "#{user}@#{hostname}:#{remote_file}"]))
-      end
-
       def ssh_command
-        "ssh #{ssh_options} "
-      end
-
-      def scp_command
-        "scp #{ssh_options} "
-      end
-
-      def ssh_options
-        "-i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
-      end
-
-      def gem?(name, version)
-        run("#{gem_command} list -i #{name} -v '#{version}'")
-      end
-
-      def install_gem(path)
-        run("#{gem_command} install -q --no-ri --no-rdoc #{path}")
-      end
-
-      def gem_command
-        File.expand_path('gem', Gem.default_bindir)
+        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
       end
 
     end

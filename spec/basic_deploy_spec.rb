@@ -4,7 +4,7 @@ describe "Deploying an application without Bundler" do
   before(:all) do
     $DISABLE_GEMFILE = true # Don't generate Gemfile/Gemfile.lock
     $DISABLE_LOCKFILE = true
-    @deploy_dir = Pathname.new(Dir.mktmpdir("serverside-deploy-#{Time.now.to_i}-#{$$}"))
+    @deploy_dir = Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
 
     # set up EY::Serverside::Server like we're on a solo
     EY::Serverside::Server.reset

@@ -1,37 +1,13 @@
+require 'json'
+require 'thor'
 
 module EY
   module Serverside
-    # Really simple and hacked implementation that works for the 99.9999% of the cases
-    class HashWithIndifferentAccess
-      def initialize(hash = {})
-        @internal = {}
-        hash.each do |k, v|
-          @internal[k.to_s] = v
-        end
-      end
-      def [](name)
-        @internal[name.to_s]
-      end
-      def []=(name, value)
-        @internal[name.to_s] = value
-      end
-
-      def method_missing(method, *args, &block)
-        if @internal.key?(method.to_s)
-          @internal[method.to_s]
-        else
-          @internal.send(method, args, &block)
-        end
-      end
-    end
-
     class Deploy::Configuration
-      require 'json'
-
       DEFAULT_CONFIG = Thor::CoreExt::HashWithIndifferentAccess.new({
         "branch"         => "master",
         "strategy"       => "Git",
-        "bundle_without" => "test development"
+        "bundle_without" => "test development",
       })
 
       attr_reader :configuration
