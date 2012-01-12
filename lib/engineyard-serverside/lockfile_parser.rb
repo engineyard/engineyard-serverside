@@ -16,11 +16,11 @@ module EY
       end
 
       def any_database_adapter?
-        any_ruby_adapter = %w[mysql2 mysql do_mysql pg do_postgres sqlite3].any? do |type|
+        any_ruby_adapter = %w[mysql2 mysql do_mysql pg do_postgres].any? do |type|
           @contents.index(/^\s+#{type}\s\([^\)]+\)$/)
         end
 
-        any_jruby_adapter = %w[mysql postgresql sqlite3].any? do |type|
+        any_jruby_adapter = %w[mysql postgresql].any? do |type|
           @contents.index(/^\s+jdbc-#{type}\s\([^\)]+\)$/) || @contents.index(/^\s+activerecord-jdbc#{type}-adapter\s\([^\)]+\)$/)
         end
 
