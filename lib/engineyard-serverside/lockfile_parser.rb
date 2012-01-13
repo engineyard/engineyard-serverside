@@ -15,6 +15,10 @@ module EY
         parse
       end
 
+      def has_ey_config?
+        @contents.index(/^\s+ey_config\s\([^\)]+\)$/)
+      end
+
       def any_database_adapter?
         any_ruby_adapter = %w[mysql2 mysql do_mysql pg do_postgres].any? do |type|
           @contents.index(/^\s+#{type}\s\([^\)]+\)$/)

@@ -30,6 +30,7 @@ module EY
           create_revision_file
           run_with_callbacks(:bundle)
           setup_services
+          check_for_ey_config
           symlink_configs
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
@@ -50,6 +51,23 @@ module EY
         debug "Finished failing to deploy at #{Time.now.asctime}"
         puts_deploy_failure
         raise
+      end
+
+      def parse_configured_services
+        result = YAML.load_file "#{c.shared_path}/config/ey_services_config_deploy.yml"
+        return {} unless result.is_a?(Hash)
+        result
+      rescue
+        {}
+      end
+
+      def check_for_ey_config
+        if gemfile? && lockfile
+          configured_services = parse_configured_services
+          if !configured_services.empty? && !lockfile.has_ey_config?
+            warning "Gemfile.lock does not contain ey_config. Add it to get EY::Config access to: #{configured_services.keys.join(', ')}."
+          end
+        end
       end
 
       def check_repository
@@ -286,6 +304,7 @@ WRAP
 
       def setup_services
         info "~> Setting up external services."
+        previously_configured_services = parse_configured_services
         begin
           sudo(services_command_check)
         rescue StandardError => e
@@ -294,11 +313,13 @@ WRAP
         end
         sudo(services_setup_command)
       rescue StandardError => e
-        warning <<-WARNING
+        unless previously_configured_services.empty?
+          warning <<-WARNING
 External services configuration not updated. Using previous version.
 Deploy again if your services configuration appears incomplete or out of date.
 #{e}
-        WARNING
+          WARNING
+        end
       end
 
       def symlink_configs(release_to_link=c.release_path)
