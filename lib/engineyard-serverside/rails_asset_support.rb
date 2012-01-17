@@ -84,7 +84,7 @@ if [ -d #{current} ]; then
 else
   mkdir -p #{current} #{last_asset_path};
 fi;
-ln -nfs #{last_asset_path} #{c.release_path}/public
+ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
         COMMAND
        end
 
