@@ -59,7 +59,7 @@ Spec::Runner.configure do |config|
     EY::Serverside.dna_json = {}.to_json
   end
 
-    def deploy_test_application(assets_enabled = true, &block)
+  def deploy_test_application(assets_enabled = true, &block)
     $DISABLE_GEMFILE = false
     $DISABLE_LOCKFILE = false
     @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")

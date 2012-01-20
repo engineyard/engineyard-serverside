@@ -31,6 +31,10 @@ module EY
         any_ruby_adapter || any_jruby_adapter
       end
 
+      def uses_sqlite3?
+        !any_database_adapter? && @contents.index(/^\s+sqlite3\s\([^\)]+\)$/)
+      end
+
       def parse
         parse_from_metadata ||
           parse_from_dependencies ||

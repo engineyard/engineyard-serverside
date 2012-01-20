@@ -66,7 +66,7 @@ class FullTestDeploy < EY::Serverside::Deploy
   end
 
   def deploy
-    yield if block_given?
+    yield(self) if block_given?
     super
   end
 
@@ -99,6 +99,7 @@ end
 module EY::Serverside::Strategies::IntegrationSpec
   module Helpers
 
+
     def update_repository_cache
       cached_copy = c.repository_cache
 
@@ -120,12 +121,28 @@ module EY::Serverside::Strategies::IntegrationSpec
       generate_gemfile_in(cached_copy)
     end
 
+    def release_path
+      c.release_path
+    end
+
+    def shared_path
+      c.shared_path
+    end
+
+    def framework_env
+      c.framework_env
+    end
+
     def create_revision_file_command
       "echo 'revision, yo' > #{c.release_path}/REVISION"
     end
 
     def short_log_message(revision)
       "FONDLED THE CODE"
+    end
+
+    def gemfile_contents=(contents)
+      @gemfile_contents = contents
     end
 
     def gemfile_contents
@@ -137,7 +154,12 @@ gem 'ey_config'
       EOF
     end
 
+    def lockfile_contents=(contents)
+      @lockfile_contents = contents
+    end
+
     # Generated using Bundler v1.0.21
+
     def lockfile_contents
       @lockfile_contents || <<-EOF
 GEM

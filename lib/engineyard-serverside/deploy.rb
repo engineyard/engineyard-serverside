@@ -32,6 +32,7 @@ module EY
           setup_services
           check_for_ey_config
           symlink_configs
+          setup_sqlite3_if_necessary
           conditionally_enable_maintenance_page
           run_with_callbacks(:migrate)
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
@@ -319,6 +320,31 @@ External services configuration not updated. Using previous version.
 Deploy again if your services configuration appears incomplete or out of date.
 #{e}
           WARNING
+        end
+      end
+
+      def setup_sqlite3_if_necessary
+        if gemfile? && lockfile && lockfile.uses_sqlite3?
+          config =  "#{c.shared_path}/config/database.sqlite3.yml"
+          [
+           ["Create databases directory if needed", "mkdir -p #{c.shared_path}/databases"],
+           ["Creating SQLite database if needed", "touch #{c.shared_path}/databases/#{c.framework_env}.sqlite3"],
+           ["Create config directory if needed", "mkdir -p #{c.release_path}/config"],
+           ["Generating SQLite config", "rm -f #{config} && touch #{config}"],
+           ["Generating SQLite config", "echo \"#{c.framework_env}:\" >> #{config}"],
+           ["Generating SQLite config", "echo \"  adapter: sqlite3\" >> #{config}"],
+           ["Generating SQLite config", "echo \"  database: #{c.shared_path}/databases/#{c.framework_env}.sqlite3\" >> #{config}"],
+           ["Generating SQLite config", "echo \"  pool: 5\" >> #{config}"],
+           ["Generating SQLite config", "echo \"  timeout: 5000\" >> #{config}"],
+           ["Symlink database.yml", "ln -nfs #{c.shared_path}/config/database.sqlite3.yml #{c.release_path}/config/database.yml"],
+          ].each do |what, cmd|
+            info "~> #{what}"
+            run(cmd)
+          end
+
+          owner = [c.user, c.group].join(':')
+          info "~> Setting ownership to #{owner}"
+          sudo "chown -R #{owner} #{c.release_path}"
         end
       end
 
