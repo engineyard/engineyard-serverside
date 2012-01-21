@@ -377,6 +377,10 @@ Deploy again if your services configuration appears incomplete or out of date.
 
       protected
 
+      def starting_time
+        @starting_time ||= Time.now
+      end
+
       def gemfile?
         File.exist?("#{c.release_path}/Gemfile")
       end

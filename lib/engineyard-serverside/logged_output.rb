@@ -42,18 +42,18 @@ module EY
       end
 
       def warning(msg)
-        info "\nWARNING: #{msg}\n".gsub(/^/,'!> ')
+        info "WARNING: #{msg}\n".gsub(/^/,'!> ')
       end
 
       def info(msg)
         with_logfile do |log|
-          Tee.new($stdout, log) << (msg + "\n")
+          Tee.new($stdout, log) << ("#{with_timestamp(msg)}\n")
         end
       end
 
       def debug(msg)
         with_logfile do |log|
-          log << "#{msg}\n"
+          log << "#{with_timestamp(msg)}\n"
         end
       end
 
@@ -62,7 +62,7 @@ module EY
           out = verbose? ? Tee.new($stdout, log) : log
           err = Tee.new($stderr, log)    # we always want to see errors
 
-          out <<  ":: running #{cmd}\n"
+          out <<  with_timestamp(":: running #{cmd}\n")
 
           # :quiet means don't raise an error on nonzero exit status
           status = Open4.spawn cmd, 0 => '', 1 => out, 2 => err, :quiet => true
@@ -79,6 +79,12 @@ module EY
         EY::Serverside::LoggedOutput.logfile
       end
 
+      def with_timestamp(msg)
+        return msg unless respond_to?(:starting_time)
+        time_passed = Time.now.to_i - starting_time.to_i
+        timestamp   = "+%2dm %02ds " % time_passed.divmod(60)
+        msg.gsub(/^/, timestamp)
+      end
     end
   end
 end

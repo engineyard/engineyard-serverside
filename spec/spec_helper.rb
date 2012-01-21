@@ -18,7 +18,24 @@ module EY
     end
 
     module LoggedOutput
-      def info(_) end
+      def self.enable_actual_info!
+        @use_actual_info = true
+      end
+
+      def self.disable_actual_info!
+        @use_actual_info = false
+      end
+
+      def self.use_actual_info?
+        @use_actual_info
+      end
+
+      alias old_info info
+      def info(*args)
+        if EY::Serverside::LoggedOutput.use_actual_info?
+          old_info(*args)
+        end
+      end
 
       def logged_system(cmd)
         output = `#{cmd} 2>&1`
