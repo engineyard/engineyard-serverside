@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v1.5.26 (2012-01-21)
+
   * Adds timestamps to deploy logs
 
 ## v1.5.25 (2012-01-13)
