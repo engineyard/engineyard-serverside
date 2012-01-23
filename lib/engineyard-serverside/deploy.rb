@@ -163,9 +163,10 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # task
       def push_code
         info "~> Pushing code to all servers"
-        barrier *(EY::Serverside::Server.all.map do |server|
-          need_later { server.sync_directory(config.repository_cache) }
-        end)
+        futures = EY::Serverside::Future.call(EY::Serverside::Server.all) do |server|
+          server.sync_directory(config.repository_cache)
+        end
+        EY::Serverside::Future.success?(futures)
       end
 
       # task

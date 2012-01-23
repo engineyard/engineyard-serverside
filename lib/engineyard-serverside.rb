@@ -11,11 +11,9 @@ $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/open4/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/json_pure/lib', File.dirname(__FILE__))
-$LOAD_PATH.unshift File.expand_path('vendor/dataflow', File.dirname(__FILE__))
 
 require 'escape'
 require 'json'
-require 'dataflow'
 
 require 'engineyard-serverside/version'
 require 'engineyard-serverside/strategies/git'
@@ -27,6 +25,7 @@ require 'engineyard-serverside/lockfile_parser'
 require 'engineyard-serverside/cli'
 require 'engineyard-serverside/configuration'
 require 'engineyard-serverside/deprecation'
+require 'engineyard-serverside/future'
 
 module EY
   module Serverside
