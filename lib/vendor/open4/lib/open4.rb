@@ -4,23 +4,65 @@ require 'timeout'
 require 'thread'
 
 module Open4
-#--{{{
-  VERSION = '1.1.0'
+  VERSION = '1.3.0'
   def self.version() VERSION end
 
   class Error < ::StandardError; end
 
+  def pfork4(fun, &b)
+    Open4.do_popen(b, :block) do |ps_read, _|
+      ps_read.close
+      begin
+        fun.call
+      rescue SystemExit => e
+        # Make it seem to the caller that calling Kernel#exit in +fun+ kills
+        # the child process normally. Kernel#exit! bypasses this rescue
+        # block.
+        exit! e.status
+      else
+        exit! 0
+      end
+    end
+  end
+  module_function :pfork4
+
   def popen4(*cmd, &b)
-#--{{{
+    Open4.do_popen(b, :init) do |ps_read, ps_write|
+      ps_read.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+      ps_write.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+      exec(*cmd)
+      raise 'forty-two'   # Is this really needed?
+    end
+  end
+  alias open4 popen4
+  module_function :popen4
+  module_function :open4
+
+  def popen4ext(closefds=false, *cmd, &b)
+    Open4.do_popen(b, :init, closefds) do |ps_read, ps_write|
+      ps_read.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+      ps_write.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
+      exec(*cmd)
+      raise 'forty-two'   # Is this really needed?
+    end
+  end
+  module_function :popen4ext
+
+  def self.do_popen(b = nil, exception_propagation_at = nil, closefds=false, &cmd)
     pw, pr, pe, ps = IO.pipe, IO.pipe, IO.pipe, IO.pipe
 
     verbose = $VERBOSE
     begin
       $VERBOSE = nil
-      ps.first.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
-      ps.last.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
 
       cid = fork {
+        if closefds
+          exlist = [0, 1, 2] | [pw,pr,pe,ps].map{|p| [p.first.fileno, p.last.fileno] }.flatten
+          ObjectSpace.each_object(IO){|io|
+            io.close if (not io.closed?) and (not exlist.include? io.fileno)
+          }
+        end
+
         pw.last.close
         STDIN.reopen pw.first
         pw.first.close
@@ -36,52 +78,59 @@ module Open4
         STDOUT.sync = STDERR.sync = true
 
         begin
-          exec(*cmd)
-          raise 'forty-two' 
+          cmd.call(ps)
         rescue Exception => e
           Marshal.dump(e, ps.last)
           ps.last.flush
+        ensure
+          ps.last.close unless ps.last.closed?
         end
-        ps.last.close unless (ps.last.closed?)
+
         exit!
       }
     ensure
       $VERBOSE = verbose
     end
 
-    [pw.first, pr.last, pe.last, ps.last].each{|fd| fd.close}
+    [ pw.first, pr.last, pe.last, ps.last ].each { |fd| fd.close }
 
-    begin
-      e = Marshal.load ps.first
-      raise(Exception === e ? e : "unknown failure!")
-    rescue EOFError # If we get an EOF error, then the exec was successful
-      42
-    ensure
-      ps.first.close
-    end
+    Open4.propagate_exception cid, ps.first if exception_propagation_at == :init
 
     pw.last.sync = true
 
-    pi = [pw.last, pr.first, pe.first]
+    pi = [ pw.last, pr.first, pe.first ]
 
-    if b 
+    begin
+      return [cid, *pi] unless b
+
       begin
-        b[cid, *pi]
-        Process.waitpid2(cid).last
+        b.call(cid, *pi)
       ensure
-        pi.each{|fd| fd.close unless fd.closed?}
+        pi.each { |fd| fd.close unless fd.closed? }
       end
-    else
-      [cid, pw.last, pr.first, pe.first]
+
+      Open4.propagate_exception cid, ps.first if exception_propagation_at == :block
+
+      Process.waitpid2(cid).last
+    ensure
+      ps.first.close unless ps.first.closed?
     end
-#--}}}
   end
-  alias open4 popen4
-  module_function :popen4
-  module_function :open4
+
+  def self.propagate_exception(cid, ps_read)
+    e = Marshal.load ps_read
+    raise Exception === e ? e : "unknown failure!"
+  rescue EOFError
+    # Child process did not raise exception.
+  rescue
+    # Child process raised exception; wait it in order to avoid a zombie.
+    Process.waitpid2 cid
+    raise
+  ensure
+    ps_read.close
+  end
 
   class SpawnError < Error
-#--{{{
     attr 'cmd'
     attr 'status'
     attr 'signals'
@@ -98,11 +147,9 @@ module Open4
       sigs = @signals.map{|k,v| "#{ k }:#{ v.inspect }"}.join(' ')
       super "cmd <#{ cmd }> failed with status <#{ exitstatus.inspect }> signals <#{ sigs }>"
     end
-#--}}}
   end
 
   class ThreadEnsemble
-#--{{{
     attr 'threads'
 
     def initialize cid
@@ -154,18 +201,14 @@ module Open4
     def all_done
       @threads.size.times{ @done.pop }
     end
-#--}}}
   end
 
   def to timeout = nil
-#--{{{
     Timeout.timeout(timeout){ yield }
-#--}}}
   end
   module_function :to
 
   def new_thread *a, &b
-#--{{{
     cur = Thread.current
     Thread.new(*a) do |*a|
       begin
@@ -174,29 +217,25 @@ module Open4
         cur.raise e
       end
     end
-#--}}}
   end
   module_function :new_thread
 
   def getopts opts = {}
-#--{{{
     lambda do |*args|
       keys, default, ignored = args
-      catch('opt') do
+      catch(:opt) do
         [keys].flatten.each do |key|
           [key, key.to_s, key.to_s.intern].each do |key|
-            throw 'opt', opts[key] if opts.has_key?(key)
+            throw :opt, opts[key] if opts.has_key?(key)
           end
         end
         default
       end
     end
-#--}}}
   end
   module_function :getopts
 
   def relay src, dst = nil, t = nil
-#--{{{
     send_dst =
       if dst.respond_to?(:call)
         lambda{|buf| dst.call(buf)}
@@ -244,12 +283,10 @@ module Open4
         send_dst[buf]
       end
     end
-#--}}}
   end
   module_function :relay
 
   def spawn arg, *argv 
-#--{{{
     argv.unshift(arg)
     opts = ((argv.size > 1 and Hash === argv.last) ? argv.pop : {})
     argv.flatten!
@@ -325,7 +362,6 @@ module Open4
       (ignore_exit_failure or (status.nil? and ignore_exec_failure) or exitstatus.include?(status.exitstatus))
 
     status
-#--}}}
   end
   module_function :spawn
 
@@ -336,7 +372,6 @@ module Open4
   module_function :chdir
 
   def background arg, *argv 
-#--{{{
     require 'thread'
     q = Queue.new
     opts = { 'pid' => q, :pid => q }
@@ -354,14 +389,12 @@ module Open4
       define_method(:exitstatus){ @exitstatus ||= spawn_status.exitstatus }
     }
     thread
-#--}}}
   end
   alias bg background
   module_function :background
   module_function :bg
 
   def maim pid, opts = {}
-#--{{{
     getopt = getopts opts
     sigs = getopt[ 'signals', %w(SIGTERM SIGQUIT SIGKILL) ]
     suspend = getopt[ 'suspend', 4 ]
@@ -379,12 +412,10 @@ module Open4
       return true unless alive? pid
     end
     return(not alive?(pid)) 
-#--}}}
   end
   module_function :maim
 
   def alive pid
-#--{{{
     pid = Integer pid
     begin
       Process.kill 0, pid
@@ -392,12 +423,10 @@ module Open4
     rescue Errno::ESRCH
       false
     end
-#--}}}
   end
   alias alive? alive
   module_function :alive
   module_function :'alive?'
-#--}}}
 end
 
 def open4(*cmd, &b) cmd.size == 0 ? Open4 : Open4::popen4(*cmd, &b) end
