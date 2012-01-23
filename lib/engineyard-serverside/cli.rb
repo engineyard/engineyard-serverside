@@ -4,13 +4,6 @@ require 'pathname'
 module EY
   module Serverside
     class CLI < Thor
-      include Dataflow
-
-      def self.start(*)
-        super
-      rescue RemoteFailure
-        exit(1)
-      end
 
       method_option :migrate,         :type     => :string,
                                       :desc     => "Run migrations with this deploy",
@@ -218,28 +211,28 @@ module EY
         remote_gem_file = File.join(Dir.tmpdir, gem_filename)
         gem_binary      = File.join(Gem.default_bindir, 'gem')
 
-        barrier(*(EY::Serverside::Server.all.find_all do |server|
-          !server.local?            # of course this machine has it
-        end.map do |server|
-          need_later do
-            egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
-            # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
-            # 0.5.11, and mistakenly thinking 0.5.1 is there
-            has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
+        servers = EY::Serverside::Server.all.find_all { |server| !server.local? }
 
-            if !server.run(has_gem_cmd)  # doesn't have this exact version
-              puts "~> Installing engineyard-serverside on #{server.hostname}"
+        futures = EY::Serverside::Future.call(servers) do |server|
+          egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
+          # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
+          # 0.5.11, and mistakenly thinking 0.5.1 is there
+          has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
-              system(Escape.shell_command([
-                'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
-                "-o", "StrictHostKeyChecking=no",
-                local_gem_file,
-               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
-              ]))
-              server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
-            end
+          if !server.run(has_gem_cmd)  # doesn't have this exact version
+            puts "~> Installing engineyard-serverside on #{server.hostname}"
+
+            system(Escape.shell_command([
+              'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
+              "-o", "StrictHostKeyChecking=no",
+              local_gem_file,
+             "#{config.user}@#{server.hostname}:#{remote_gem_file}",
+            ]))
+            server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
           end
-        end))
+        end
+
+        EY::Serverside::Future.success?(futures)
       end
 
       private
