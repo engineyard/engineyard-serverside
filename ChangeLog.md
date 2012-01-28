@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v1.5.27 (2012-01-27)
+
   * Add celluloid for Ruby 1.9 compatible futures in preparation for internal 1.9 upgrade.
   * If the application Gemfile contains sqlite3 but no other recognized database
     adapter, generate a SQLite database.yml and print a warning.
