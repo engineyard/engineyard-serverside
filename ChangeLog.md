@@ -9,6 +9,7 @@
   * Records exceptions raised during deploy into the deploy log when possible.
   * Fix a bug where permissions problems may cause integrate action to fail.
   * Fix a problem where "maintenance page still up" notice would stay on Cloud Dashboard too long. (downgraded message severity)
+  * Garbage collect git at the end of each deploy. First one may take a while but the next ones will be faster and reduce extra disk usage.
 
 ## v2.0.3 (2012-09-24)
 

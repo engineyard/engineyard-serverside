@@ -102,6 +102,10 @@ class EY::Serverside::Strategies::IntegrationSpec
     "ref: #{revision} - Short log message"
   end
 
+  def gc_repository_cache
+    shell.status "Garbage collecting cached git repository to reduce disk usage."
+  end
+
   private
 
   def install_git_base

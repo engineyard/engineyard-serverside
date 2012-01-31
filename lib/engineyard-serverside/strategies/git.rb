@@ -45,6 +45,11 @@ module EY
           @to_checkout = branch?(@opts_ref) ? "origin/#{@opts_ref}" : @opts_ref
         end
 
+        def gc_repository_cache
+          shell.status "Garbage collecting cached git repository to reduce disk usage."
+          run("#{git} gc")
+        end
+
         def create_revision_file_command(dir)
           %Q{#{git} show --pretty=format:"%H" | head -1 > "#{dir}/REVISION"}
         end

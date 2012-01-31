@@ -48,6 +48,7 @@ module EY
         disable_maintenance_page
 
         cleanup_old_releases
+        gc_repository_cache
         shell.status "Finished deploy at #{Time.now.asctime}"
       rescue Exception
         shell.status "Finished failing to deploy at #{Time.now.asctime}"
@@ -57,6 +58,10 @@ module EY
 
       def update_repository_cache
         strategy.update_repository_cache
+      end
+
+      def gc_repository_cache
+        strategy.gc_repository_cache
       end
 
       def create_revision_file_command
