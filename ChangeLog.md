@@ -4,6 +4,10 @@
 
   *
 
+## v1.5.28 (2012-02-02)
+
+  * Fix incompatibility issues between Open4 and Ruby 1.9
+
 ## v1.5.27 (2012-01-27)
 
   * Add celluloid for Ruby 1.9 compatible futures in preparation for internal 1.9 upgrade.
