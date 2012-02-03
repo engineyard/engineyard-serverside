@@ -2,7 +2,8 @@
 
 ## NEXT
 
-  *
+  * Improved deploy output, especially for --verbose.
+  * Send all log output through a new Shell object that formats and adds timestamps.
 
 ## v1.5.29 (2012-02-06)
 

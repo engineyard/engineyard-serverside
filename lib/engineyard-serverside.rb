@@ -26,6 +26,8 @@ require 'engineyard-serverside/cli'
 require 'engineyard-serverside/configuration'
 require 'engineyard-serverside/deprecation'
 require 'engineyard-serverside/future'
+require 'engineyard-serverside/shell'
+
 
 module EY
   module Serverside

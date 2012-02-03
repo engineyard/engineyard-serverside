@@ -55,6 +55,10 @@ module EY
         EY::Serverside.node
       end
 
+      def verbose
+        configuration['verbose']
+      end
+
       def app
         configuration['app'].to_s
       end

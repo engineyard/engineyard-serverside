@@ -20,7 +20,7 @@ describe EY::Serverside do
 
   it "preserves the old constants" do
     names = %w[CLI Deploy DeployBase Deploy::Configuration
-               DeployHook LockfileParser LoggedOutput Server Task
+               DeployHook LockfileParser Server Task
                Strategies Strategies::Git]
 
     names.map do |name|
@@ -30,6 +30,11 @@ describe EY::Serverside do
       prints_warning = name.include?('::') ? false : true
       check_deprecation(const, prints_warning)
     end
+  end
+
+  it "deprecates EY::Serverside::LoggedOutput for EY::Serverside::Shell::Helpers" do
+    EY::Serverside::LoggedOutput.should == EY::Serverside::Shell::Helpers
+    @warnings.string.should include("EY::Serverside::LoggedOutput")
   end
 
   it "deprecates EY.dna_json and EY.node" do

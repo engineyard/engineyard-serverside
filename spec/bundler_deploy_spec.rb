@@ -32,7 +32,7 @@ describe "Deploying an application that uses Bundler" do
     end
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    @deployer = FullTestDeploy.new(config)
+    @deployer = FullTestDeploy.new(config, test_shell)
     @deployer.deploy
   end
 

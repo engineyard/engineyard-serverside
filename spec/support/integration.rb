@@ -1,23 +1,11 @@
 class FullTestDeploy < EY::Serverside::Deploy
-  attr_reader :infos, :debugs, :commands
+  attr_reader :commands
 
   def initialize(*)
     super
-    @infos = []
-    @debugs = []
     @commands = []
     @gemfile_contents = nil
     @lockfile_contents = nil
-  end
-
-  # stfu
-  def info(msg)
-    @infos << msg
-  end
-
-  # no really, stfu
-  def debug(msg)
-    @debugs << msg
   end
 
   # passwordless sudo is neither guaranteed nor desired

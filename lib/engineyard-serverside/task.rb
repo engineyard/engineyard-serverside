@@ -1,12 +1,16 @@
+require 'engineyard-serverside/shell/helpers'
+
 module EY
   module Serverside
     class Task
+      include EY::Serverside::Shell::Helpers
 
-      attr_reader :config
+      attr_reader :config, :shell
       alias :c :config
 
-      def initialize(conf)
+      def initialize(conf, shell = nil)
         @config = conf
+        @shell = shell
         @roles = :all
       end
 
@@ -18,7 +22,7 @@ module EY
         end
 
         if deploy_file
-          puts "~> Loading deployment task overrides from #{deploy_file}"
+          shell.status "Loading deployment task overrides from #{deploy_file}"
           instance_eval(File.read(deploy_file))
           true
         else
@@ -54,7 +58,7 @@ module EY
         servers = EY::Serverside::Server.from_roles(@roles)
         futures = EY::Serverside::Future.call(servers, block_given?) do |server, exec_block|
           to_run = exec_block ? block.call(server, cmd.dup) : cmd
-          server.run(Escape.shell_command(wrapper + [to_run]))
+          server.run(Escape.shell_command(wrapper + [to_run])) { |cmd| shell.logged_system(cmd) }
         end
 
         unless EY::Serverside::Future.success?(futures)

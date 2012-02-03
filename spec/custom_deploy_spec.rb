@@ -11,7 +11,6 @@ describe "the EY::Serverside::Deploy API" do
       # cheat a bit; we don't actually want to do these things
       def require_custom_tasks() end
       def callback(*_) end
-      def puts(*_) 'stfu' end
 
       attr_reader :call_order
       def initialize(*a)
@@ -34,7 +33,7 @@ describe "the EY::Serverside::Deploy API" do
       def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
     end
 
-    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new)
+    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new, test_shell)
     td.deploy
     td.call_order.should == %w(
       push_code
@@ -60,7 +59,7 @@ describe "the EY::Serverside::Deploy API" do
     before(:each) do
       @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
       @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
-      @deploy = TestQuietDeploy.new(@config)
+      @deploy = TestQuietDeploy.new(@config, test_shell)
     end
 
     def write_eydeploy(relative_path, contents = "def got_new_methods() 'from the file on disk' end")
@@ -92,7 +91,7 @@ describe "the EY::Serverside::Deploy API" do
         def value() 'base' end
       end
 
-      deploy = TestDeploySuper.new(@config)
+      deploy = TestDeploySuper.new(@config, test_shell)
       deploy.require_custom_tasks.should be_true
       deploy.value.should == "base + derived"
     end
