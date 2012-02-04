@@ -51,7 +51,7 @@ module EY
       desc "deploy", "Deploy code from /data/<app>"
       def deploy(default_task=:deploy)
         config = EY::Serverside::Deploy::Configuration.new(options)
-        EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
+        load_servers(config)
 
         EY::Serverside::LoggedOutput.verbose = options[:verbose]
         EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-deploy.log")
@@ -135,7 +135,7 @@ module EY
 
         config = EY::Serverside::Deploy::Configuration.new(integrate_options)
 
-        EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
+        load_servers(config)
 
         invoke :propagate
 
@@ -181,7 +181,7 @@ module EY
         EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-restart.log")
 
         config = EY::Serverside::Deploy::Configuration.new(options)
-        EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
+        load_servers(config)
 
         invoke :propagate
 
@@ -236,6 +236,10 @@ module EY
       end
 
       private
+
+      def load_servers(config)
+        EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
+      end
 
       def assemble_instance_hashes(config)
         options[:instances].collect { |hostname|
