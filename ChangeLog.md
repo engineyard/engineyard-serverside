@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Fix #31: Use resin to run engineyard-serverside when it's available
 
 ## v1.5.28 (2012-02-02)
 
