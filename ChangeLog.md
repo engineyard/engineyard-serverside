@@ -6,7 +6,7 @@
 
 ## v1.5.29 (2012-02-06)
 
-  * Fix #31: Use resin to run engineyard-serverside when it's available
+  * This version has been pulled before release.
 
 ## v1.5.28 (2012-02-02)
 

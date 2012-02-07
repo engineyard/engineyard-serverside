@@ -423,11 +423,7 @@ WRAP
       end
 
       def serverside_bin
-        basedir = if File.exist?('/usr/local/ey_resin/ruby')
-          '/usr/local/ey_resin/ruby'
-        else
-          File.expand_path('../../..', __FILE__)
-        end
+        basedir = File.expand_path('../../..', __FILE__)
         File.join(basedir, 'bin', 'engineyard-serverside')
       end
 
