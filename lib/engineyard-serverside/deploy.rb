@@ -300,10 +300,6 @@ WRAP
         "/usr/local/ey_resin/ruby/bin/ey-services-setup #{config.app}"
       end
 
-      def node_package_manager_command_check
-        "which npm"
-      end
-
       def setup_services
         info "~> Setting up external services."
         previously_configured_services = parse_configured_services
@@ -524,12 +520,8 @@ WRAP
 
       def check_node_npm
         if File.exist?("#{c.release_path}/package.json")
-          unless run(node_package_manager_command_check)
-            abort "*** [Error] package.json detected, but npm was not installed"
-          else
-            info "~> package.json detected, installing npm packages"
-            run "cd #{c.release_path} && npm install"
-          end
+          info "~> package.json detected, installing npm packages"
+          run "cd #{c.release_path} && npm install"
         end
       end
     end   # DeployBase
