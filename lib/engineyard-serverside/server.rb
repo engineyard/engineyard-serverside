@@ -1,11 +1,8 @@
 require 'open-uri'
-require 'engineyard-serverside/logged_output'
 
 module EY
   module Serverside
     class Server < Struct.new(:hostname, :roles, :name, :user)
-      include LoggedOutput
-
       class DuplicateHostname < StandardError
         def initialize(hostname)
           super "There is already an EY::Serverside::Server with hostname '#{hostname}'"
@@ -75,20 +72,20 @@ module EY
 
       def sync_directory(directory)
         return if local?
-        run "mkdir -p #{directory}"
-        logged_system(%|rsync --delete -aq -e "#{ssh_command}" #{directory}/ #{user}@#{hostname}:#{directory}|)
+        yield remote_command("mkdir -p #{directory}")
+        yield Escap.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
       end
 
       def run(command)
-        if local?
-          logged_system(command)
-        else
-          logged_system(ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command]))
-        end
+        yield local? ? command : remote_command(command)
+      end
+
+      def remote_command(command)
+        ssh_command + Escape.shell_command(["#{user}@#{hostname}", command])
       end
 
       def ssh_command
-        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
+        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no "
       end
 
     end

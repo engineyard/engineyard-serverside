@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe "Deploying an application that uses Node.js and NPM" do
   def deploy_test_application
-    @deploy_dir = File.join(Dir.tmpdir, "serverside-deploy-#{Time.now.to_i}-#{$$}")
+    @deploy_dir = Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
 
     # set up EY::Serverside::Server like we're on a solo
     EY::Serverside::Server.reset
@@ -19,7 +19,7 @@ describe "Deploying an application that uses Node.js and NPM" do
       })
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    @deployer = FullTestDeploy.new(config)
+    @deployer = FullTestDeploy.new(config, test_shell)
     @deployer.deploy do
       FileUtils.mkdir_p(config.repository_cache) # block runs before deploy
       @deployer.generate_package_json_in(config.repository_cache)

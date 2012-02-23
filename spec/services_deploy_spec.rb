@@ -23,9 +23,8 @@ describe "Deploying an application with services" do
         'framework_env' => 'staging'
       })
 
-    EY::Serverside::LoggedOutput.verbose = true
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    FullTestDeploy.new(config)
+    FullTestDeploy.new(config, test_shell)
   end
 
   def exist
@@ -65,7 +64,7 @@ DEPENDENCIES
       end
 
       it "warns about missing ey_config" do
-        @deployer.infos.should be_any { |info| info =~ /WARNING: Gemfile.lock does not contain ey_config/ }
+        read_stderr.should include("WARNING: Gemfile.lock does not contain ey_config")
       end
 
     end
@@ -75,7 +74,7 @@ DEPENDENCIES
       end
 
       it "works without warnings" do
-        @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+        read_output.should_not =~ /WARNING/
       end
 
     end
@@ -101,7 +100,7 @@ DEPENDENCIES
       @symlinked_services_file.should be_symlink
       @shared_services_file.read.should == "#{@invalid_services_yml}\n"
 
-      @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+      read_output.should_not =~ /WARNING/
     end
   end
 
@@ -125,7 +124,7 @@ DEPENDENCIES
       @symlinked_services_file.should be_symlink
       @shared_services_file.read.should == "#{@services_yml}\n"
 
-      @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+      read_output.should_not =~ /WARNING/
     end
 
     describe "followed by a deploy that can't find the command" do
@@ -144,7 +143,7 @@ DEPENDENCIES
         @symlinked_services_file.should be_symlink
         @shared_services_file.read.should == "#{@services_yml}\n"
 
-        @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+        read_output.should_not =~ /WARNING/
       end
 
     end
@@ -166,7 +165,7 @@ DEPENDENCIES
         @symlinked_services_file.should be_symlink
         @shared_services_file.read.should == "#{@services_yml}\n"
 
-        @deployer.infos.should be_any { |info| info =~ /WARNING: External services configuration not updated/ }
+        read_stderr.should include('WARNING: External services configuration not updated')
       end
 
       it "does not log a warning or symlink a config file when there is no existing services file" do
@@ -176,7 +175,7 @@ DEPENDENCIES
         @shared_services_file.should_not exist
         @symlinked_services_file.should_not exist
 
-        @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+        read_output.should_not =~ /WARNING/
       end
 
     end
@@ -199,7 +198,7 @@ DEPENDENCIES
         @symlinked_services_file.should be_symlink
         @shared_services_file.read.should == "#{@services_yml}\n"
 
-        @deployer.infos.should_not be_any { |info| info =~ /WARNING/ }
+        read_output.should_not =~ /WARNING/
       end
 
     end

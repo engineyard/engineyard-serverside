@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe "Deploying an application with sqlite3 as the only DB adapter in the Gemfile.lock" do
-  before do
+  before(:all) do
     @release_path  = nil
     @shared_path   = nil
     @framework_env = nil
@@ -17,7 +17,6 @@ describe "Deploying an application with sqlite3 as the only DB adapter in the Ge
       @framework_env             = deployer.framework_env
     end
   end
-    
 
   it 'should symlink database.sqlite3.yml' do
     File.exist?(File.join(@release_path, 'config', 'database.yml')).should be_true

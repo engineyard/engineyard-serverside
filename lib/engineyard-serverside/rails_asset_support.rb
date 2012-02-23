@@ -9,7 +9,7 @@ module EY
           keep_existing_assets
           cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile || true"
           if rails_version
-            info "~> Precompiling assets for rails v#{rails_version}"
+            shell.status "Precompiling assets for rails v#{rails_version}"
           else
             warning "Precompiling assets even though Rails was not bundled."
           end
@@ -22,24 +22,24 @@ module EY
         return unless File.readable?(app_rb_path) # Not a Rails app in the first place.
 
         if File.directory?(File.join(c.release_path, 'app', 'assets'))
-          info "~> app/assets/ found. Attempting Rails asset pre-compilation."
+          shell.status "app/assets/ found. Attempting Rails asset pre-compilation."
         else
           return false
         end
 
         if app_builds_own_assets?
-          info "~> public/assets already exists, skipping pre-compilation."
+          shell.status "public/assets already exists, skipping pre-compilation."
           return
         end
         if app_disables_assets?(app_rb_path)
-          info "~> application.rb has disabled asset compilation. Skipping."
+          shell.status "application.rb has disabled asset compilation. Skipping."
           return
         end
 # This check is very expensive, and has been deemed not worth the time.
 # Leaving this here in case someone comes up with a faster way.
 =begin
         unless app_has_asset_task?
-          info "~> No 'assets:precompile' Rake task found. Skipping."
+          shell.status "No 'assets:precompile' Rake task found. Skipping."
           return
         end
 =end

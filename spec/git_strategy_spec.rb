@@ -2,8 +2,12 @@ require 'spec_helper'
 
 describe "the git deploy strategy" do
   subject do
-    EY::Serverside::Strategies::Git.new(:repo => File.join(GITREPO_DIR, 'git'),
-                                        :repository_cache => GITREPO_DIR, :ref => "master")
+    EY::Serverside::Strategies::Git.new(
+      test_shell,
+      :repo => File.join(GITREPO_DIR, 'git'),
+      :repository_cache => GITREPO_DIR,
+      :ref => "master"
+    )
   end
 
   before { subject.checkout }

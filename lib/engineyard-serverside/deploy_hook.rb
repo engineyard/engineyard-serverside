@@ -1,27 +1,29 @@
+require 'engineyard-serverside/shell/helpers'
+
 module EY
   module Serverside
     class DeployHook < Task
-      def initialize(options)
-        super(EY::Serverside::Deploy::Configuration.new(options))
-      end
-
       def callback_context
-        @context ||= CallbackContext.new(config)
+        @context ||= CallbackContext.new(config, shell)
       end
 
       def run(hook)
         hook_path = "#{c.release_path}/deploy/#{hook}.rb"
         if File.exist?(hook_path)
           Dir.chdir(c.release_path) do
-            puts "~> running deploy hook: deploy/#{hook}.rb"
+            shell.status "Running deploy hook: deploy/#{hook}.rb"
             if desc = syntax_error(hook_path)
               hook_name = File.basename(hook_path)
               abort "*** [Error] Invalid Ruby syntax in hook: #{hook_name} ***\n*** #{desc.chomp} ***"
             else
-              callback_context.instance_eval(IO.read(hook_path))
+              eval_hook(IO.read(hook_path))
             end
           end
         end
+      end
+
+      def eval_hook(code)
+        callback_context.instance_eval(code)
       end
 
       def syntax_error(file)
@@ -30,9 +32,18 @@ module EY
       end
 
       class CallbackContext
-        def initialize(config)
+        include EY::Serverside::Shell::Helpers
+
+        attr_reader :shell
+
+        def initialize(config, shell)
           @configuration = config
+          @shell = shell
           @node = node
+        end
+
+        def config
+          @configuration
         end
 
         def method_missing(meth, *args, &blk)
@@ -48,19 +59,11 @@ module EY
         end
 
         def run(cmd)
-          system(Escape.shell_command(["sh", "-l", "-c", cmd]))
+          shell.logged_system(Escape.shell_command(["sh", "-l", "-c", cmd]))
         end
 
         def sudo(cmd)
-          system(Escape.shell_command(["sudo", "sh", "-l", "-c", cmd]))
-        end
-
-        def info(*args)
-          $stderr.puts *args
-        end
-
-        def debug(*args)
-          $stdout.puts *args
+          shell.logged_system(Escape.shell_command(["sudo", "sh", "-l", "-c", cmd]))
         end
 
         # convenience functions for running on certain instance types

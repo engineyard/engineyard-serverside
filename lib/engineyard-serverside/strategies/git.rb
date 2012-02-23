@@ -1,5 +1,3 @@
-require 'engineyard-serverside/logged_output'
-
 module EY
   module Serverside
     module Strategies
@@ -28,7 +26,7 @@ module EY
             #
             # Rollback doesn't know about the repository location (nor
             # should it need to), but it would like to use #short_log_message.
-            klass.new(
+            klass.new(shell,
               :repository_cache => c[:repository_cache],
               :app => c[:app],
               :repo => c[:repo],
@@ -37,11 +35,10 @@ module EY
           end
         end
 
-        include LoggedOutput
+        attr_reader :shell, :opts
 
-        attr_reader :opts
-
-        def initialize(opts)
+        def initialize(shell, opts)
+          @shell = shell
           @opts = opts
         end
 
@@ -51,21 +48,21 @@ module EY
 
         def fetch
           if usable_repository?
-            logged_system("#{git} fetch -q origin 2>&1")
+            shell.logged_system("#{git} fetch -q origin 2>&1")
           else
             FileUtils.rm_rf(opts[:repository_cache])
-            logged_system("git clone -q #{opts[:repo]} #{opts[:repository_cache]} 2>&1")
+            shell.logged_system("git clone -q #{opts[:repo]} #{opts[:repository_cache]} 2>&1")
           end
         end
 
         def checkout
-          info "~> Deploying revision #{short_log_message(to_checkout)}"
+          shell.status "Deploying revision #{short_log_message(to_checkout)}"
           in_git_work_tree do
-            (logged_system("git checkout -q '#{to_checkout}'") ||
-              logged_system("git reset -q --hard '#{to_checkout}'")) &&
-              logged_system("git submodule sync") &&
-              logged_system("git submodule update --init") &&
-              logged_system("git clean -dfq")
+            (shell.logged_system("git checkout -q '#{to_checkout}'") ||
+              shell.logged_system("git reset -q --hard '#{to_checkout}'")) &&
+              shell.logged_system("git submodule sync") &&
+              shell.logged_system("git submodule update --init") &&
+              shell.logged_system("git clean -dfq")
           end
         end
 

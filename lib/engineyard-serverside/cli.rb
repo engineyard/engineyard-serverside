@@ -1,5 +1,8 @@
 require 'thor'
 require 'pathname'
+require 'engineyard-serverside/deploy'
+require 'engineyard-serverside/shell'
+require 'engineyard-serverside/server'
 
 module EY
   module Serverside
@@ -50,15 +53,8 @@ module EY
 
       desc "deploy", "Deploy code from /data/<app>"
       def deploy(default_task=:deploy)
-        config = EY::Serverside::Deploy::Configuration.new(options)
-        load_servers(config)
-
-        EY::Serverside::LoggedOutput.verbose = options[:verbose]
-        EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-deploy.log")
-
-        invoke :propagate
-
-        EY::Serverside::Deploy.new(config).send(default_task)
+        config, shell = init_and_propagate(options, 'deploy')
+        EY::Serverside::Deploy.new(config, shell).send(default_task)
       end
 
       method_option :app,           :type     => :string,
@@ -84,9 +80,15 @@ module EY
       method_option :current_name,  :type     => :string,
                                     :desc     => "Value for #current_name in hooks"
 
+      method_option :verbose,       :type     => :boolean,
+                                    :default  => false,
+                                    :desc     => "Verbose output",
+                                    :aliases  => ["-v"]
+
       desc "hook [NAME]", "Run a particular deploy hook"
       def hook(hook_name)
-        EY::Serverside::DeployHook.new(options).run(hook_name)
+        config, shell = init(options, "hook-#{hook_name}")
+        EY::Serverside::DeployHook.new(config, shell).run(hook_name)
       end
 
 
@@ -120,8 +122,6 @@ module EY
                                       :aliases  => ["-v"]
       desc "integrate", "Integrate other instances into this cluster"
       def integrate
-        EY::Serverside::LoggedOutput.verbose = options[:verbose]
-        EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-integrate.log")
 
         app_dir = Pathname.new "/data/#{options[:app]}"
         current_app_dir = app_dir + "current"
@@ -133,23 +133,19 @@ module EY
         # we have to deploy the same SHA there as here
         integrate_options[:branch] = (current_app_dir + 'REVISION').read.strip
 
-        config = EY::Serverside::Deploy::Configuration.new(integrate_options)
-
-        load_servers(config)
-
-        invoke :propagate
+        config, shell = init_and_propagate(integrate_options, 'integrate')
 
         EY::Serverside::Server.all.each do |server|
-          server.sync_directory app_dir
+          server.sync_directory(app_dir) { |cmd| shell.logged_system(cmd) }
           # we're just about to recreate this, so it has to be gone
           # first. otherwise, non-idempotent deploy hooks could screw
           # things up, and since we don't control deploy hooks, we must
           # assume the worst.
-          server.run("rm -rf #{current_app_dir}")
+          run_on_server(server,"rm -rf #{current_app_dir}")
         end
 
         # deploy local-ref to other instances into /data/$app/local-current
-        EY::Serverside::Deploy.new(config).cached_deploy
+        EY::Serverside::Deploy.new(config, shell).cached_deploy
       end
 
       method_option :app,             :type     => :string,
@@ -177,15 +173,9 @@ module EY
                                       :aliases  => ["-v"]
       desc "restart", "Restart app servers, conditionally enabling maintenance page"
       def restart
-        EY::Serverside::LoggedOutput.verbose = options[:verbose]
-        EY::Serverside::LoggedOutput.logfile = File.join(ENV['HOME'], "#{options[:app]}-restart.log")
+        config, shell = init_and_propagate(options, 'restart')
 
-        config = EY::Serverside::Deploy::Configuration.new(options)
-        load_servers(config)
-
-        invoke :propagate
-
-        EY::Serverside::Deploy.new(config).restart_with_maintenance_page
+        EY::Serverside::Deploy.new(config, shell).restart_with_maintenance_page
       end
 
       desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
@@ -203,8 +193,10 @@ module EY
         end
       end
 
-      desc "propagate", "Propagate the engineyard-serverside gem to the other instances in the cluster. This will install exactly version #{EY::Serverside::VERSION}."
-      def propagate
+      private
+
+      # Put the same engineyard-serverside on all the servers (Used to be public but is unused as an actual CLI command now)
+      def propagate(shell)
         config          = EY::Serverside::Deploy::Configuration.new
         gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
         local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
@@ -219,23 +211,38 @@ module EY
           # 0.5.11, and mistakenly thinking 0.5.1 is there
           has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
-          if !server.run(has_gem_cmd)  # doesn't have this exact version
-            puts "~> Installing engineyard-serverside on #{server.hostname}"
+          if !run_on_server(server,has_gem_cmd) # doesn't have this exact version
+            shell.status "Installing engineyard-serverside on #{server.hostname}"
 
-            system(Escape.shell_command([
+            shell.logged_system(Escape.shell_command([
               'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
               "-o", "StrictHostKeyChecking=no",
               local_gem_file,
              "#{config.user}@#{server.hostname}:#{remote_gem_file}",
             ]))
-            server.run("sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
+            run_on_server(server,"sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
           end
         end
 
         EY::Serverside::Future.success?(futures)
       end
 
-      private
+      def init_and_propagate(*args)
+        config, shell = init(*args)
+        load_servers(config)
+        propagate(shell)
+        [config, shell]
+      end
+
+      def init(options, action)
+        config = EY::Serverside::Deploy::Configuration.new(options)
+        shell  = EY::Serverside::Shell.new(:verbose  => config.verbose, :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log"))
+        [config, shell]
+      end
+
+      def run_on_server(server, command)
+        server.run(command) { |cmd| shell.logged_system(cmd) }
+      end
 
       def load_servers(config)
         EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))

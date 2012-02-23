@@ -7,22 +7,21 @@ require 'engineyard-serverside/rails_asset_support'
 module EY
   module Serverside
     class DeployBase < Task
-      include LoggedOutput
       include ::EY::Serverside::RailsAssetSupport
 
       # default task
       def deploy
-        debug "Starting deploy at #{Time.now.asctime}"
+        shell.status "Starting deploy at #{shell.start_time.asctime}"
         update_repository_cache
         cached_deploy
       end
 
       def cached_deploy
-        debug "Deploying app from cached copy at #{Time.now.asctime}"
+        shell.status "Deploying app from cached copy at #{Time.now.asctime}"
         require_custom_tasks
         push_code
 
-        info "~> Starting full deploy"
+        shell.status "Starting full deploy"
         copy_repository_cache
         check_repository
 
@@ -47,9 +46,9 @@ module EY
         disable_maintenance_page
 
         cleanup_old_releases
-        debug "Finished deploy at #{Time.now.asctime}"
+        shell.status "Finished deploy at #{Time.now.asctime}"
       rescue Exception
-        debug "Finished failing to deploy at #{Time.now.asctime}"
+        shell.status "Finished failing to deploy at #{Time.now.asctime}"
         puts_deploy_failure
         raise
       end
@@ -73,9 +72,9 @@ module EY
 
       def check_repository
         if gemfile?
-          info "~> Gemfile found."
+          shell.status "Gemfile found."
           if lockfile
-            info "~> Gemfile.lock found."
+            shell.status "Gemfile.lock found."
             unless lockfile.any_database_adapter?
               warning <<-WARN
 Gemfile.lock does not contain a recognized database adapter.
@@ -97,7 +96,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
             WARN
           end
         else
-          info "~> No Gemfile. Deploying without bundler support."
+          shell.status "No Gemfile. Deploying without bundler support."
         end
       end
 
@@ -163,9 +162,9 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
       # task
       def push_code
-        info "~> Pushing code to all servers"
+        shell.status "Pushing code to all servers"
         futures = EY::Serverside::Future.call(EY::Serverside::Server.all) do |server|
-          server.sync_directory(config.repository_cache)
+          server.sync_directory(config.repository_cache) { |cmd| shell.logged_system(cmd) }
         end
         EY::Serverside::Future.success?(futures)
       end
@@ -173,7 +172,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # task
       def restart
         @restart_failed = true
-        info "~> Restarting app servers"
+        shell.status "Restarting app servers"
         roles :app_master, :app, :solo do
           run(restart_command)
         end
@@ -191,13 +190,8 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
       # If we don't have a local version of the ssh wrapper script yet,
       # create it on all the servers that will need it.
-      # TODO - This logic likely fails when people change deploy keys.
       def ssh_executable
-        path = ssh_wrapper_path
-        roles :app_master, :app, :solo, :util do
-          run(generate_ssh_wrapper)
-        end
-        path
+        @path ||= generate_ssh_wrapper
       end
 
       # We specify 'IdentitiesOnly' to avoid failures on systems with > 5 private keys available.
@@ -208,14 +202,15 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       def generate_ssh_wrapper
         path = ssh_wrapper_path
         identity_file = "~/.ssh/#{c.app}-deploy-key"
-<<-WRAP
+        run <<-SCRIPT
 [[ -x #{path} ]] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
 ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' -o 'UserKnownHostsFile /dev/null' $*
 SSH
 chmod 0700 #{path}
-WRAP
+        SCRIPT
+        path
       end
 
       def ssh_wrapper_path
@@ -243,7 +238,7 @@ WRAP
       def clean_release_directory(dir, count = 3)
         @cleanup_failed = true
         ordinal = count.succ.to_s
-        info "~> Cleaning release directory: #{dir}"
+        shell.status "Cleaning release directory: #{dir}"
         sudo "ls -r #{dir} | tail -n +#{ordinal} | xargs -I@ rm -rf #{dir}/@"
         @cleanup_failed = false
       end
@@ -255,15 +250,15 @@ WRAP
           c.release_path = c.previous_release(rolled_back_release)
 
           revision = File.read(File.join(c.release_path, 'REVISION')).strip
-          info "~> Rolling back to previous release: #{short_log_message(revision)}"
+          shell.status "Rolling back to previous release: #{short_log_message(revision)}"
 
           run_with_callbacks(:symlink)
           sudo "rm -rf #{rolled_back_release}"
           bundle
-          info "~> Restarting with previous release."
+          shell.status "Restarting with previous release."
           with_maintenance_page { run_with_callbacks(:restart) }
         else
-          info "~> Already at oldest release, nothing to roll back to."
+          shell.status "Already at oldest release, nothing to roll back to."
           exit(1)
         end
       end
@@ -274,17 +269,17 @@ WRAP
         @migrations_reached = true
         roles :app_master, :solo do
           cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} #{c.migration_command}"
-          info "~> Migrating: #{cmd}"
+          shell.status "Migrating: #{cmd}"
           run(cmd)
         end
       end
 
       # task
       def copy_repository_cache
-        info "~> Copying to #{c.release_path}"
+        shell.status "Copying to #{c.release_path}"
         run("mkdir -p #{c.release_path} #{c.failed_release_dir} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
 
-        info "~> Ensuring proper ownership."
+        shell.status "Ensuring proper ownership."
         sudo("chown -R #{c.user}:#{c.group} #{c.deploy_to}")
       end
 
@@ -305,7 +300,7 @@ WRAP
       end
 
       def setup_services
-        info "~> Setting up external services."
+        shell.status "Setting up external services."
         previously_configured_services = parse_configured_services
         begin
           sudo(services_command_check)
@@ -341,24 +336,24 @@ YML
 WRAP
            ["Symlink database.yml", "ln -nfs #{c.shared_path}/config/database.sqlite3.yml #{c.release_path}/config/database.yml"],
           ].each do |what, cmd|
-            info "~> #{what}"
+            shell.status "#{what}"
             run(cmd)
           end
 
           owner = [c.user, c.group].join(':')
-          info "~> Setting ownership to #{owner}"
+          shell.status "Setting ownership to #{owner}"
           sudo "chown -R #{owner} #{c.release_path}"
         end
       end
 
       def symlink_configs(release_to_link=c.release_path)
-        info "~> Preparing shared resources for release."
+        shell.status "Preparing shared resources for release."
         symlink_tasks(release_to_link).each do |what, cmd|
-          info "~> #{what}"
+          shell.substatus what
           run(cmd)
         end
         owner = [c.user, c.group].join(':')
-        info "~> Setting ownership to #{owner}"
+        shell.status "Setting ownership to #{owner}"
         sudo "chown -R #{owner} #{release_to_link}"
       end
 
@@ -381,7 +376,7 @@ WRAP
 
       # task
       def symlink(release_to_link=c.release_path)
-        info "~> Symlinking code."
+        shell.status "Symlinking code."
         run "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
         @symlink_changed = true
       rescue Exception
@@ -415,11 +410,12 @@ WRAP
       end
 
       def base_callback_command_for(what)
-        [serverside_bin, 'hook', what.to_s,
-          '--app', config.app,
-          '--release-path', config.release_path.to_s,
-          '--framework-env', c.environment.to_s,
-        ].compact
+        cmd =  [serverside_bin, 'hook', what.to_s]
+        cmd << '--app'           << config.app
+        cmd << '--release-path'  << config.release_path.to_s
+        cmd << '--framework-env' << config.environment.to_s
+        cmd << '--verbose' if config.verbose
+        cmd
       end
 
       def serverside_bin
@@ -429,9 +425,9 @@ WRAP
 
       def puts_deploy_failure
         if @cleanup_failed
-          info "~> [Relax] Your site is running new code, but clean up of old deploys failed."
+          shell.status "[Relax] Your site is running new code, but clean up of old deploys failed."
         elsif @maintenance_up
-          info "~> [Attention] Maintenance page still up, consider the following before removing:"
+          shell.status "[Attention] Maintenance page still up, consider the following before removing:"
           info " * Deploy hooks ran. This might cause problems for reverting to old code." if @callbacks_reached
           info " * Migrations ran. This might cause problems for reverting to old code." if @migrations_reached
           if @symlink_changed
@@ -441,9 +437,9 @@ WRAP
           end
           info " * Application servers failed to restart." if @restart_failed
           info ""
-          info "~> Need help? File a ticket for support."
+          shell.status "Need help? File a ticket for support."
         else
-          info "~> [Relax] Your site is still running old code and nothing destructive has occurred."
+          shell.status "[Relax] Your site is still running old code and nothing destructive has occurred."
         end
       end
 
@@ -456,7 +452,7 @@ WRAP
       def with_failed_release_cleanup
         yield
       rescue Exception
-        info "~> Release #{c.release_path} failed, saving release to #{c.failed_release_dir}."
+        shell.status "Release #{c.release_path} failed, saving release to #{c.failed_release_dir}."
         sudo "mv #{c.release_path} #{c.failed_release_dir}"
         raise
       end
@@ -489,7 +485,7 @@ WRAP
 
       def check_ruby_bundler
         if gemfile?
-          info "~> Bundling gems..."
+          shell.status "Bundling gems..."
 
           clean_bundle_on_system_version_change
 
@@ -523,7 +519,7 @@ WRAP
           unless run(node_package_manager_command_check)
             abort "*** [Error] package.json detected, but npm was not installed"
           else
-            info "~> package.json detected, installing npm packages"
+            shell.status "package.json detected, installing npm packages"
             run "cd #{c.release_path} && npm install"
           end
         end
@@ -531,7 +527,7 @@ WRAP
     end   # DeployBase
 
     class Deploy < DeployBase
-      def self.new(config)
+      def self.new(config, shell=nil)
         # include the correct fetch strategy
         include EY::Serverside::Strategies.const_get(config.strategy)::Helpers
         super
