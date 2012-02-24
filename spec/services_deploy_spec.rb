@@ -20,6 +20,8 @@ describe "Deploying an application with services" do
         "stack"         => 'nginx_passenger',
         "migrate"       => nil,
         'app'           => 'foo',
+        'environment'   => 'env',
+        'account'       => 'acc',
         'framework_env' => 'staging'
       })
 

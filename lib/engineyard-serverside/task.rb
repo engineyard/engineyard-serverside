@@ -30,6 +30,25 @@ module EY
         end
       end
 
+      def load_ey_yml
+        ey_yml = ["config/ey.yml", "ey.yml"].map do |short_file|
+          File.join(c.repository_cache, short_file)
+        end.detect do |file|
+          File.exist?(file)
+        end
+
+        if ey_yml
+          shell.status "Loading deploy configuration in #{ey_yml}"
+          data = YAML.load_file(ey_yml)
+          config.ey_yml_data = data
+        else
+          false
+        end
+      rescue Exception
+        shell.error "Error loading YAML in #{ey_yml}"
+        raise
+      end
+
       def roles(*task_roles)
         raise "Roles must be passed a block" unless block_given?
 

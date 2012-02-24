@@ -51,6 +51,48 @@ describe "the EY::Serverside::Deploy API" do
       cleanup_old_releases)
   end
 
+  describe "ey.yml loading" do
+    before(:each) do
+      @tempdir = `mktemp -d -t ey_yml_spec.XXXXX`.strip
+      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir, 'environment_name' => 'env_name', 'account_name' => 'acc', 'migrate' => 'rake db:migrate', 'config' => {'branch' => 'branch_from_config'}.to_json)
+      @deploy = TestDeploy.new(@config, test_shell)
+    end
+
+    def write_ey_yml(relative_path, data = {'environments' => {'env_name' => {'copy_exclude' => ['.git'], 'migrate' => true, 'branch' => 'branch_from_ey_yaml'}}})
+      FileUtils.mkdir_p(File.join(
+        @tempdir,
+        File.dirname(relative_path)))
+
+      File.open(File.join(@tempdir, relative_path), 'w') do |f|
+        f.write data.to_yaml
+      end
+    end
+
+    it "requires 'ey.yml' and adds any defined methods to the deploy" do
+      write_ey_yml 'ey.yml'
+      @deploy.load_ey_yml
+      @deploy.config.copy_exclude.should == ['.git']
+    end
+
+    it "falls back to 'config/ey.yml'" do
+      write_ey_yml 'config/ey.yml'
+      @deploy.load_ey_yml
+      @deploy.config.copy_exclude.should == ['.git']
+    end
+
+    it "loads at lower priority than command line options" do
+      write_ey_yml 'ey.yml'
+      @deploy.load_ey_yml
+      @deploy.config.migration_command.should == 'rake db:migrate'
+    end
+
+    it "loads at lower priority than json config option" do
+      write_ey_yml 'ey.yml'
+      @deploy.load_ey_yml
+      @deploy.config.branch.should == 'branch_from_config'
+    end
+  end
+
   describe "task overrides" do
     class TestQuietDeploy < EY::Serverside::Deploy
       def puts(*_) 'quiet' end

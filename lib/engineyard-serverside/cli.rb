@@ -25,6 +25,14 @@ module EY
                                       :desc     => "Application to deploy",
                                       :aliases  => ["-a"]
 
+      method_option :environment_name,:type     => :string,
+                                      :required => true,
+                                      :desc     => "Environment name"
+
+      method_option :account_name,    :type     => :string,
+                                      :required => true,
+                                      :desc     => "Account name"
+
       method_option :framework_env,   :type     => :string,
                                       :desc     => "Ruby web framework environment",
                                       :aliases  => ["-e"]
@@ -47,7 +55,6 @@ module EY
                                       :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
 
       method_option :verbose,         :type     => :boolean,
-                                      :default  => false,
                                       :desc     => "Verbose output",
                                       :aliases  => ["-v"]
 
@@ -61,6 +68,14 @@ module EY
                                     :required => true,
                                     :desc     => "Which application's hooks to run",
                                     :aliases  => ["-a"]
+
+      method_option :environment_name, :type     => :string,
+                                       :required => true,
+                                       :desc     => "Environment name"
+
+      method_option :account_name,  :type     => :string,
+                                    :required => true,
+                                    :desc     => "Account name"
 
       method_option :release_path,  :type     => :string,
                                     :desc     => "Value for #release_path in hooks (mostly for internal coordination)",
@@ -81,7 +96,6 @@ module EY
                                     :desc     => "Value for #current_name in hooks"
 
       method_option :verbose,       :type     => :boolean,
-                                    :default  => false,
                                     :desc     => "Verbose output",
                                     :aliases  => ["-v"]
 
@@ -96,6 +110,14 @@ module EY
                                       :required => true,
                                       :desc     => "Application to deploy",
                                       :aliases  => ["-a"]
+
+      method_option :environment_name,:type     => :string,
+                                      :required => true,
+                                      :desc     => "Environment name"
+
+      method_option :account_name,    :type     => :string,
+                                      :required => true,
+                                      :desc     => "Account name"
 
       method_option :framework_env,   :type     => :string,
                                       :required => true,
@@ -117,7 +139,6 @@ module EY
                                       :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
 
       method_option :verbose,         :type     => :boolean,
-                                      :default  => false,
                                       :desc     => "Verbose output",
                                       :aliases  => ["-v"]
       desc "integrate", "Integrate other instances into this cluster"
@@ -153,6 +174,14 @@ module EY
                                       :desc     => "Application to deploy",
                                       :aliases  => ["-a"]
 
+      method_option :environment_name,:type     => :string,
+                                      :required => true,
+                                      :desc     => "Environment name"
+
+      method_option :account_name,    :type     => :string,
+                                      :required => true,
+                                      :desc     => "Account name"
+
       method_option :stack,           :type     => :string,
                                       :desc     => "Web stack (so we can restart it correctly)"
 
@@ -168,7 +197,6 @@ module EY
                                       :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
 
       method_option :verbose,         :type     => :boolean,
-                                      :default  => false,
                                       :desc     => "Verbose output",
                                       :aliases  => ["-v"]
       desc "restart", "Restart app servers, conditionally enabling maintenance page"

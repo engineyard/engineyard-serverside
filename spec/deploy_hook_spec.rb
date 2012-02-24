@@ -1,12 +1,6 @@
 require 'spec_helper'
 
 describe "the deploy-hook API" do
-  before(:each) do
-    @config = EY::Serverside::Deploy::Configuration.new({})
-    @hook = EY::Serverside::DeployHook.new(@config, test_shell)
-    @callback_context = EY::Serverside::DeployHook::CallbackContext.new(@hook.config, @hook.shell)
-  end
-
   def deploy_hook(options={})
     config = EY::Serverside::Deploy::Configuration.new(options)
     EY::Serverside::DeployHook.new(config, test_shell)
@@ -54,6 +48,24 @@ describe "the deploy-hook API" do
       deploy_hook.eval_hook('respond_to?(:release_dir)       ').should be_true
       deploy_hook.eval_hook('respond_to?(:failed_release_dir)').should be_true
       deploy_hook.eval_hook('respond_to?(:release_path)      ').should be_true
+    end
+  end
+
+  context "access to command line options that should be handed through to the config" do
+    before do
+      @hook = deploy_hook({'app' => 'app', 'environment_name' => 'env', 'account_name' => 'acc'})
+    end
+
+    it "has account_name" do
+      @hook.eval_hook('account_name').should == 'acc'
+    end
+
+    it "has environment_name" do
+      @hook.eval_hook('environment_name').should == 'env'
+    end
+
+    it "has app_name" do
+      @hook.eval_hook('app_name').should == 'app'
     end
   end
 

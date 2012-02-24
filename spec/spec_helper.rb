@@ -101,6 +101,8 @@ Spec::Runner.configure do |config|
       "stack"         => 'nginx_passenger',
       "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
       'app'           => 'rails31',
+      'environment'   => 'env',
+      'account'       => 'acc',
       'framework_env' => 'staging'
     })
 

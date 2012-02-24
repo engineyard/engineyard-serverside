@@ -19,6 +19,7 @@ module EY
       def cached_deploy
         shell.status "Deploying app from cached copy at #{Time.now.asctime}"
         require_custom_tasks
+        load_ey_yml
         push_code
 
         shell.status "Starting full deploy"
@@ -411,9 +412,11 @@ WRAP
 
       def base_callback_command_for(what)
         cmd =  [serverside_bin, 'hook', what.to_s]
-        cmd << '--app'           << config.app
-        cmd << '--release-path'  << config.release_path.to_s
-        cmd << '--framework-env' << config.environment.to_s
+        cmd << '--app'              << config.app
+        cmd << '--environment-name' << config.environment_name
+        cmd << '--account-name'     << config.account_name
+        cmd << '--release-path'     << config.release_path.to_s
+        cmd << '--framework-env'    << config.environment.to_s
         cmd << '--verbose' if config.verbose
         cmd
       end

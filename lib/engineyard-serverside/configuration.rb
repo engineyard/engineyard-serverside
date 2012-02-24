@@ -10,41 +10,50 @@ module EY
         "bundle_without" => "test development",
       })
 
-      attr_reader :configuration
-      alias :c :configuration
-
       attr_writer :release_path
 
       def initialize(options={})
         opts = options.dup
         @release_path = opts[:release_path]
         config = JSON.parse(opts.delete("config") || "{}")
-        @configuration = DEFAULT_CONFIG.merge(config).merge(opts)
+        @configs = [config, opts] # low to high priority
       end
+
+      def configuration
+        @configuration ||= @configs.inject(DEFAULT_CONFIG) {|low,high| low.merge(high)}
+      end
+      alias :c :configuration # FIXME: awful, but someone is probably using it :(
 
       # Delegate to the configuration objects
       def method_missing(meth, *args, &blk)
-        c.key?(meth.to_s) ? c[meth.to_s] : super
+        configuration.key?(meth.to_s) ? c[meth.to_s] : super
       end
 
       def respond_to?(meth, include_private=false)
-        c.key?(meth.to_s) ? true : super
+        configuration.key?(meth.to_s) ? true : super
+      end
+
+      def ey_yml_data=(data)
+        environments = data['environments']
+        if environments && (env_data = environments[environment_name])
+          @configuration = nil # reset cached configuration hash
+          @configs.unshift(env_data) # insert just above default configuration
+          true
+        else
+          false
+        end
       end
 
       def [](key)
         if respond_to?(key.to_sym)
           send(key.to_sym)
         else
-          c[key]
+          configuration[key]
         end
       end
 
       def has_key?(key)
-        if respond_to?(key.to_sym)
-          true
-        else
-          c.has_key?(key)
-        end
+        respond_to?(key.to_sym) || configuration.has_key?(key)
       end
 
       def to_json
@@ -61,6 +70,15 @@ module EY
 
       def app
         configuration['app'].to_s
+      end
+      alias app_name app
+
+      def environment_name
+        configuration['environment_name'].to_s
+      end
+
+      def account_name
+        configuration['account_name'].to_s
       end
 
       def revision
@@ -97,6 +115,10 @@ module EY
 
       def role
         node['instance_role']
+      end
+
+      def current_roles
+        configuration['current_roles'] || []
       end
 
       def current_role
