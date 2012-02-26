@@ -428,21 +428,22 @@ WRAP
 
       def puts_deploy_failure
         if @cleanup_failed
-          shell.status "[Relax] Your site is running new code, but clean up of old deploys failed."
+          shell.notice "[Relax] Your site is running new code, but clean up of old deploys failed."
         elsif @maintenance_up
-          shell.status "[Attention] Maintenance page still up, consider the following before removing:"
-          info " * Deploy hooks ran. This might cause problems for reverting to old code." if @callbacks_reached
-          info " * Migrations ran. This might cause problems for reverting to old code." if @migrations_reached
+          message = "[Attention] Maintenance page still up, consider the following before removing:\n"
+          message << " * Deploy hooks ran. This might cause problems for reverting to old code.\n" if @callbacks_reached
+          message << " * Migrations ran. This might cause problems for reverting to old code.\n" if @migrations_reached
           if @symlink_changed
-            info " * Your new code is symlinked as current."
+            message << " * Your new code is symlinked as current.\n"
           else
-            info " * Your old code is still symlinked as current."
+            message << " * Your old code is still symlinked as current.\n"
           end
-          info " * Application servers failed to restart." if @restart_failed
-          info ""
-          shell.status "Need help? File a ticket for support."
+          message << " * Application servers failed to restart.\n" if @restart_failed
+          message << "\n"
+          message << "Need help? File a ticket for support.\n"
+          shell.notice message
         else
-          shell.status "[Relax] Your site is still running old code and nothing destructive has occurred."
+          shell.notice "[Relax] Your site is still running old code and nothing destructive has occurred."
         end
       end
 

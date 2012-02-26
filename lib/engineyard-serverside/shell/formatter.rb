@@ -16,7 +16,9 @@ module EY
 
         def build_message(severity, stamp, message)
           if %w[WARN ERROR FATAL].include?(severity)
-            prepend("#{stamp}!> ", "#{severity_name(severity)}#{message}")
+            prepend("#{stamp}!> ", "#{message}")
+          elsif severity == "WARN"
+            prepend("#{stamp}!> ", "#{message}")
           elsif severity == "INFO"
             prepend(stamp, message)
           else
@@ -36,7 +38,7 @@ module EY
             end
           when "INFO"
             # Need to differentiate info messages more when we're running in verbose mode
-            @stdout << (@verbose ? "\n#{thor_shell.set_color(msg, :white, true)}" : msg)
+            @stdout << (@verbose && msg.index('~>') ? "\n#{thor_shell.set_color(msg, :white, true)}" : msg)
             @stdout.flush
           when "WARN"
             @stderr << "\n" << thor_shell.set_color(msg, :yellow, true)
@@ -58,16 +60,6 @@ module EY
             "+    %02ds  " % mod
           else
             "+%2dm %02ds  " % [div,mod]
-          end
-        end
-
-        def severity_name(severity)
-          if %w[INFO DEBUG ANY].include?(severity)
-            ""
-          elsif severity =='WARN'
-            "WARNING: "
-          else
-            "#{severity}: "
           end
         end
 

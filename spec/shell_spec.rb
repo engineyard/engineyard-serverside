@@ -12,16 +12,16 @@ describe EY::Serverside::Shell do
     @shell = EY::Serverside::Shell.new(:verbose => true, :stdout => @output, :stderr => @output, :log_path => Pathname.new(Dir.tmpdir).join("engineyard-serverside-#{Time.now.to_i}-${$$}.log"), :start_time => time1)
 
     Timecop.freeze(time1) do
-      @shell.debug('test1')
-      @shell.warning('test2')
+      @shell.debug('debug')
+      @shell.notice('notice')
     end
     Timecop.freeze(time2) do
       @shell.status('STATUS')
-      @shell.debug("test11\ntest12\ntest13")
-      @shell.warning("test21\ntest22\ntest23")
+      @shell.debug("multi\nline\ndebug")
+      @shell.warning("multi\nline\nwarning")
     end
     Timecop.freeze(time3) do
-      @shell.substatus("test31\ntest32\ntest33")
+      @shell.substatus("multi\nline\nsubstatus")
     end
 
     tstp_1 = "+    00s "
@@ -30,19 +30,21 @@ describe EY::Serverside::Shell do
     notstp = "         "
     @output.rewind
     @output.read.should == <<-OUTPUT
-#{notstp} test1
-#{tstp_1} !> WARNING: test2
+#{notstp} debug
 
-\e[1m#{tstp_2} ~> STATUS
-\e[0m#{notstp} test11
-#{notstp} test12
-#{notstp} test13
-#{tstp_2} !> WARNING: test21
-#{tstp_2} !> test22
-#{tstp_2} !> test23
-#{notstp}  ~ test31
-#{notstp}  ~ test32
-#{notstp}  ~ test33
+\e[1m\e[33m#{tstp_1} !> notice
+\e[0m
+\e[1m\e[37m#{tstp_2} ~> STATUS
+\e[0m#{notstp} multi
+#{notstp} line
+#{notstp} debug
+
+\e[1m\e[33m#{tstp_2} !> WARNING: multi
+#{tstp_2} !> line
+#{tstp_2} !> warning
+\e[0m#{notstp}  ~ multi
+#{notstp}  ~ line
+#{notstp}  ~ substatus
     OUTPUT
   end
 end

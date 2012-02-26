@@ -62,9 +62,10 @@ module EY
         unknown msg.gsub(/^/,'     ')
       end
 
-      def fatal(msg)   logger.fatal   msg end
-      def error(msg)   logger.error   msg end
-      def warning(msg) logger.warn    msg end
+      def fatal(msg)   logger.fatal   "FATAL: #{msg}"   end
+      def error(msg)   logger.error   "ERROR: #{msg}"   end
+      def warning(msg) logger.warn    "WARNING: #{msg}" end
+      def notice(msg)  logger.warn    msg end
       def info(msg)    logger.info    msg end
       def debug(msg)   logger.debug   msg end
       def unknown(msg) logger.unknown msg end
