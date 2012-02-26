@@ -29,14 +29,21 @@ module EY
         end
 
         def put_to_io(severity, msg)
-          if severity == "DEBUG"
+          case severity
+          when "DEBUG"
             if @verbose
               @stdout << msg
             end
-          elsif severity == "INFO"
+          when "INFO"
             # Need to differentiate info messages more when we're running in verbose mode
-            @stdout << (@verbose ? "\n\e[1m#{msg}\e[0m" : msg)
+            @stdout << (@verbose ? "\n#{thor_shell.set_color(msg, :white, true)}" : msg)
             @stdout.flush
+          when "WARN"
+            @stderr << "\n" << thor_shell.set_color(msg, :yellow, true)
+            @stderr.flush
+          when "ERROR"
+            @stderr << "\n" << thor_shell.set_color(msg, :red, true)
+            @stderr.flush
           else
             @stderr << msg
             @stderr.flush
@@ -62,6 +69,10 @@ module EY
           else
             "#{severity}: "
           end
+        end
+
+        def thor_shell
+          thor_shell ||= Thor::Shell::Color.new
         end
       end
     end
