@@ -54,11 +54,11 @@ describe "the EY::Serverside::Deploy API" do
   describe "ey.yml loading" do
     before(:each) do
       @tempdir = `mktemp -d -t ey_yml_spec.XXXXX`.strip
-      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir, 'environment_name' => 'env_name', 'account_name' => 'acc', 'migrate' => 'rake db:migrate', 'config' => {'branch' => 'branch_from_config'}.to_json)
+      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir, 'environment_name' => 'env_name', 'account_name' => 'acc', 'migrate' => nil, 'config' => {'branch' => 'branch_from_config'}.to_json)
       @deploy = TestDeploy.new(@config, test_shell)
     end
 
-    def write_ey_yml(relative_path, data = {'environments' => {'env_name' => {'copy_exclude' => ['.git'], 'migrate' => true, 'branch' => 'branch_from_ey_yaml'}}})
+    def write_ey_yml(relative_path, data = {'environments' => {'env_name' => {'copy_exclude' => ['.git'], 'migrate' => true, 'migration_command' => 'uh oh', 'branch' => 'branch_from_ey_yaml'}}})
       FileUtils.mkdir_p(File.join(
         @tempdir,
         File.dirname(relative_path)))
@@ -83,7 +83,7 @@ describe "the EY::Serverside::Deploy API" do
     it "loads at lower priority than command line options" do
       write_ey_yml 'ey.yml'
       @deploy.load_ey_yml
-      @deploy.config.migration_command.should == 'rake db:migrate'
+      @deploy.config.migrate?.should == false
     end
 
     it "loads at lower priority than json config option" do
