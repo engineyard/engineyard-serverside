@@ -54,11 +54,29 @@ describe "the EY::Serverside::Deploy API" do
   describe "ey.yml loading" do
     before(:each) do
       @tempdir = `mktemp -d -t ey_yml_spec.XXXXX`.strip
-      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir, 'environment_name' => 'env_name', 'account_name' => 'acc', 'migrate' => nil, 'config' => {'branch' => 'branch_from_config'}.to_json)
-      @deploy = TestDeploy.new(@config, test_shell)
+      @config = EY::Serverside::Deploy::Configuration.new({
+        'repository_cache' => @tempdir,
+        'environment_name' => 'env_name',
+        'account_name' => 'acc',
+        'migrate' => nil,
+        'config' => {'branch' => 'branch_from_config'}.to_json
+      })
+
+      @deploy = FullTestDeploy.new(@config, test_shell)
+
+      @yaml_data = {
+        'environments' => {
+          'env_name' => {
+            'copy_exclude' => ['.git'],
+            'migrate' => true,
+            'migration_command' => 'uh oh',
+            'branch' => 'branch_from_ey_yaml'
+          }
+        }
+      }
     end
 
-    def write_ey_yml(relative_path, data = {'environments' => {'env_name' => {'copy_exclude' => ['.git'], 'migrate' => true, 'migration_command' => 'uh oh', 'branch' => 'branch_from_ey_yaml'}}})
+    def write_ey_yml(relative_path, data)
       FileUtils.mkdir_p(File.join(
         @tempdir,
         File.dirname(relative_path)))
@@ -69,25 +87,25 @@ describe "the EY::Serverside::Deploy API" do
     end
 
     it "requires 'ey.yml' and adds any defined methods to the deploy" do
-      write_ey_yml 'ey.yml'
+      write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
       @deploy.config.copy_exclude.should == ['.git']
     end
 
     it "falls back to 'config/ey.yml'" do
-      write_ey_yml 'config/ey.yml'
+      write_ey_yml 'config/ey.yml', @yaml_data
       @deploy.load_ey_yml
       @deploy.config.copy_exclude.should == ['.git']
     end
 
     it "loads at lower priority than command line options" do
-      write_ey_yml 'ey.yml'
+      write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
       @deploy.config.migrate?.should == false
     end
 
     it "loads at lower priority than json config option" do
-      write_ey_yml 'ey.yml'
+      write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
       @deploy.config.branch.should == 'branch_from_config'
     end
