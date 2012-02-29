@@ -4,6 +4,10 @@
 
   *
 
+## v1.5.30 (2012-02-29)
+
+  *
+
 ## v1.5.29 (2012-02-06)
 
   * This version has been pulled before release.
