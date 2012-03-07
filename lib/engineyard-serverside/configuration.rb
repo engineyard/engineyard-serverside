@@ -1,5 +1,6 @@
 require 'json'
 require 'thor'
+require 'pp'
 
 module EY
   module Serverside
@@ -33,13 +34,17 @@ module EY
         configuration.key?(meth.to_s) ? true : super
       end
 
-      def ey_yml_data=(data)
+      def load_ey_yml_data(data, shell)
         environments = data['environments']
         if environments && (env_data = environments[environment_name])
+          shell.substatus "ey.yml configuration loaded for environment #{environment_name.inspect}."
+          shell.debug "#{environment_name}: #{env_data.pretty_inspect}"
           @configuration = nil # reset cached configuration hash
           @configs.unshift(env_data) # insert just above default configuration
           true
         else
+          shell.info "No matching ey.yml configuration found for environment #{environment_name.inspect}."
+          shell.debug "ey.yml:\n#{data.pretty_inspect}"
           false
         end
       end

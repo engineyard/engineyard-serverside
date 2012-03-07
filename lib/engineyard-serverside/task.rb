@@ -40,7 +40,7 @@ module EY
         if ey_yml
           shell.status "Loading deploy configuration in #{ey_yml}"
           data = YAML.load_file(ey_yml)
-          config.ey_yml_data = data
+          config.load_ey_yml_data(data, shell)
         else
           false
         end
