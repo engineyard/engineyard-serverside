@@ -65,7 +65,7 @@ module EY
           out <<  with_timestamp(":: running #{cmd}\n")
 
           # :quiet means don't raise an error on nonzero exit status
-          status = Open4.spawn cmd, 0 => '', 1 => out, 2 => err, :quiet => true
+          status = Open4.spawn cmd, :stdin => '', :stdout => out, :quiet => true # leaving :stderr out for now
           status.exitstatus == 0
         end
       end
