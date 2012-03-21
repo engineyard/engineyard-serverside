@@ -1,4 +1,4 @@
-require 'open4'
+require 'systemu'
 
 module EY
   module Serverside
@@ -65,8 +65,8 @@ module EY
           out <<  with_timestamp(":: running #{cmd}\n")
 
           # :quiet means don't raise an error on nonzero exit status
-          status = Open4.spawn cmd, :stdin => '', :stdout => out, :quiet => true # leaving :stderr out for now
-          status.exitstatus == 0
+          status = systemu cmd, 'stdout' => out, 'stderr' => err
+          status == 0
         end
       end
 
