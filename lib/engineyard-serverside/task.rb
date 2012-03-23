@@ -50,11 +50,11 @@ module EY
 
       private
 
-      def run_on_roles(cmd, wrapper=%w[sh -l -c], &block)
+      def run_on_roles(cmd, &block)
         servers = EY::Serverside::Server.from_roles(@roles)
         futures = EY::Serverside::Future.call(servers, block_given?) do |server, exec_block|
           to_run = exec_block ? block.call(server, cmd.dup) : cmd
-          server.run(Escape.shell_command(wrapper + [to_run]))
+          server.run(to_run)
         end
 
         unless EY::Serverside::Future.success?(futures)

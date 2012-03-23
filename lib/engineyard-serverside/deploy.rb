@@ -193,11 +193,10 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # create it on all the servers that will need it.
       # TODO - This logic likely fails when people change deploy keys.
       def ssh_executable
-        path = ssh_wrapper_path
         roles :app_master, :app, :solo, :util do
           run(generate_ssh_wrapper)
         end
-        path
+        ssh_wrapper_path
       end
 
       # We specify 'IdentitiesOnly' to avoid failures on systems with > 5 private keys available.
@@ -206,16 +205,12 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # Learned this at http://lists.mindrot.org/pipermail/openssh-unix-dev/2009-February/027271.html
       # (Thanks Jim L.)
       def generate_ssh_wrapper
-        path = ssh_wrapper_path
         identity_file = "~/.ssh/#{c.app}-deploy-key"
-<<-WRAP
-[[ -x #{path} ]] || cat > #{path} <<'SSH'
-#!/bin/sh
-unset SSH_AUTH_SOCK
-ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' -o 'UserKnownHostsFile /dev/null' $*
-SSH
-chmod 0700 #{path}
-WRAP
+        %{ echo "#{wrapper_for(identity_file)}" > #{ssh_wrapper_path} && chmod 0700 #{ssh_wrapper_path} }
+      end
+
+      def wrapper_for(identity)
+        "#!/bin/sh\nunset SSH_AUTH_SOCK; ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=DEBUG -o IdentityFile=#{identity} -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null $*"
       end
 
       def ssh_wrapper_path
@@ -387,7 +382,7 @@ WRAP
       end
 
       def callback(what)
-        @callbacks_reached ||= true
+        @callbacks_reached = true
         if File.exist?("#{c.release_path}/deploy/#{what}.rb")
           run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
             per_instance_args = [

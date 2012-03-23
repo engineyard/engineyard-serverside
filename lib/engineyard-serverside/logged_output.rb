@@ -1,4 +1,4 @@
-require 'open4'
+require 'systemu'
 
 module EY
   module Serverside
@@ -62,10 +62,11 @@ module EY
           out = verbose? ? Tee.new($stdout, log) : log
           err = Tee.new($stderr, log)    # we always want to see errors
 
+          cmd = "sh -c #{Escape.shell_command([cmd])}"
+          puts "running #{cmd}" if ENV['DEBUG']
           out <<  with_timestamp(":: running #{cmd}\n")
-
-          # :quiet means don't raise an error on nonzero exit status
-          status = Open4.spawn cmd, :stdin => '', :stdout => out, :quiet => true # leaving :stderr out for now
+          status = systemu cmd, 'stdout' => out, 'stderr' => err
+          puts "exit status= #{status.exitstatus}" if ENV['DEBUG']
           status.exitstatus == 0
         end
       end

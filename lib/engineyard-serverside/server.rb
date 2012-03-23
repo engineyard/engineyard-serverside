@@ -83,12 +83,12 @@ module EY
         if local?
           logged_system(command)
         else
-          logged_system(ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command]))
+          logged_system("#{ssh_command} #{user}@#{hostname} #{command}")
         end
       end
 
       def ssh_command
-        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
+        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no"
       end
 
     end
