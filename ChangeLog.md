@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v1.6.0 (2012-03-23)
+
   * Replace Open4 with systemu
 
 ## v1.5.34 (2012-03-22)
