@@ -45,7 +45,9 @@ module EY
       end
 
       def sudo(cmd, &blk)
-        run_on_roles(cmd, %w[sudo sh -l -c], &blk)
+        sudo_cmd = "sudo sh -c #{Escape.shell_command [cmd]}"
+
+        run_on_roles(sudo_cmd, &blk)
       end
 
       private
