@@ -208,7 +208,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         path = ssh_wrapper_path
         identity_file = "~/.ssh/#{c.app}-deploy-key"
 <<-WRAP
-[[ -x #{path} ]] || cat > #{path} <<SSH
+[[ -x #{path} ]] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
 ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no -o LogLevel=DEBUG -o IdentityFile=#{identity_file} -o IdentitiesOnly=yes $*
@@ -326,7 +326,7 @@ Deploy again if your services configuration appears incomplete or out of date.
            ["Creating SQLite database if needed", "touch #{c.shared_path}/databases/#{c.framework_env}.sqlite3"],
            ["Create config directory if needed", "mkdir -p #{c.release_path}/config"],
            ["Generating SQLite config", <<-WRAP],
-cat > #{c.shared_path}/config/database.sqlite3.yml<<YML
+cat > #{c.shared_path}/config/database.sqlite3.yml<<'YML'
 #{c.framework_env}:
   adapter: sqlite3
   database: #{c.shared_path}/databases/#{c.framework_env}.sqlite3
