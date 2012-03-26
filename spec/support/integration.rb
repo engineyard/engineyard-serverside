@@ -213,7 +213,7 @@ module EY::Serverside::Strategies::NodeIntegrationSpec
   "name": "node-example",
   "version": "0.0.1",
   "dependencies": {
-    "express": "2.2.0"
+    "express": "2.5.8"
   }
 }
 EOF
