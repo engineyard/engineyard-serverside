@@ -205,12 +205,16 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # Learned this at http://lists.mindrot.org/pipermail/openssh-unix-dev/2009-February/027271.html
       # (Thanks Jim L.)
       def generate_ssh_wrapper
+        path = ssh_wrapper_path
         identity_file = "~/.ssh/#{c.app}-deploy-key"
-        %{ echo "#{wrapper_for(identity_file)}" > #{ssh_wrapper_path} && chmod 0700 #{ssh_wrapper_path} }
-      end
-
-      def wrapper_for(identity)
-        "#!/bin/sh\nunset SSH_AUTH_SOCK; ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=DEBUG -o IdentityFile=#{identity} -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null $*"
+<<-WRAP
+[[ -x #{path} ]] || cat > #{path} <<SSH
+#!/bin/sh
+unset SSH_AUTH_SOCK
+ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no -o LogLevel=DEBUG -o IdentityFile=#{identity_file} -o IdentitiesOnly=yes $*
+SSH
+chmod 0700 #{path}
+WRAP
       end
 
       def ssh_wrapper_path
@@ -322,7 +326,7 @@ Deploy again if your services configuration appears incomplete or out of date.
            ["Creating SQLite database if needed", "touch #{c.shared_path}/databases/#{c.framework_env}.sqlite3"],
            ["Create config directory if needed", "mkdir -p #{c.release_path}/config"],
            ["Generating SQLite config", <<-WRAP],
-cat > #{c.shared_path}/config/database.sqlite3.yml<<'YML'
+cat > #{c.shared_path}/config/database.sqlite3.yml<<YML
 #{c.framework_env}:
   adapter: sqlite3
   database: #{c.shared_path}/databases/#{c.framework_env}.sqlite3
@@ -382,7 +386,7 @@ WRAP
       end
 
       def callback(what)
-        @callbacks_reached = true
+        @callbacks_reached ||= true
         if File.exist?("#{c.release_path}/deploy/#{what}.rb")
           run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
             per_instance_args = [
