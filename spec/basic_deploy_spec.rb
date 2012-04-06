@@ -39,6 +39,8 @@ describe "Deploying an application without Bundler" do
   end
 
   it "runs all the hooks" do
+    @deploy_dir.join('current', 'before_update_repository_cache.ran').should exist
+    @deploy_dir.join('current', 'after_update_repository_cache.ran' ).should exist
     @deploy_dir.join('current', 'before_bundle.ran' ).should exist
     @deploy_dir.join('current', 'after_bundle.ran'  ).should exist
     @deploy_dir.join('current', 'before_migrate.ran').should exist

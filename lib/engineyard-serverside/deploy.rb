@@ -13,7 +13,7 @@ module EY
       # default task
       def deploy
         debug "Starting deploy at #{Time.now.asctime}"
-        update_repository_cache
+        run_with_callbacks(:update_repository_cache)
         cached_deploy
       end
 
