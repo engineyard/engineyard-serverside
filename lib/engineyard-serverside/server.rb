@@ -73,7 +73,7 @@ module EY
       def sync_directory(directory)
         return if local?
         yield remote_command("mkdir -p #{directory}")
-        yield Escap.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
+        yield Escape.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
       end
 
       def run(command)
@@ -85,7 +85,7 @@ module EY
       end
 
       def ssh_command
-        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o PasswordAuthentication=no "
+        "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no "
       end
 
     end

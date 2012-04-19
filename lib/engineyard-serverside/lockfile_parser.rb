@@ -24,7 +24,7 @@ module EY
           @contents.index(/^\s+#{type}\s\([^\)]+\)$/)
         end
 
-        any_jruby_adapter = %w[mysql postgresql].any? do |type|
+        any_jruby_adapter = %w[mysql postgresql postgres].any? do |type|
           @contents.index(/^\s+jdbc-#{type}\s\([^\)]+\)$/) || @contents.index(/^\s+activerecord-jdbc#{type}-adapter\s\([^\)]+\)$/)
         end
 

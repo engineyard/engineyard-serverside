@@ -1,6 +1,6 @@
 require 'logger'
 require 'pathname'
-require 'open4'
+require 'systemu'
 require 'engineyard-serverside/shell/formatter'
 
 module EY
@@ -89,12 +89,10 @@ module EY
 
       protected
 
-      # spawn_process is a separate utility method so tests can override just the meat
-      # of the process spawning and not couple the tests too tightly with the implementation.
-      # we do this because Open4 LOVES to segfault in CI. FUN!
+      # This is the meat of process spawning. It's nice to keep it separate even
+      # though it's simple because we've had to modify it frequently.
       def spawn_process(cmd, cmd_stdout, cmd_stderr)
-        # :quiet means don't raise an error on nonzero exit status
-        result = Open4.spawn cmd, 0 => '', 1 => cmd_stdout, 2 => cmd_stderr, :quiet => true
+        result = systemu cmd, 'stdout' => cmd_stdout, 'stderr' => cmd_stderr
         result.exitstatus == 0
       end
     end

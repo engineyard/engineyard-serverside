@@ -5,6 +5,42 @@
   * Improved deploy output, especially for --verbose.
   * Send all log output through a new Shell object that formats and adds timestamps.
 
+## v1.6.3 (2012-03-26)
+
+  *
+
+## v1.6.2 (2012-03-26)
+
+  *
+
+## v1.6.1 (2012-03-23)
+
+  *
+
+## v1.6.0 (2012-03-23)
+
+  * Replace Open4 with systemu
+
+## v1.5.34 (2012-03-22)
+
+  *
+
+## v1.5.33 (2012-03-19)
+
+  *
+
+## v1.5.32 (2012-03-15)
+
+  *
+
+## v1.5.31 (2012-03-15)
+
+  *
+
+## v1.5.30 (2012-02-29)
+
+  *
+
 ## v1.5.29 (2012-02-06)
 
   * This version has been pulled before release.

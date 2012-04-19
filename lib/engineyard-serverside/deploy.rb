@@ -189,10 +189,12 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         %Q[export GIT_SSH="#{ssh_executable}" && export LANG="en_US.UTF-8" && unset RUBYOPT BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
       end
 
-      # If we don't have a local version of the ssh wrapper script yet,
-      # create it on all the servers that will need it.
+      # create ssh wrapper on all servers
       def ssh_executable
-        @path ||= generate_ssh_wrapper
+        roles :app_master, :app, :solo, :util do
+          run(generate_ssh_wrapper)
+        end
+        ssh_wrapper_path
       end
 
       # We specify 'IdentitiesOnly' to avoid failures on systems with > 5 private keys available.
@@ -207,7 +209,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 [[ -x #{path} ]] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
-ssh -o 'CheckHostIP no' -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -o 'LogLevel DEBUG' -o 'IdentityFile #{identity_file}' -o 'IdentitiesOnly yes' -o 'UserKnownHostsFile /dev/null' $*
+ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no -o LogLevel=DEBUG -o IdentityFile=#{identity_file} -o IdentitiesOnly=yes $*
 SSH
 chmod 0700 #{path}
         SCRIPT
@@ -294,10 +296,6 @@ chmod 0700 #{path}
 
       def services_setup_command
         "/usr/local/ey_resin/ruby/bin/ey-services-setup #{config.app}"
-      end
-
-      def node_package_manager_command_check
-        "which npm"
       end
 
       def setup_services
@@ -520,12 +518,8 @@ WRAP
 
       def check_node_npm
         if File.exist?("#{c.release_path}/package.json")
-          unless run(node_package_manager_command_check)
-            abort "*** [Error] package.json detected, but npm was not installed"
-          else
-            shell.status "package.json detected, installing npm packages"
-            run "cd #{c.release_path} && npm install"
-          end
+          info "~> package.json detected, installing npm packages"
+          run "cd #{c.release_path} && npm install"
         end
       end
     end   # DeployBase

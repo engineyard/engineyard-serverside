@@ -17,13 +17,6 @@ module EY
       @node = nil
     end
 
-    class Shell
-      def spawn_process(cmd, cmd_stdout, cmd_stderr)
-        cmd_stdout << `#{cmd} 2>&1`
-        $? == 0
-      end
-    end
-
     class Strategies::Git
       def short_log_message(_) "" end
     end
