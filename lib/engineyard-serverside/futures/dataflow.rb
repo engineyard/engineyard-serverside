@@ -6,25 +6,20 @@ module EY
     class Future
       extend Dataflow
 
-      def self.call(servers, *args, &block)
-        futures = []
-        # Dataflow needs to call `barrier` and `need_later` in the same object
-        barrier(*servers.map do |server|
-          future = new(server, *args, &block)
-          futures << future
+      def self.call(blocks)
+        futures = map(blocks)
 
-          need_later { future.call }
-        end)
+        # Dataflow needs to call `barrier` and `need_later` in the same object
+        need_laters = futures.map do |future|
+          need_later { future.result }
+        end
+        barrier(*need_laters)
 
         futures
       end
 
-      def future
-        @block.call(@server, *@args)
-      end
-
       def call
-        @value ||= future
+        @block.call
       end
     end
   end

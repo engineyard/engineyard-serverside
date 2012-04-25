@@ -1,18 +1,24 @@
 module EY
   module Serverside
     class Future
+      def self.map(blocks)
+        blocks.map { |block| new(&block) }
+      end
+
       def self.success?(futures)
         futures.empty? || futures.all? {|f| f.success?}
       end
 
-      def initialize(server, *args, &block)
-        @server = server
-        @args = args
+      def initialize(&block)
         @block = block
       end
 
+      def result
+        @result ||= call
+      end
+
       def success?
-        @value == true
+        result == true
       end
 
       def error?
