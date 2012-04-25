@@ -70,10 +70,17 @@ module EY
         hostname == 'localhost'
       end
 
-      def sync_directory(directory)
-        return if local?
-        yield remote_command("mkdir -p #{directory}")
-        yield Escape.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
+      def sync_directory_command(directory)
+        return nil if local?
+        [
+          remote_command("mkdir -p #{directory}"),
+          Escape.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
+        ].join(' && ')
+      end
+
+      def command_on_server(cmd, &block)
+        command = block ? block.call(self, cmd.dup) : cmd
+        local? ? command : remote_command(command)
       end
 
       def run(command)

@@ -18,6 +18,11 @@ describe "the bundler version retrieved from the lockfile" do
     lambda { get_version('0.9-with-bundler') }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
   end
 
+  it "has a default version" do
+    EY::Serverside::LockfileParser.default_version.should == "1.1.3"
+    EY::Serverside::LockfileParser::DEFAULT.should == "1.1.3"
+  end
+
   it "returns the default version for a 1.0 lockfile without a bundler dependency" do
     get_version('1.0-no-bundler').should == EY::Serverside::LockfileParser::DEFAULT
   end

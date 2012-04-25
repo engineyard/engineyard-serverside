@@ -1,0 +1,1 @@
+This repo uses sqlite3 gem instead of the usual database adapters.

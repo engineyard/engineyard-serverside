@@ -1,0 +1,5 @@
+This is a simple bundled fake app for specs.
+
+All the files in this directory are copied into a temporary git repository
+during spec runs. The rest of the "git repository" stuff comes from
+gitrepo.tar.gz which is copied first to create the repo.

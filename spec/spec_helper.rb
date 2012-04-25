@@ -10,6 +10,9 @@ require 'pp'
 require 'engineyard-serverside'
 require File.expand_path('../support/integration', __FILE__)
 
+FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
+GROUP = `id -gn`.strip
+
 module EY
   module Serverside
     def self.dna_json=(j)
@@ -23,12 +26,6 @@ module EY
   end
 end
 
-FIXTURES_DIR = File.expand_path("../fixtures", __FILE__)
-GITREPO_DIR = "#{FIXTURES_DIR}/gitrepo"
-
-FileUtils.rm_rf GITREPO_DIR if File.exists? GITREPO_DIR
-Kernel.system "tar xzf #{GITREPO_DIR}.tar.gz -C #{FIXTURES_DIR}"
-
 Spec::Runner.configure do |config|
   $NPM_INSTALLED = system('which npm 2>&1')
   unless $NPM_INSTALLED
@@ -36,8 +33,6 @@ Spec::Runner.configure do |config|
   end
 
   config.before(:all) do
-    $DISABLE_GEMFILE = false
-    $DISABLE_LOCKFILE = false
     EY::Serverside.dna_json = {}.to_json
   end
 
@@ -77,9 +72,13 @@ Spec::Runner.configure do |config|
     EY::Serverside::Shell.new(:verbose => true, :log_path => log_path, :stdout => stdout, :stderr => stderr)
   end
 
-  def deploy_test_application(assets_enabled = true, &block)
-    $DISABLE_GEMFILE = false
-    $DISABLE_LOCKFILE = false
+  def exist
+    be_exist
+  end
+
+  # When a repo fixture name is specified, the files found in the specified
+  # spec/fixtures/repos dir are copied into the test github repository.
+  def deploy_test_application(repo_fixture_name = 'default', &block)
     @deploy_dir = Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
 
     # set up EY::Serverside::Server like we're on a solo
@@ -90,13 +89,15 @@ Spec::Runner.configure do |config|
     @config = EY::Serverside::Deploy::Configuration.new({
       "strategy"      => "IntegrationSpec",
       "deploy_to"     => @deploy_dir.to_s,
-      "group"         => `id -gn`.strip,
+      "group"         => GROUP,
       "stack"         => 'nginx_passenger',
       "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
       'app'           => 'rails31',
       'environment'   => 'env',
       'account'       => 'acc',
-      'framework_env' => 'staging'
+      'framework_env' => 'staging',
+      'branch'        => 'somebranch',
+      'repo'          => FIXTURES_DIR.join('repos', repo_fixture_name)
     })
 
     # pretend there is a shared bundled_gems directory
@@ -105,33 +106,15 @@ Spec::Runner.configure do |config|
       @deploy_dir.join('shared', 'bundled_gems', name).open("w") { |f| f.write("old\n") }
     end
 
-    # Set up the application directory to have the requested asset options.
-    prepare_rails31_app(assets_enabled)
-
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     @deployer = FullTestDeploy.new(@config, test_shell)
-    @deployer.deploy(&block)
+    yield @deployer if block_given?
+    @deployer.deploy
   end
 
-  def prepare_rails31_app(assets_enabled)
-    FileUtils.mkdir_p(File.join(@config.release_path, 'config'))
-      app_rb = File.join(@config.release_path, 'config', 'application.rb')
-      app_rb_contents = <<-EOF
-module Rails31
-  class Application < Rails::Application
-    config.assets.enabled = #{assets_enabled ? 'true' : 'false'}
-  end
-end
-EOF
-      File.open(app_rb, 'w') {|f| f.write(app_rb_contents)}
-      rakefile = File.join(@config.release_path, 'Rakefile')
-      rakefile_contents = <<-EOF
-desc 'Precompile yar assetz'
-task 'assets:precompile' do
-  sh 'touch precompiled'
-end
-EOF
-    File.open(rakefile, 'w') {|f| f.write(rakefile_contents)}
-    FileUtils.mkdir_p(File.join(@config.release_path, 'app', 'assets'))
+  def redeploy_test_application(&block)
+    raise "Please deploy_test_application first" unless @deployer
+    yield @deployer if block_given?
+    @deployer.deploy
   end
 end

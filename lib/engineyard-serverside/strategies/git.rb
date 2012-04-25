@@ -2,39 +2,6 @@ module EY
   module Serverside
     module Strategies
       class Git
-        module Helpers
-          def update_repository_cache
-            unless strategy.fetch && strategy.checkout
-              abort "*** [Error] Git could not checkout (#{strategy.to_checkout}) ***"
-            end
-          end
-
-          def create_revision_file_command
-            strategy.create_revision_file_command(c.release_path)
-          end
-
-          def short_log_message(revision)
-            strategy.short_log_message(revision)
-          end
-
-          def strategy
-            # Ensure the git ssh config is up to date with the current app.
-            ENV['GIT_SSH'] = ssh_executable
-            klass = Module.nesting[1]
-            # Use [] to access attributes instead of calling methods so
-            # that we get nils instead of NoMethodError.
-            #
-            # Rollback doesn't know about the repository location (nor
-            # should it need to), but it would like to use #short_log_message.
-            klass.new(shell,
-              :repository_cache => c[:repository_cache],
-              :app => c[:app],
-              :repo => c[:repo],
-              :ref => c[:branch]
-            )
-          end
-        end
-
         attr_reader :shell, :opts
 
         def initialize(shell, opts)
@@ -42,22 +9,28 @@ module EY
           @opts = opts
         end
 
+        def update_repository_cache
+          unless fetch && checkout
+            abort "*** [Error] Git could not checkout (#{to_checkout}) ***"
+          end
+        end
+
         def usable_repository?
-          File.directory?(opts[:repository_cache]) && `#{git} remote -v | grep origin`[opts[:repo]]
+          File.directory?(repository_cache) && `#{git} remote -v | grep origin`[remote_uri]
         end
 
         def fetch
           if usable_repository?
             shell.logged_system("#{git} fetch -q origin 2>&1")
           else
-            FileUtils.rm_rf(opts[:repository_cache])
-            shell.logged_system("git clone -q #{opts[:repo]} #{opts[:repository_cache]} 2>&1")
+            FileUtils.rm_rf(repository_cache)
+            shell.logged_system("git clone -q #{remote_uri} #{repository_cache} 2>&1")
           end
         end
 
         def checkout
           shell.status "Deploying revision #{short_log_message(to_checkout)}"
-          in_git_work_tree do
+          in_repository_cache do
             (shell.logged_system("git checkout -q '#{to_checkout}'") ||
               shell.logged_system("git reset -q --hard '#{to_checkout}'")) &&
               shell.logged_system("git submodule sync") &&
@@ -69,11 +42,7 @@ module EY
         def to_checkout
           return @to_checkout if @opts_ref == opts[:ref]
           @opts_ref = opts[:ref]
-          @to_checkout = if branch?(opts[:ref])
-            "origin/#{opts[:ref]}"
-          else
-            opts[:ref]
-          end
+          @to_checkout = branch?(@opts_ref) ? "origin/#{@opts_ref}" : @opts_ref
         end
 
         def create_revision_file_command(dir)
@@ -85,24 +54,24 @@ module EY
         end
 
       private
-        def in_git_work_tree
-          Dir.chdir(git_work_tree) { yield }
+        def in_repository_cache
+          Dir.chdir(repository_cache) { yield }
         end
 
-        def git_work_tree
+        def remote_uri
+          opts[:repo]
+        end
+
+        def repository_cache
           opts[:repository_cache]
         end
 
         def git
-          "git --git-dir #{git_work_tree}/.git --work-tree #{git_work_tree}"
+          "git --git-dir #{repository_cache}/.git --work-tree #{repository_cache}"
         end
 
         def branch?(ref)
-          remote_branches = `#{git} branch -r`
-          remote_branches.each_line do |line|
-            return true if line.include?("origin/#{ref}")
-          end
-          false
+          system("#{git} show-branch origin/#{ref} > /dev/null 2>&1")
         end
       end
     end

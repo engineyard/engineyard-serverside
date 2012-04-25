@@ -2,7 +2,6 @@ module EY
   module Serverside
     module RailsAssetSupport
       def compile_assets
-        asset_dir = "#{c.release_path}/app/assets"
         return unless app_needs_assets?
         rails_version = bundled_rails_version
         roles :app_master, :app, :solo do
@@ -22,17 +21,17 @@ module EY
         return unless File.readable?(app_rb_path) # Not a Rails app in the first place.
 
         if File.directory?(File.join(c.release_path, 'app', 'assets'))
-          shell.status "app/assets/ found. Attempting Rails asset pre-compilation."
+          shell.status "Attempting Rails asset pre-compilation. (found directory: 'app/assets')"
         else
           return false
         end
 
         if app_builds_own_assets?
-          shell.status "public/assets already exists, skipping pre-compilation."
+          shell.status "Skipping asset compilation. (found directory: 'public/assets')"
           return
         end
         if app_disables_assets?(app_rb_path)
-          shell.status "application.rb has disabled asset compilation. Skipping."
+          shell.status "Skipping asset compilation. (application.rb has disabled asset compilation)"
           return
         end
 # This check is very expensive, and has been deemed not worth the time.

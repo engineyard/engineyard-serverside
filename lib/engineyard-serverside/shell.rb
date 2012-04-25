@@ -70,14 +70,14 @@ module EY
       def debug(msg)   logger.debug   msg end
       def unknown(msg) logger.unknown msg end
 
-      # Return an IO that outputs to stdout or not according to the verbosity settings
-      # debug is hidden in non-verbose mode
+      # Return an IO that outputs to stdout or not according to the verbosity settings.
+      # debug is hidden in non-verbose mode.
       def out
         YieldIO.new { |msg| command_stdout(msg) }
       end
 
-      # Return an IO that outputs to stderr
-      # unknown always shows, but without a severity title
+      # Return an IO that outputs to stderr.
+      # unknown always shows, but without a severity title.
       def err
         YieldIO.new { |msg| command_stderr(msg) }
       end

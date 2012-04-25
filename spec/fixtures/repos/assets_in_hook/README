@@ -1,0 +1,2 @@
+Assets are pre-compiled in a hook, as if the user had set up a hook before we
+began supporting asset precompilation in rails.

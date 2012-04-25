@@ -54,6 +54,18 @@ module EY
         raise
       end
 
+      def update_repository_cache
+        strategy.update_repository_cache
+      end
+
+      def create_revision_file_command
+        strategy.create_revision_file_command(config.release_path)
+      end
+
+      def short_log_message(revision)
+        strategy.short_log_message(revision)
+      end
+
       def parse_configured_services
         result = YAML.load_file "#{c.shared_path}/config/ey_services_config_deploy.yml"
         return {} unless result.is_a?(Hash)
@@ -164,9 +176,11 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # task
       def push_code
         shell.status "Pushing code to all servers"
-        futures = EY::Serverside::Future.call(EY::Serverside::Server.all) do |server|
-          server.sync_directory(config.repository_cache) { |cmd| shell.logged_system(cmd) }
+        commands = EY::Serverside::Server.all.reject { |server| server.local? }.map do |server|
+          cmd = server.sync_directory_command(config.repository_cache)
+          proc { shell.logged_system(cmd) }
         end
+        futures = EY::Serverside::Future.call(commands)
         EY::Serverside::Future.success?(futures)
       end
 
@@ -191,10 +205,12 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
       # create ssh wrapper on all servers
       def ssh_executable
-        roles :app_master, :app, :solo, :util do
-          run(generate_ssh_wrapper)
-        end
-        ssh_wrapper_path
+        @ssh_executable ||= begin
+                              roles :app_master, :app, :solo, :util do
+                                run(generate_ssh_wrapper)
+                              end
+                              ssh_wrapper_path
+                            end
       end
 
       # We specify 'IdentitiesOnly' to avoid failures on systems with > 5 private keys available.
@@ -204,16 +220,15 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # (Thanks Jim L.)
       def generate_ssh_wrapper
         path = ssh_wrapper_path
-        identity_file = "~/.ssh/#{c.app}-deploy-key"
-        run <<-SCRIPT
+        <<-SCRIPT
+mkdir -p #{File.dirname(path)}
 [[ -x #{path} ]] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
-ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no -o LogLevel=DEBUG -o IdentityFile=#{identity_file} -o IdentitiesOnly=yes $*
+ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no -o LogLevel=DEBUG -o IdentityFile=#{c.ssh_identity_file} -o IdentitiesOnly=yes $*
 SSH
 chmod 0700 #{path}
         SCRIPT
-        path
       end
 
       def ssh_wrapper_path
@@ -388,17 +403,32 @@ WRAP
         @callbacks_reached ||= true
         if File.exist?("#{c.release_path}/deploy/#{what}.rb")
           run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
-            per_instance_args = [
-              '--current-roles', server.roles.join(' '),
-              '--config', c.to_json,
-            ]
-            per_instance_args << '--current-name' << server.name.to_s if server.name
+            per_instance_args = []
+            per_instance_args << '--current-roles' << server.roles.join(' ')
+            per_instance_args << '--config'        << c.to_json
+            per_instance_args << '--current-name'  << server.name.to_s if server.name
             cmd << " " << Escape.shell_command(per_instance_args)
           end
         end
       end
 
       protected
+
+      # Use [] to access attributes instead of calling methods so
+      # that we get nils instead of NoMethodError.
+      #
+      # Rollback doesn't know about the repository location (nor
+      # should it need to), but it would like to use #short_log_message.
+      def strategy
+        ENV['GIT_SSH'] = ssh_executable
+        @strategy ||= config.strategy_class.new(
+          shell,
+          :repository_cache => config[:repository_cache],
+          :app              => config[:app],
+          :repo             => config[:repo],
+          :ref              => config[:branch]
+        )
+      end
 
       def starting_time
         @starting_time ||= Time.now
@@ -525,11 +555,6 @@ WRAP
     end   # DeployBase
 
     class Deploy < DeployBase
-      def self.new(config, shell=nil)
-        # include the correct fetch strategy
-        include EY::Serverside::Strategies.const_get(config.strategy)::Helpers
-        super
-      end
     end
   end
 end

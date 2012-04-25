@@ -157,7 +157,7 @@ module EY
         config, shell = init_and_propagate(integrate_options, 'integrate')
 
         EY::Serverside::Server.all.each do |server|
-          server.sync_directory(app_dir) { |cmd| shell.logged_system(cmd) }
+          shell.logged_system server.sync_directory_command(app_dir)
           # we're just about to recreate this, so it has to be gone
           # first. otherwise, non-idempotent deploy hooks could screw
           # things up, and since we don't control deploy hooks, we must
@@ -233,25 +233,28 @@ module EY
 
         servers = EY::Serverside::Server.all.find_all { |server| !server.local? }
 
-        futures = EY::Serverside::Future.call(servers) do |server|
+        commands = servers.each do |server|
           egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
           # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
           # 0.5.11, and mistakenly thinking 0.5.1 is there
           has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
-          if !run_on_server(server,has_gem_cmd) # doesn't have this exact version
-            shell.status "Installing engineyard-serverside on #{server.hostname}"
+          proc do
+            if !run_on_server(server,has_gem_cmd) # doesn't have this exact version
+              shell.status "Installing engineyard-serverside on #{server.hostname}"
 
-            shell.logged_system(Escape.shell_command([
-              'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
-              "-o", "StrictHostKeyChecking=no",
-              local_gem_file,
-             "#{config.user}@#{server.hostname}:#{remote_gem_file}",
-            ]))
-            run_on_server(server,"sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
+              shell.logged_system(Escape.shell_command([
+                'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
+                "-o", "StrictHostKeyChecking=no",
+                local_gem_file,
+               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
+              ]))
+              run_on_server(server,"sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
+            end
           end
         end
 
+        futures = EY::Serverside::Future.call(commands)
         EY::Serverside::Future.success?(futures)
       end
 

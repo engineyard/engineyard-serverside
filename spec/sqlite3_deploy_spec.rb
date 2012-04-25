@@ -6,33 +6,28 @@ describe "Deploying an application with sqlite3 as the only DB adapter in the Ge
     @shared_path   = nil
     @framework_env = nil
 
-    deploy_test_application do |deployer|
-      gemfile                    = File.expand_path('../fixtures/gemfiles/1.0.21-rails-31-with-sqlite', __FILE__)
-      lockfile                   = File.expand_path('../fixtures/lockfiles/1.0.21-rails-31-with-sqlite', __FILE__)
-      deployer.gemfile_contents  = File.read(gemfile)
-      deployer.lockfile_contents = File.read(lockfile)
-
-      @shared_path               = deployer.shared_path
-      @release_path              = deployer.release_path
-      @framework_env             = deployer.framework_env
+    deploy_test_application('sqlite3') do |deployer|
+      @shared_path   = deployer.shared_path
+      @release_path  = deployer.release_path
+      @framework_env = deployer.framework_env
     end
   end
 
   it 'should symlink database.sqlite3.yml' do
-    File.exist?(File.join(@release_path, 'config', 'database.yml')).should be_true
+    @release_path.join('config', 'database.yml').should exist
   end
 
   it 'should create database.sqlite3.yml in a shared location' do
-    File.exist?(File.join(@shared_path, 'config', 'database.sqlite3.yml')).should be_true
+    @shared_path.join('config', 'database.sqlite3.yml').should exist
   end
 
   it 'should put a reference to a shared database in database.sqlite3.yml' do
-    contents = File.read(File.join(@release_path, 'config', 'database.yml'))
-    contents.should include(File.expand_path(File.join(@shared_path, 'databases', "#{@framework_env}.sqlite3")))
+    contents = @release_path.join('config', 'database.yml').read
+    contents.should include(@shared_path.join('databases', "#{@framework_env}.sqlite3").expand_path)
   end
 
   it 'should create the shared database' do
-    File.exist?(File.join(@shared_path, 'databases', "#{@framework_env}.sqlite3")).should be_true
+    @shared_path.join('databases', "#{@framework_env}.sqlite3").should exist
   end
 
 end

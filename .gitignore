@@ -1,6 +1,5 @@
-Gemfile.lock
+/Gemfile.lock
 pkg
 .bundle
 *.gem
 spec/fixtures/gitrepo
-Gemfile.lock

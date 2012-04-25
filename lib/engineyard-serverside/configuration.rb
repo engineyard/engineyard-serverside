@@ -86,6 +86,14 @@ module EY
         configuration['account_name'].to_s
       end
 
+      def ssh_identity_file
+        "~/.ssh/#{c.app}-deploy-key"
+      end
+
+      def strategy_class
+        EY::Serverside::Strategies.const_get(strategy)
+      end
+
       def revision
         IO.read(File.join(latest_release, 'REVISION'))
       end

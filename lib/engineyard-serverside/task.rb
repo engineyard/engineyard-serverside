@@ -79,10 +79,13 @@ module EY
 
       def run_on_roles(cmd, &block)
         servers = EY::Serverside::Server.from_roles(@roles)
-        futures = EY::Serverside::Future.call(servers, block_given?) do |server, exec_block|
-          to_run = exec_block ? block.call(server, cmd.dup) : cmd
-          server.run(to_run) { |exec_cmd| shell.logged_system(exec_cmd) }
+
+        commands = servers.map do |server|
+          exec_cmd = server.command_on_server(cmd, &block)
+          proc { shell.logged_system(exec_cmd) }
         end
+
+        futures = EY::Serverside::Future.call(commands)
 
         unless EY::Serverside::Future.success?(futures)
           failures = futures.select {|f| f.error? }.map {|f| f.inspect}.join("\n")

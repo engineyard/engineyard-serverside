@@ -53,9 +53,16 @@ class FullTestDeploy < EY::Serverside::Deploy
     result
   end
 
-  def deploy
-    yield(self) if block_given?
-    super
+  def shared_path
+    Pathname.new(config.shared_path)
+  end
+
+  def release_path
+    Pathname.new(config.release_path)
+  end
+
+  def framework_env
+    config.framework_env
   end
 
   def services_command_check
@@ -67,144 +74,71 @@ class FullTestDeploy < EY::Serverside::Deploy
   end
 
   def services_setup_command
-    @mock_services_setup_command || "echo 'skipped'"
+    @mock_services_setup_command || "echo 'services setup command'"
   end
 
   def mock_services_setup!(value)
     @mock_services_setup_command = value
   end
-
-  def mock_gemfile_contents(gemfile_contents)
-    @gemfile_contents = gemfile_contents
-  end
-
-  def mock_lockfile_contents(lockfile_contents)
-    @lockfile_contents = lockfile_contents
-  end
-
 end
 
-module EY::Serverside::Strategies::IntegrationSpec
-  module Helpers
+class EY::Serverside::Strategies::IntegrationSpec
+  attr_reader :shell, :source_repo, :repository_cache
 
+  def initialize(shell, opts)
+    unless opts[:repository_cache] && opts[:repo]
+      raise ArgumentError, "Option :repository_cache and :repo are required"
+    end
 
-    def update_repository_cache
-      cached_copy = c.repository_cache
+    @shell = shell
+    @ref = opts[:ref]
+    @source_repo = Pathname.new(opts[:repo])
+    @repository_cache = Pathname.new(opts[:repository_cache])
+  end
 
-      deploy_hook_dir = File.join(cached_copy, 'deploy')
-      FileUtils.mkdir_p(deploy_hook_dir)
-      %w[bundle compile_assets migrate symlink restart].each do |action|
-        %w[before after].each do |prefix|
-          hook = "#{prefix}_#{action}"
-          hook_path = File.join(deploy_hook_dir, "#{hook}.rb")
-          next if File.exist?(hook_path)
-          File.open(hook_path, 'w') do |f|
-            f.write(%Q{run 'touch "#{c.release_path}/#{hook}.ran"'})
-          end
+  def update_repository_cache
+    shell.status "Checking out #{@ref}"
+    install_git_base
+    copy_fixture_repo_files
+    add_default_deploy_hooks
+  end
+
+  def create_revision_file_command(dir)
+    "echo '#{@ref}' > #{dir}/REVISION"
+  end
+
+  def short_log_message(revision)
+    "ref: #{revision} - Short log message"
+  end
+
+  private
+
+  def install_git_base
+    repository_cache.mkpath
+    git_base = FIXTURES_DIR.join('gitrepo.tar.gz')
+    system "tar xzf #{git_base} --strip-components 1 -C #{repository_cache}"
+  end
+
+  def copy_fixture_repo_files
+    if source_repo.exist?
+      system("cp -Rf #{source_repo.join('*')} #{repository_cache}")
+    else
+      raise "Mock repo #{source_repo.inspect} does not exist. Path should be absolute. e.g. FIXTURES_DIR.join('repos','example')"
+    end
+  end
+
+  def add_default_deploy_hooks
+    deploy_hook_dir = repository_cache.join('deploy')
+    deploy_hook_dir.mkpath
+    %w[bundle compile_assets migrate symlink restart].each do |action|
+      %w[before after].each do |prefix|
+        hook = "#{prefix}_#{action}"
+        hook_path = deploy_hook_dir.join("#{hook}.rb")
+        next if hook_path.exist?
+        hook_path.open('w') do |f|
+          f.write(%Q{run 'touch #{hook}.ran'})
         end
       end
-
-      FileUtils.mkdir_p(File.join(c.shared_path, 'config'))
-      FileUtils.mkdir_p(cached_copy)
-      generate_gemfile_in(cached_copy)
-    end
-
-    def release_path
-      c.release_path
-    end
-
-    def shared_path
-      c.shared_path
-    end
-
-    def framework_env
-      c.framework_env
-    end
-
-    def create_revision_file_command
-      "echo 'revision, yo' > #{c.release_path}/REVISION"
-    end
-
-    def short_log_message(revision)
-      "FONDLED THE CODE"
-    end
-
-    def gemfile_contents=(contents)
-      @gemfile_contents = contents
-    end
-
-    def gemfile_contents
-      @gemfile_contents || <<-EOF
-source :rubygems
-gem 'rake'
-gem 'pg'
-gem 'ey_config'
-      EOF
-    end
-
-    def lockfile_contents=(contents)
-      @lockfile_contents = contents
-    end
-
-    # Generated using Bundler v1.0.21
-
-    def lockfile_contents
-      @lockfile_contents || <<-EOF
-GEM
-  remote: http://rubygems.org/
-  specs:
-    pg (0.11.0)
-    rake (0.9.2.2)
-    ey_config (0.0.1)
-
-PLATFORMS
-  ruby
-
-DEPENDENCIES
-  pg
-  rake
-  ey_config
-      EOF
-    end
-
-    def generate_gemfile_in(dir)
-      `echo "this is my file; there are many like it, but this one is mine" > #{dir}/file`
-      gemfile_path = File.join(dir, 'Gemfile')
-      lockfile_path = File.join(dir, 'Gemfile.lock')
-
-      unless $DISABLE_GEMFILE
-        File.open(gemfile_path, 'w') {|f| f.write(gemfile_contents) }
-      end
-      unless $DISABLE_LOCKFILE
-        File.open(lockfile_path, 'w') {|f| f.write(lockfile_contents) }
-      end
-    end
-  end
-end
-
-module EY::Serverside::Strategies::NodeIntegrationSpec
-  module Helpers
-    include EY::Serverside::Strategies::IntegrationSpec::Helpers
-
-    def generate_gemfile_in(dir)
-      super(dir)
-    end
-
-    def generate_package_json_in(dir)
-      npm_file = File.join(dir, 'package.json')
-      File.open(npm_file, 'w') {|f| f.write(npm_content)}
-    end
-
-    def npm_content
-      <<-EOF
-{
-  "name": "node-example",
-  "version": "0.0.1",
-  "dependencies": {
-    "express": "2.5.8"
-  }
-}
-EOF
     end
   end
 end
