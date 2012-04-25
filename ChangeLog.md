@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Default bundler version is now 1.1.3
   * Improved deploy output, especially for --verbose.
   * Send all log output through a new Shell object that formats and adds timestamps.
 
