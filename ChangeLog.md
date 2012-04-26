@@ -10,6 +10,10 @@
   * * maintenance\_on\_restart: true or false (default: false except for glassfish and mongrel)
   * * maintenance\_on\_migrate: true or false (default: true)
 
+## v1.6.4 (2012-04-26)
+
+  *
+
 ## v1.6.3 (2012-03-26)
 
   *
