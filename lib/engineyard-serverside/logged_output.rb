@@ -62,7 +62,7 @@ module EY
           out = verbose? ? Tee.new($stdout, log) : log
           err = Tee.new($stderr, log)    # we always want to see errors
 
-          cmd = "sh -c #{Escape.shell_command([cmd])}"
+          cmd = "sh -l -c #{Escape.shell_command([cmd])}"
           puts "running #{cmd}" if ENV['DEBUG']
           out <<  with_timestamp(":: running #{cmd}\n")
           status = systemu cmd, 'stdout' => out, 'stderr' => err

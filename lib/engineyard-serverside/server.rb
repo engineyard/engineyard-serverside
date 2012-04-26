@@ -83,7 +83,7 @@ module EY
         if local?
           logged_system(command)
         else
-          logged_system("#{ssh_command} #{user}@#{hostname} #{Escape.shell_command [command]}")
+          logged_system(ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command]))
         end
       end
 
