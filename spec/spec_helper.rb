@@ -1,9 +1,15 @@
 $LOAD_PATH.push File.expand_path("../lib", File.dirname(__FILE__))
 
-if defined?(Bundler)
-  Bundler.require :default, :test
-else
+unless defined?(Bundler)
   require 'rubygems'
+end
+
+if ENV['COVERAGE']
+  # Ruby 1.9.x only.
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter "lib/vendor/"
+  end
 end
 
 require 'pp'

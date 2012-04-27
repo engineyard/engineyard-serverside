@@ -5,6 +5,11 @@ Spec::Rake::SpecTask.new(:spec) do |spec|
 end
 task :default => :spec
 
+task :coverage => [:coverage_env, :spec]
+task :coverage_env do
+  ENV['COVERAGE'] = '1'
+end
+
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'
 require 'engineyard-serverside/version'
