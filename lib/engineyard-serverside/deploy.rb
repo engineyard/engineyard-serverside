@@ -131,10 +131,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         end
 
         # this one is guaranteed to exist
-        maintenance_page_candidates <<  File.expand_path(
-          "default_maintenance_page.html",
-          File.dirname(__FILE__)
-          )
+        maintenance_page_candidates << File.expand_path("default_maintenance_page.html", File.dirname(__FILE__))
 
         # put in the maintenance page
         maintenance_file = maintenance_page_candidates.detect do |file|
