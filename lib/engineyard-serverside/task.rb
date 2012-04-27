@@ -3,8 +3,6 @@ require 'engineyard-serverside/shell/helpers'
 module EY
   module Serverside
     class Task
-      include EY::Serverside::Shell::Helpers
-
       attr_reader :config, :shell
       alias :c :config
 

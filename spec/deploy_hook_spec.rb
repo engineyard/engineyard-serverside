@@ -240,6 +240,14 @@ describe "deploy hooks" do
       it "#current_role returns the first role" do
         deploy_hook(:current_roles => %w(a b)).eval_hook('current_role').should == 'a'
       end
+
+      it "has info, warning, debug, logged_system, and access to shell" do
+        deploy_hook.eval_hook('respond_to?(:info)         ').should be_true
+        deploy_hook.eval_hook('respond_to?(:warning)      ').should be_true
+        deploy_hook.eval_hook('respond_to?(:debug)        ').should be_true
+        deploy_hook.eval_hook('respond_to?(:logged_system)').should be_true
+        deploy_hook.eval_hook('respond_to?(:shell)        ').should be_true
+      end
     end
   end
 end

@@ -78,7 +78,7 @@ module EY
         if gemfile? && lockfile
           configured_services = parse_configured_services
           if !configured_services.empty? && !lockfile.has_ey_config?
-            warning "Gemfile.lock does not contain ey_config. Add it to get EY::Config access to: #{configured_services.keys.join(', ')}."
+            shell.warning "Gemfile.lock does not contain ey_config. Add it to get EY::Config access to: #{configured_services.keys.join(', ')}."
           end
         end
       end
@@ -89,7 +89,7 @@ module EY
           if lockfile
             shell.status "Gemfile.lock found."
             unless lockfile.any_database_adapter?
-              warning <<-WARN
+              shell.warning <<-WARN
 Gemfile.lock does not contain a recognized database adapter.
 A database-adapter gem such as mysql2, mysql, or do_mysql was expected.
 This can prevent applications that use MySQL or PostreSQL from booting.
@@ -99,7 +99,7 @@ Applications that don't use MySQL or PostgreSQL can safely ignore this warning.
               WARN
             end
           else
-            warning <<-WARN
+            shell.warning <<-WARN
 Gemfile.lock is missing!
 You can get different versions of gems in production than what you tested with.
 You can get different versions of gems on every deployment even if your Gemfile hasn't changed.
@@ -319,13 +319,13 @@ chmod 0700 #{path}
         begin
           sudo(services_command_check)
         rescue StandardError => e
-          info "Could not setup services. Upgrade your environment to get services configuration."
+          shell.info "Could not setup services. Upgrade your environment to get services configuration."
           return
         end
         sudo(services_setup_command)
       rescue StandardError => e
         unless previously_configured_services.empty?
-          warning <<-WARNING
+          shell.warning <<-WARNING
 External services configuration not updated. Using previous version.
 Deploy again if your services configuration appears incomplete or out of date.
 #{e}
@@ -549,7 +549,7 @@ WRAP
 
       def check_node_npm
         if File.exist?("#{c.release_path}/package.json")
-          info "~> package.json detected, installing npm packages"
+          shell.info "~> package.json detected, installing npm packages"
           run "cd #{c.release_path} && npm install"
         end
       end

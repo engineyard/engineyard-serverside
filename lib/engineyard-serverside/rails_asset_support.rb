@@ -10,7 +10,7 @@ module EY
           if rails_version
             shell.status "Precompiling assets for rails v#{rails_version}"
           else
-            warning "Precompiling assets even though Rails was not bundled."
+            shell.warning "Precompiling assets even though Rails was not bundled."
           end
           run(cmd)
         end
