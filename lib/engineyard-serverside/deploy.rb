@@ -426,10 +426,6 @@ WRAP
         )
       end
 
-      def starting_time
-        @starting_time ||= Time.now
-      end
-
       def gemfile?
         File.exist?("#{c.release_path}/Gemfile")
       end

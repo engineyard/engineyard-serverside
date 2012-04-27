@@ -155,10 +155,6 @@ module EY
         all_releases[index-1]
       end
 
-      def oldest_release
-        all_releases.first
-      end
-
       def all_releases
         Dir.glob("#{release_dir}/*").sort
       end

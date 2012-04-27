@@ -17,8 +17,6 @@ module EY
         def build_message(severity, stamp, message)
           if %w[WARN ERROR FATAL].include?(severity)
             prepend("#{stamp}!> ", "#{message}")
-          elsif severity == "WARN"
-            prepend("#{stamp}!> ", "#{message}")
           elsif severity == "INFO"
             prepend(stamp, message)
           else
