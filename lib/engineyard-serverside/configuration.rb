@@ -215,6 +215,10 @@ module EY
         @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end
 
+      def maintenance_page_enabled_path
+        File.join(shared_path, "system", "maintenance.html")
+      end
+
       def exclusions
         copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
       end

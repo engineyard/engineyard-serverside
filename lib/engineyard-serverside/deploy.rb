@@ -140,10 +140,8 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
         @maintenance_up = true
         roles :app_master, :app, :solo do
-          maint_page_dir = File.join(c.shared_path, "system")
-          visible_maint_page = File.join(maint_page_dir, "maintenance.html")
-          run Escape.shell_command(['mkdir', '-p', maint_page_dir])
-          run Escape.shell_command(['cp', maintenance_file, visible_maint_page])
+          run Escape.shell_command(['mkdir', '-p', File.dirname(c.maintenance_page_enabled_path)])
+          run Escape.shell_command(['cp', maintenance_file, c.maintenance_page_enabled_path])
         end
       end
 
@@ -160,7 +158,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       def disable_maintenance_page
         @maintenance_up = false
         roles :app_master, :app, :solo do
-          run "rm -f #{File.join(c.shared_path, "system", "maintenance.html")}"
+          run "rm -f #{c.maintenance_page_enabled_path}"
         end
       end
 
