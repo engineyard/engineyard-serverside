@@ -61,8 +61,7 @@ module EY
         # have the same code anyway.
         task_check = "PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake -T assets:precompile |grep 'assets:precompile'"
         cmd = "cd #{c.release_path} && #{task_check}"
-        logged_system "cd #{c.release_path} && #{task_check}"
-        $? == 0
+        shell.logged_system("cd #{c.release_path} && #{task_check}").success?
       end
 
       def app_builds_own_assets?

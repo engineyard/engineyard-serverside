@@ -20,6 +20,15 @@ module EY
       @node = nil
     end
 
+    class Future
+      def inspect
+        <<-EOM
+#{self.class.name} result below: (run with DEBUG=1 to see the full log)
+#{result.inspect}
+        EOM
+      end
+    end
+
     class Strategies::Git
       def short_log_message(_) "" end
     end
@@ -78,7 +87,7 @@ Spec::Runner.configure do |config|
 
   # When a repo fixture name is specified, the files found in the specified
   # spec/fixtures/repos dir are copied into the test github repository.
-  def deploy_test_application(repo_fixture_name = 'default', &block)
+  def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
     @deploy_dir = Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
 
     # set up EY::Serverside::Server like we're on a solo
@@ -93,12 +102,12 @@ Spec::Runner.configure do |config|
       "stack"         => 'nginx_passenger',
       "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
       'app'           => 'rails31',
-      'environment'   => 'env',
-      'account'       => 'acc',
+      'environment_name' => 'env',
+      'account_name'  => 'acc',
       'framework_env' => 'staging',
       'branch'        => 'somebranch',
       'repo'          => FIXTURES_DIR.join('repos', repo_fixture_name)
-    })
+    }.merge(extra_config))
 
     # pretend there is a shared bundled_gems directory
     @deploy_dir.join('shared', 'bundled_gems').mkpath

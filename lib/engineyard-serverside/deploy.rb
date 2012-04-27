@@ -402,11 +402,12 @@ WRAP
       def callback(what)
         @callbacks_reached ||= true
         if File.exist?("#{c.release_path}/deploy/#{what}.rb")
+          shell.status "Running deploy hook: deploy/#{what}.rb"
           run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
             per_instance_args = []
             per_instance_args << '--current-roles' << server.roles.join(' ')
-            per_instance_args << '--config'        << c.to_json
             per_instance_args << '--current-name'  << server.name.to_s if server.name
+            per_instance_args << '--config'        << c.to_json
             cmd << " " << Escape.shell_command(per_instance_args)
           end
         end

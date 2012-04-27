@@ -60,28 +60,21 @@ module EY
         end
       end
 
-      # Returns +true+ if the command is successful,
-      # raises EY::Serverside::RemoteFailure with a list of failures
-      # otherwise.
       def run(cmd, &blk)
-        run_on_roles(shell_command(cmd), &blk)
+        run_on_roles('sh -l -c', cmd, &blk)
       end
 
       def sudo(cmd, &blk)
-        run_on_roles("sudo #{shell_command(cmd)}", &blk)
-      end
-
-      def shell_command(cmd)
-        "sh -l -c #{Escape.shell_command [cmd]}"
+        run_on_roles('sudo sh -l -c', cmd, &blk)
       end
 
       private
 
-      def run_on_roles(cmd, &block)
+      def run_on_roles(prefix, cmd, &block)
         servers = EY::Serverside::Server.from_roles(@roles)
 
         commands = servers.map do |server|
-          exec_cmd = server.command_on_server(cmd, &block)
+          exec_cmd = server.command_on_server(prefix, cmd, &block)
           proc { shell.logged_system(exec_cmd) }
         end
 

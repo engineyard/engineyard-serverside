@@ -15,6 +15,21 @@ module EY
         end
       end
 
+      class CommandResult < Struct.new(:command, :exitstatus, :output)
+        def success?
+          exitstatus.zero?
+        end
+
+        def inspect
+          <<-EOM
+$ #{command}
+#{output}
+
+# => #{exitstatus}
+          EOM
+        end
+      end
+
       attr_reader :logger
 
       def initialize(options)
@@ -45,6 +60,14 @@ module EY
         debug msg.gsub(/^/, ' ~ ')
       end
 
+      def fatal(msg)   logger.fatal   "FATAL: #{msg}"   end
+      def error(msg)   logger.error   "ERROR: #{msg}"   end
+      def warning(msg) logger.warn    "WARNING: #{msg}" end
+      def notice(msg)  logger.warn    msg end
+      def info(msg)    logger.info    msg end
+      def debug(msg)   logger.debug   msg end
+      def unknown(msg) logger.unknown msg end
+
       # a debug outputter that displays a command being run
       # Formatis like this:
       #   $ cmd blah do \
@@ -54,46 +77,21 @@ module EY
         debug cmd.gsub(/^/, '   > ').sub(/>/, '$')
       end
 
-      def command_stdout(msg)
-        debug msg.gsub(/^/,'     ')
-      end
-
-      def command_stderr(msg)
-        unknown msg.gsub(/^/,'     ')
-      end
-
-      def fatal(msg)   logger.fatal   "FATAL: #{msg}"   end
-      def error(msg)   logger.error   "ERROR: #{msg}"   end
-      def warning(msg) logger.warn    "WARNING: #{msg}" end
-      def notice(msg)  logger.warn    msg end
-      def info(msg)    logger.info    msg end
-      def debug(msg)   logger.debug   msg end
-      def unknown(msg) logger.unknown msg end
-
-      # Return an IO that outputs to stdout or not according to the verbosity settings.
-      # debug is hidden in non-verbose mode.
-      def out
-        YieldIO.new { |msg| command_stdout(msg) }
-      end
-
-      # Return an IO that outputs to stderr.
-      # unknown always shows, but without a severity title.
-      def err
-        YieldIO.new { |msg| command_stderr(msg) }
-      end
-
       def logged_system(cmd)
         show_command(cmd)
-        spawn_process(cmd, out, err)
+        output = ""
+        outio = YieldIO.new { |msg| output << msg; debug   msg.gsub(/^/,'     ') }
+        errio = YieldIO.new { |msg| output << msg; unknown msg.gsub(/^/,'     ') }
+        result = spawn_process(cmd, outio, errio)
+        CommandResult.new(cmd, result.exitstatus, output)
       end
 
       protected
 
       # This is the meat of process spawning. It's nice to keep it separate even
       # though it's simple because we've had to modify it frequently.
-      def spawn_process(cmd, cmd_stdout, cmd_stderr)
-        result = systemu cmd, 'stdout' => cmd_stdout, 'stderr' => cmd_stderr
-        result.exitstatus == 0
+      def spawn_process(cmd, outio, errio)
+        systemu cmd, 'stdout' => outio, 'stderr' => errio
       end
     end
   end

@@ -21,21 +21,21 @@ module EY
 
         def fetch
           if usable_repository?
-            shell.logged_system("#{git} fetch -q origin 2>&1")
+            run("#{git} fetch -q origin 2>&1")
           else
             FileUtils.rm_rf(repository_cache)
-            shell.logged_system("git clone -q #{remote_uri} #{repository_cache} 2>&1")
+            run("git clone -q #{remote_uri} #{repository_cache} 2>&1")
           end
         end
 
         def checkout
           shell.status "Deploying revision #{short_log_message(to_checkout)}"
           in_repository_cache do
-            (shell.logged_system("git checkout -q '#{to_checkout}'") ||
-              shell.logged_system("git reset -q --hard '#{to_checkout}'")) &&
-              shell.logged_system("git submodule sync") &&
-              shell.logged_system("git submodule update --init") &&
-              shell.logged_system("git clean -dfq")
+            (run("git checkout -q '#{to_checkout}'") ||
+              run("git reset -q --hard '#{to_checkout}'")) &&
+              run("git submodule sync") &&
+              run("git submodule update --init") &&
+              run("git clean -dfq")
           end
         end
 
@@ -54,6 +54,10 @@ module EY
         end
 
       private
+        def run(cmd)
+          shell.logged_system(cmd).success?
+        end
+
         def in_repository_cache
           Dir.chdir(repository_cache) { yield }
         end

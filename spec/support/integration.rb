@@ -100,7 +100,6 @@ class EY::Serverside::Strategies::IntegrationSpec
     shell.status "Checking out #{@ref}"
     install_git_base
     copy_fixture_repo_files
-    add_default_deploy_hooks
   end
 
   def create_revision_file_command(dir)
@@ -124,21 +123,6 @@ class EY::Serverside::Strategies::IntegrationSpec
       system("cp -Rf #{source_repo.join('*')} #{repository_cache}")
     else
       raise "Mock repo #{source_repo.inspect} does not exist. Path should be absolute. e.g. FIXTURES_DIR.join('repos','example')"
-    end
-  end
-
-  def add_default_deploy_hooks
-    deploy_hook_dir = repository_cache.join('deploy')
-    deploy_hook_dir.mkpath
-    %w[bundle compile_assets migrate symlink restart].each do |action|
-      %w[before after].each do |prefix|
-        hook = "#{prefix}_#{action}"
-        hook_path = deploy_hook_dir.join("#{hook}.rb")
-        next if hook_path.exist?
-        hook_path.open('w') do |f|
-          f.write(%Q{run 'touch #{hook}.ran'})
-        end
-      end
     end
   end
 end

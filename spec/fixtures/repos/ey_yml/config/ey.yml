@@ -1,8 +1,8 @@
 environments:
-  env_name:
+  env:
     copy_exclude:
-      - .git
-      - README
+    - .git
+    - README
     migrate: true
     migration_command: 'uh oh'
     branch: branch_from_ey_yml

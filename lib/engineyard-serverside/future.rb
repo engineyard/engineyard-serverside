@@ -18,7 +18,7 @@ module EY
       end
 
       def success?
-        result == true
+        result.success?
       end
 
       def error?

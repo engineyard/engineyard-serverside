@@ -14,8 +14,8 @@ module EY
       attr_writer :release_path
 
       def initialize(options={})
-        opts = options.dup
-        @release_path = opts[:release_path]
+        opts = options.inject({}) { |h,(k,v)| h[k.to_s] = v; h }
+        @release_path = opts['release_path']
         config = JSON.parse(opts.delete("config") || "{}")
         @configs = [config, opts] # low to high priority
       end
@@ -27,7 +27,7 @@ module EY
 
       # Delegate to the configuration objects
       def method_missing(meth, *args, &blk)
-        configuration.key?(meth.to_s) ? c[meth.to_s] : super
+        configuration.key?(meth.to_s) ? configuration[meth.to_s] : super
       end
 
       def respond_to?(meth, include_private=false)

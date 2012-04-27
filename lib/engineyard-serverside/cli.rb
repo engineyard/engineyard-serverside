@@ -240,7 +240,7 @@ module EY
           has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
           proc do
-            if !run_on_server(server,has_gem_cmd) # doesn't have this exact version
+            if !run_on_server(server,has_gem_cmd).success? # doesn't have this exact version
               shell.status "Installing engineyard-serverside on #{server.hostname}"
 
               shell.logged_system(Escape.shell_command([
@@ -272,7 +272,7 @@ module EY
       end
 
       def run_on_server(server, command)
-        server.run(command) { |cmd| shell.logged_system(cmd) }
+        shell.logged_system(server.command_on_server('sh -l -c', command))
       end
 
       def load_servers(config)

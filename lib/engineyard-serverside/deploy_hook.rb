@@ -11,7 +11,6 @@ module EY
         hook_path = "#{c.release_path}/deploy/#{hook}.rb"
         if File.exist?(hook_path)
           Dir.chdir(c.release_path) do
-            shell.status "Running deploy hook: deploy/#{hook}.rb"
             if desc = syntax_error(hook_path)
               hook_name = File.basename(hook_path)
               abort "*** [Error] Invalid Ruby syntax in hook: #{hook_name} ***\n*** #{desc.chomp} ***"
@@ -54,16 +53,16 @@ module EY
           end
         end
 
-        def respond_to?(meth, include_private=false)
-          @configuration.respond_to?(meth, include_private) || super
+        def respond_to?(*a)
+          @configuration.respond_to?(*a) || super
         end
 
         def run(cmd)
-          shell.logged_system(Escape.shell_command(["sh", "-l", "-c", cmd]))
+          shell.logged_system(Escape.shell_command(["sh", "-l", "-c", cmd])).success?
         end
 
         def sudo(cmd)
-          shell.logged_system(Escape.shell_command(["sudo", "sh", "-l", "-c", cmd]))
+          shell.logged_system(Escape.shell_command(["sudo", "sh", "-l", "-c", cmd])).success?
         end
 
         # convenience functions for running on certain instance types
