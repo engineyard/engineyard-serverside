@@ -23,7 +23,7 @@ describe "Deploying an application with sqlite3 as the only DB adapter in the Ge
 
   it 'should put a reference to a shared database in database.sqlite3.yml' do
     contents = @release_path.join('config', 'database.yml').read
-    contents.should include(@shared_path.join('databases', "#{@framework_env}.sqlite3").expand_path)
+    contents.should include(@shared_path.join('databases', "#{@framework_env}.sqlite3").expand_path.to_s)
   end
 
   it 'should create the shared database' do
