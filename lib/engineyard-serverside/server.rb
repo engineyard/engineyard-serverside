@@ -102,6 +102,16 @@ module EY
         @known_hosts_file ||= Tempfile.new('ey-ss-known-hosts')
       end
 
+      # Make a known hosts tempfile to absorb host fingerprints so we don't show
+      #
+      #     Warning: Permanently added 'xxx' (RSA) to the list of known hosts.
+      #
+      # for every ssh command.
+      # (even with StrictHostKeyChecking=no, the warning output is annoying)
+      def self.known_hosts_file
+        @known_hosts_file ||= Tempfile.new('ey-ss-known-hosts')
+      end
+
       def ssh_command
         "ssh -i #{ENV['HOME']}/.ssh/internal -o StrictHostKeyChecking=no -o UserKnownHostsFile=#{self.class.known_hosts_file.path} -o PasswordAuthentication=no "
       end
