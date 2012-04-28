@@ -11,7 +11,9 @@ describe "Deploying a simple application" do
     end
 
     it "restarts the app servers" do
-      @deploy_dir.join('current', 'restart').should exist
+      restart = @deploy_dir.join('current', 'restart')
+      restart.should exist
+      restart.read.chomp.should == %|LANG="en_US.UTF-8" /engineyard/bin/app_rails31 deploy|
     end
   end
 end

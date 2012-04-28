@@ -32,8 +32,8 @@ class FullTestDeploy < EY::Serverside::Deploy
     nil
   end
 
-  def restart
-    FileUtils.touch("#{c.release_path}/restart")
+  def restart_command
+    Escape.shell_command(["echo", super]) + "> #{c.release_path}/restart"
   end
 
   # we're probably running this spec under bundler, but a real
