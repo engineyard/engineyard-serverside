@@ -164,6 +164,15 @@ describe "deploy hooks" do
       end
     end
 
+    context "environment variables" do
+      it "sets the framework env variables" do
+        deploy_hook('framework_env' => 'production').eval_hook("ENV['RAILS_ENV']").should == 'production'
+        deploy_hook('framework_env' => 'production').eval_hook("ENV['RACK_ENV'] ").should == 'production'
+        deploy_hook('framework_env' => 'production').eval_hook("ENV['MERB_ENV'] ").should == 'production'
+        deploy_hook('framework_env' => 'production').eval_hook("ENV['NODE_ENV'] ").should == 'production'
+      end
+    end
+
     context "has methods to run code only on certain instances" do
       def scenarios
         [
@@ -220,7 +229,6 @@ describe "deploy hooks" do
         where_code_runs_with("on_utilities(%w[alpha beta])").should ==
           where_code_runs_with("on_utilities('alpha', 'beta')")
       end
-
     end
 
     context "#syntax_error" do

@@ -163,8 +163,16 @@ module EY
         release_path + '/ey_bundler_binstubs'
       end
 
+      def framework_env_names
+        %w[RAILS_ENV RACK_ENV NODE_ENV MERB_ENV]
+      end
+
       def framework_envs
-        "RAILS_ENV=#{environment} RACK_ENV=#{environment} NODE_ENV=#{environment} MERB_ENV=#{environment}"
+        framework_env_names.map { |e| "#{e}=#{environment}" }.join(' ')
+      end
+
+      def set_framework_envs
+        framework_env_names.each { |e| ENV[e] = environment }
       end
 
       def current_path

@@ -37,6 +37,7 @@ module EY
 
         def initialize(config, shell)
           @configuration = config
+          @configuration.set_framework_envs
           @shell = shell
           @node = node
         end
