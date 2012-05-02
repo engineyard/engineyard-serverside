@@ -5,6 +5,10 @@
   * Default bundler version is now 1.1.3
   * Improved deploy output, especially for --verbose.
   * Send all log output through a new Shell object that formats and adds timestamps.
+  * Load ey.yml to customize deploy settings.
+  * Control maintenance page through ey.yml options:
+  * * maintenance\_on\_restart: true or false (default: false except for glassfish and mongrel)
+  * * maintenance\_on\_migrate: true or false (default: true)
 
 ## v1.6.3 (2012-03-26)
 

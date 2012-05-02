@@ -211,6 +211,22 @@ module EY
         @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end
 
+      def required_downtime_stack?
+        %w[ nginx_mongrel glassfish ].include? stack
+      end
+
+      def enable_maintenance_page_on_restart?
+        configuration.fetch('maintenance_on_restart', required_downtime_stack?)
+      end
+
+      def enable_maintenance_page_on_migrate?
+        configuration.fetch('maintenance_on_migrate', true)
+      end
+
+      def enable_maintenance_page?
+        enable_maintenance_page_on_restart? || (migrate? && enable_maintenance_page_on_migrate?)
+      end
+
       def maintenance_page_enabled_path
         File.join(shared_path, "system", "maintenance.html")
       end

@@ -144,13 +144,9 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       end
 
       def conditionally_enable_maintenance_page
-        if c.migrate? || required_downtime_stack?
+        if c.enable_maintenance_page?
           enable_maintenance_page
         end
-      end
-
-      def required_downtime_stack?
-        %w[ nginx_mongrel glassfish ].include? c.stack
       end
 
       def disable_maintenance_page

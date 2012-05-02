@@ -1,0 +1,5 @@
+source :rubygems
+
+gem 'rake'
+gem 'pg'
+gem 'ey_config'

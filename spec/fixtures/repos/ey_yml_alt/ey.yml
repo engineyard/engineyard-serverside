@@ -8,4 +8,5 @@ environments:
     branch: branch_from_ey_yml
     custom: custom_from_ey_yml
     bundle_without: only test
-    maintenance_on_migrate: false
+    maintenance_on_migrate: true
+    maintenance_on_restart: true
