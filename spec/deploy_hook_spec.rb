@@ -1,23 +1,18 @@
 require 'spec_helper'
 
 describe "the deploy-hook API" do
-  before(:each) do
-    @hook = EY::Serverside::DeployHook.new(options)
-    @callback_context = EY::Serverside::DeployHook::CallbackContext.new(@hook.config)
+  def deploy_hook(options={})
+    EY::Serverside::DeployHook.new(options)
   end
 
   def run_hook(options={}, &blk)
     raise ArgumentError unless block_given?
-    options.each do |k, v|
-      @callback_context.configuration[k] = v
-    end
-
     # The hooks on the filesystem are run by passing a string to
     # context.instance_eval, not a block. However, using a block
     # should allow us to get the same degree of test coverage and
     # still let us have things like syntax checking work on this spec
     # file.
-    @callback_context.instance_eval(&blk)
+    deploy_hook(options).callback_context.instance_eval(&blk)
   end
 
   context "#run" do
@@ -46,9 +41,9 @@ describe "the deploy-hook API" do
     end
 
     it "runs things with sudo" do
-      @callback_context.should_receive(:system).with("sudo sh -l -c 'do it as root'").and_return(true)
-
-      run_hook { sudo("do it as root") }
+      callback = deploy_hook.callback_context
+      callback.should_receive(:system).with("sudo sh -l -c 'do it as root'").and_return(true)
+      callback.instance_eval { sudo("do it as root") }
     end
   end
 
@@ -123,6 +118,15 @@ describe "the deploy-hook API" do
     end
   end
 
+  context "environment variables" do
+    it "sets the framework env variables" do
+      run_hook('framework_env' => 'production') { ENV['RAILS_ENV'] }.should == 'production'
+      run_hook('framework_env' => 'production') { ENV['RACK_ENV']  }.should == 'production'
+      run_hook('framework_env' => 'production') { ENV['MERB_ENV']  }.should == 'production'
+      run_hook('framework_env' => 'production') { ENV['NODE_ENV']  }.should == 'production'
+    end
+  end
+
   context "has methods to run code only on certain instances" do
     def scenarios
       [
@@ -141,10 +145,11 @@ describe "the deploy-hook API" do
 
     def where_code_runs_with(method, *args)
       scenarios.map do |s|
-        @callback_context.configuration[:current_roles] = s[:instance_role].split(',')
-        @callback_context.configuration[:current_name] = s[:name]
+        hook_result = run_hook('current_roles' => s[:instance_role].split(','), 'current_name' => s[:name]) do
+          send(method, *args) { 'ran!' }
+        end
 
-        if run_hook { send(method, *args) { 'ran!'} } == 'ran!'
+        if hook_result == 'ran!'
           result = s[:instance_role]
           result << "_#{s[:name]}" if s[:name]
           result
@@ -189,14 +194,14 @@ describe "the deploy-hook API" do
   context "#syntax_error" do
     it "returns nil for hook files containing valid Ruby syntax" do
       hook_path = File.expand_path('../fixtures/valid_hook.rb', __FILE__)
-      @hook.syntax_error(hook_path).should be_nil
+      deploy_hook.syntax_error(hook_path).should be_nil
     end
 
     it "returns a brief problem description for hook files containing valid Ruby syntax" do
       hook_path = File.expand_path('../fixtures/invalid_hook.rb', __FILE__)
       desc = "spec/fixtures/invalid_hook.rb:1: syntax error, unexpected '^'"
       match = /#{Regexp.escape desc}/
-      @hook.syntax_error(hook_path).should =~ match
+      deploy_hook.syntax_error(hook_path).should =~ match
     end
   end
 

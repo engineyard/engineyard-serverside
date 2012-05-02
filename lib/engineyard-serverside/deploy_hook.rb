@@ -32,6 +32,7 @@ module EY
       class CallbackContext
         def initialize(config)
           @configuration = config
+          @configuration.set_framework_envs
           @node = node
         end
 
