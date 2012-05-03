@@ -219,6 +219,14 @@ module EY
         @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end
 
+      def precompile_assets?
+        configuration['precompile_assets'] == true
+      end
+
+      def skip_precompile_assets?
+        configuration['precompile_assets'] == false
+      end
+
       def required_downtime_stack?
         %w[ nginx_mongrel glassfish ].include? stack
       end

@@ -11,12 +11,32 @@ describe "Deploying a Rails 3.1 application" do
     end
   end
 
+  context "with asset compilation enabled in ey.yml, despite not otherwise being enabled" do
+    before(:all) do
+      deploy_test_application('assets_enabled_in_ey_yml')
+    end
+
+    it "precompiles assets" do
+      @deploy_dir.join('current', 'precompiled').should exist
+    end
+  end
+
   context "with asset support disabled in its config" do
     before(:all) do
       deploy_test_application('assets_disabled')
     end
 
     it "does not precompile assets" do
+      @deploy_dir.join('current', 'precompiled').should_not exist
+    end
+  end
+
+  context "with asset compilation disabled in ey.yml, despite all other configuration would enable assets" do
+    before(:all) do
+      deploy_test_application('assets_disabled_in_ey_yml')
+    end
+
+    it "precompiles assets" do
       @deploy_dir.join('current', 'precompiled').should_not exist
     end
   end

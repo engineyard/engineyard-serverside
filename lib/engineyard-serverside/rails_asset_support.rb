@@ -6,7 +6,16 @@ module EY
         rails_version = bundled_rails_version
         roles :app_master, :app, :solo do
           keep_existing_assets
-          cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile || true"
+          cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
+
+          unless config.precompile_assets?
+            # If specifically requested, then we want to fail if compilation fails.
+            # If we are implicitly precompiling, we want to fail non-destructively
+            # because we don't know if the rake task exists or if the user
+            # actually intended for assets to be compiled.
+            cmd << %{ || (echo "Asset compilation failure ignored.\n Add 'precompile_assets: true' to ey.yml to abort deploy on failure." && true)}
+          end
+
           if rails_version
             shell.status "Precompiling assets for rails v#{rails_version}"
           else
@@ -17,11 +26,19 @@ module EY
       end
 
       def app_needs_assets?
+        if config.precompile_assets?
+          shell.status "Attempting Rails asset precompilation. (enabled in config)"
+          return true
+        elsif config.skip_precompile_assets?
+          shell.status "Skipping asset precompilation. (disabled in config)"
+          return false
+        end
+
         app_rb_path = File.join(c.release_path, 'config', 'application.rb')
         return unless File.readable?(app_rb_path) # Not a Rails app in the first place.
 
         if File.directory?(File.join(c.release_path, 'app', 'assets'))
-          shell.status "Attempting Rails asset pre-compilation. (found directory: 'app/assets')"
+          shell.status "Attempting Rails asset precompilation. (found directory: 'app/assets')"
         else
           return false
         end
@@ -88,6 +105,7 @@ ln -nfs #{current} #{last_asset_path} #{c.release_path}/public
 
       def bundled_rails_version(lockfile_path = nil)
         lockfile_path ||= File.join(c.release_path, 'Gemfile.lock')
+        return unless File.exist?(lockfile_path)
         lockfile = File.open(lockfile_path) {|f| f.read}
         lockfile.each_line do |line|
           # scan for gemname (version) toplevel deps.

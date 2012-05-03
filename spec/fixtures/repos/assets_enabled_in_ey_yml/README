@@ -1,0 +1,1 @@
+an app that we otherwise wouldn't compile assets, but precompile_assets is set to true in ey.yml

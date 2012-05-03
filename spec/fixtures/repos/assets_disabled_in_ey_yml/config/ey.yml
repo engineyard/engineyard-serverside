@@ -1,0 +1,4 @@
+environments:
+  env:
+    precompile_assets: false
+    maintenance_on_migrate: false
