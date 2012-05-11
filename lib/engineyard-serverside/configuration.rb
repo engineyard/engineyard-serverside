@@ -251,6 +251,10 @@ module EY
         copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
       end
 
+      def ignore_database_adapter_warning?
+        configuration.fetch('ignore_database_adapter_warning', false)
+      end
+
     end
   end
 end

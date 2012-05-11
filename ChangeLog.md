@@ -11,6 +11,7 @@
   * * maintenance\_on\_migrate: true or false (default: true)
   * Control asset precompilation through ey.yml option:
   * * precompile\_assets: true or false (default: nil - means assets compilation will be inferred by app/assets and config/application.rb)
+  * Specify ignore\_database\_adapter\_warning: true to ignore the missing database adapter warning.
 
 ## v1.6.4 (2012-04-26)
 

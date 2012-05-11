@@ -88,7 +88,7 @@ module EY
           shell.status "Gemfile found."
           if lockfile
             shell.status "Gemfile.lock found."
-            unless lockfile.any_database_adapter?
+            if !config.ignore_database_adapter_warning? && !lockfile.any_database_adapter?
               shell.warning <<-WARN
 Gemfile.lock does not contain a recognized database adapter.
 A database-adapter gem such as mysql2, mysql, or do_mysql was expected.
