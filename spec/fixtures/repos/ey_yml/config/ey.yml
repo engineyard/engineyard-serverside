@@ -9,4 +9,5 @@ environments:
     custom: custom_from_ey_yml
     bundle_without: only test
     maintenance_on_migrate: false
+    maintenance_on_restart: false
     ignore_database_adapter_warning: true

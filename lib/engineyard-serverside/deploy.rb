@@ -150,9 +150,15 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       end
 
       def disable_maintenance_page
-        @maintenance_up = false
-        roles :app_master, :app, :solo do
-          run "rm -f #{c.maintenance_page_enabled_path}"
+        if c.enable_maintenance_page?
+          @maintenance_up = false
+          roles :app_master, :app, :solo do
+            run "rm -f #{c.maintenance_page_enabled_path}"
+          end
+        else
+          if File.exists?(c.maintenance_page_enabled_path)
+            shell.notice "[Attention] Maintenance page is still up. You must remove it manually."
+          end
         end
       end
 

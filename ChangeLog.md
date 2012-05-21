@@ -9,6 +9,7 @@
   * Control maintenance page through ey.yml options:
   * * maintenance\_on\_restart: true or false (default: false except for glassfish and mongrel)
   * * maintenance\_on\_migrate: true or false (default: true)
+  * Don't remove maintenance pages that weren't put up during this deploy if maintenance options (above) are not enabled.
   * Control asset precompilation through ey.yml option:
   * * precompile\_assets: true or false (default: nil - means assets compilation will be inferred by app/assets and config/application.rb)
   * Specify ignore\_database\_adapter\_warning: true to ignore the missing database adapter warning.

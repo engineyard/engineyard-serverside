@@ -42,6 +42,17 @@ describe "Deploying an app with ey.yml" do
       @deploy_dir.join('current','maintenance_enabled').should_not exist
     end
 
+    it "does not remove an existing maintenance page" do
+      @deploy_dir.join('current','maintenance_disabled').delete
+      @deployer.enable_maintenance_page
+      @deploy_dir.join('shared','system','maintenance.html').should exist
+      redeploy_test_application
+      read_output.should =~ /Maintenance page is still up. You must remove it manually./
+      @deploy_dir.join('shared','system','maintenance.html').should exist
+      @deploy_dir.join('current','maintenance_disabled').should_not exist
+      @deploy_dir.join('current','maintenance_enabled').should exist
+    end
+
     it "makes custom variables available to hooks" do
       @deploy_dir.join('current', 'custom_hook').read.should include("custom_from_ey_yml")
     end
