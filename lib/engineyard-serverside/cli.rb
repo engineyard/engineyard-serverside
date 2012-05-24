@@ -233,7 +233,7 @@ module EY
 
         servers = EY::Serverside::Server.all.find_all { |server| !server.local? }
 
-        commands = servers.each do |server|
+        commands = servers.map do |server|
           egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
           # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
           # 0.5.11, and mistakenly thinking 0.5.1 is there
