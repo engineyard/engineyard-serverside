@@ -95,7 +95,9 @@ A database-adapter gem such as mysql2, mysql, or do_mysql was expected.
 This can prevent applications that use MySQL or PostreSQL from booting.
 
 To fix, add any needed adapter to your Gemfile, bundle, commit, and redeploy.
-Applications that don't use MySQL or PostgreSQL can safely ignore this warning.
+Applications not using MySQL or PostgreSQL can safely ignore this warning by
+adding ignore_database_adapter_warning: true to the application's ey.yml file
+under this environment's name and adding the file to your repository.
               WARN
             end
           else
