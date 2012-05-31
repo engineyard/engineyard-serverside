@@ -2,17 +2,19 @@
 
 ## NEXT
 
-  * Default bundler version is now 1.1.3
-  * Improved deploy output, especially for --verbose.
-  * Send all log output through a new Shell object that formats and adds timestamps.
-  * Load ey.yml to customize deploy settings.
-  * Control maintenance page through ey.yml options:
-    * maintenance\_on\_restart: true or false (default: false except for glassfish and mongrel)
-    * maintenance\_on\_migrate: true or false (default: true)
-  * Don't remove maintenance pages that weren't put up during this deploy if maintenance options (above) are not enabled.
-  * Control asset precompilation through ey.yml option:
-    * precompile\_assets: true or false (default: nil - means assets compilation will be inferred by app/assets and config/application.rb)
-  * Specify ignore\_database\_adapter\_warning: true to ignore the missing database adapter warning.
+  * Default bundler version is now 1.1.3.
+  * Deploy hooks now have access to `account_name` and `environment_name`.
+  * Improves deploy output, especially for `--verbose`.
+  * Sends all log output through a new Shell object that formats and adds timestamps.
+  * Loads `ey.yml` or `config/ey.yml` to customize deploy settings.
+  * Supports new ey.yml options to control automatic maintenance page:
+  * `maintenance_on_restart: true or false (default: false except for glassfish and mongrel)`
+  * `maintenance_on_migrate: true or false (default: true)`
+  * Don't remove maintenance pages that weren't put up during this deploy if maintenance options (above) are set to false.
+  * Supports new ey.yml options to control asset precompilation:
+  * `precompile_assets: true or false (default: inferred using app/assets and config/application.rb)`
+  * Supports new ey.yml option to ignore the missing database adapter warning:
+  * `ignore_database_adapter_warning: true (default: false)`
 
 ## v1.6.4 (2012-04-26)
 
