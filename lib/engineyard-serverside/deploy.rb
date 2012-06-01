@@ -388,7 +388,7 @@ WRAP
       # task
       def symlink(release_to_link=c.release_path)
         shell.status "Symlinking code."
-        run "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && sudo find #{c.current_path} -not -user #{c.user} -or -not -group #{c.group} -exec chown #{c.user}:#{c.group} {} +"
+        run "rm -f #{c.current_path} && ln -nfs #{release_to_link} #{c.current_path} && find #{c.current_path} -not -user #{c.user} -or -not -group #{c.group} -exec chown #{c.user}:#{c.group} {} +"
         @symlink_changed = true
       rescue Exception
         sudo "rm -f #{c.current_path} && ln -nfs #{c.previous_release(release_to_link)} #{c.current_path} && chown -R #{c.user}:#{c.group} #{c.current_path}"
