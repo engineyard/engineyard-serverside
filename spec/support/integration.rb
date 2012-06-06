@@ -115,12 +115,16 @@ class EY::Serverside::Strategies::IntegrationSpec
   def install_git_base
     repository_cache.mkpath
     git_base = FIXTURES_DIR.join('gitrepo.tar.gz')
-    system "tar xzf #{git_base} --strip-components 1 -C #{repository_cache}"
+    shell.substatus "Test helpers copying base repo into #{repository_cache}"
+    shell.logged_system "tar xzf #{git_base} --strip-components 1 -C #{repository_cache}"
   end
 
   def copy_fixture_repo_files
     if source_repo.exist?
-      system("cp -Rf #{source_repo.join('*')} #{repository_cache}")
+      shell.substatus "Test helpers copying repo fixture from #{source_repo}/ to #{repository_cache}"
+      # This uses a ruby method instead of shelling out because I was having
+      # trouble getting cp -R to behave consistently between distros.
+      FileUtils.cp_r Dir.glob("#{source_repo}/*"), repository_cache
     else
       raise "Mock repo #{source_repo.inspect} does not exist. Path should be absolute. e.g. FIXTURES_DIR.join('repos','example')"
     end
