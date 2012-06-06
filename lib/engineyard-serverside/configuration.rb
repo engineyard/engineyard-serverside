@@ -219,6 +219,10 @@ module EY
         @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end
 
+      def precompile_assets_inferred?
+        !precompile_assets? && !skip_precompile_assets?
+      end
+
       def precompile_assets?
         configuration['precompile_assets'] == true
       end

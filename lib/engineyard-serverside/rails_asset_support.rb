@@ -8,7 +8,7 @@ module EY
           keep_existing_assets
           cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} rake assets:precompile"
 
-          unless config.precompile_assets?
+          if config.precompile_assets_inferred?
             # If specifically requested, then we want to fail if compilation fails.
             # If we are implicitly precompiling, we want to fail non-destructively
             # because we don't know if the rake task exists or if the user
@@ -35,21 +35,25 @@ module EY
         end
 
         app_rb_path = File.join(c.release_path, 'config', 'application.rb')
-        return unless File.readable?(app_rb_path) # Not a Rails app in the first place.
+        unless File.readable?(app_rb_path) # Not a Rails app in the first place.
+          shell.status "Skipping asset precompilation. (not a Rails application)"
+          return false
+        end
 
-        if File.directory?(File.join(c.release_path, 'app', 'assets'))
+        if FileTest.exist?(File.join(c.release_path, 'app', 'assets'))
           shell.status "Attempting Rails asset precompilation. (found directory: 'app/assets')"
         else
+          shell.status "Skipping asset precompilation. (directory not found: 'app/assets')"
           return false
         end
 
         if app_builds_own_assets?
-          shell.status "Skipping asset compilation. (found directory: 'public/assets')"
-          return
+          shell.status "Skipping asset compilation. Already compiled. (found directory: 'public/assets')"
+          return false
         end
         if app_disables_assets?(app_rb_path)
           shell.status "Skipping asset compilation. (application.rb has disabled asset compilation)"
-          return
+          return false
         end
 # This check is very expensive, and has been deemed not worth the time.
 # Leaving this here in case someone comes up with a faster way.
