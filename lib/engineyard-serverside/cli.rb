@@ -233,14 +233,21 @@ module EY
 
         servers = EY::Serverside::Server.all.find_all { |server| !server.local? }
 
+        shell.status "Propagating engineyard-serverside #{EY::Serverside::VERSION} to #{servers.size} server#{servers.size == 1 ? '' : 's' }."
+
         commands = servers.map do |server|
+          shell.debug "Building propagate commands for #{server.hostname}"
+
           egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
           # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
           # 0.5.11, and mistakenly thinking 0.5.1 is there
           has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
           proc do
-            if !run_on_server(server,has_gem_cmd).success? # doesn't have this exact version
+            exists = shell.logged_system(server.command_on_server('sh -l -c', has_gem_cmd))
+            if exists.success?
+              exists # Future expects logged system result object
+            else # doesn't have this exact version
               shell.status "Installing engineyard-serverside on #{server.hostname}"
 
               shell.logged_system(Escape.shell_command([
@@ -249,13 +256,17 @@ module EY
                 local_gem_file,
                "#{config.user}@#{server.hostname}:#{remote_gem_file}",
               ]))
-              run_on_server(server,"sudo #{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'")
+              install_gem_cmd = "#{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'"
+              shell.logged_system(server.command_on_server('sudo sh -l -c', install_gem_cmd))
             end
           end
         end
 
         futures = EY::Serverside::Future.call(commands)
-        EY::Serverside::Future.success?(futures)
+        unless EY::Serverside::Future.success?(futures)
+          failures = futures.select {|f| f.error? }.map {|f| f.inspect}.join("\n")
+          raise EY::Serverside::RemoteFailure.new(failures)
+        end
       end
 
       def init_and_propagate(*args)
@@ -268,6 +279,7 @@ module EY
       def init(options, action)
         config = EY::Serverside::Deploy::Configuration.new(options)
         shell  = EY::Serverside::Shell.new(:verbose  => config.verbose, :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log"))
+        shell.debug "Initializing engineyard-serverside #{EY::Serverside::VERSION}."
         [config, shell]
       end
 

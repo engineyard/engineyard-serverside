@@ -33,6 +33,7 @@ module EY
           when "DEBUG"
             if @verbose
               @stdout << msg
+              @stdout.flush
             end
           when "INFO"
             # Need to differentiate info messages more when we're running in verbose mode
