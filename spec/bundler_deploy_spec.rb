@@ -34,19 +34,19 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "has the binstubs in the path when migrating" do
-      File.read(File.join(@deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
+      File.read(File.join(deploy_dir, 'path-when-migrating')).should include('ey_bundler_binstubs')
     end
 
     it "creates a ruby version file" do
-      File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
+      File.exist?(File.join(deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
     end
 
     it "creates a system version file" do
-      File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
+      File.exist?(File.join(deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
     end
 
     it "generates bundler binstubs" do
-      File.exist?(File.join(@deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
+      File.exist?(File.join(deploy_dir, 'current', 'ey_bundler_binstubs', 'rake')).should be_true
     end
   end
 
@@ -68,11 +68,11 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "creates a ruby version file" do
-      File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
+      File.exist?(File.join(deploy_dir, 'shared', 'bundled_gems', 'RUBY_VERSION')).should be_true
     end
 
     it "creates a system version file" do
-      File.exist?(File.join(@deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
+      File.exist?(File.join(deploy_dir, 'shared', 'bundled_gems', 'SYSTEM_VERSION')).should be_true
     end
 
     it "sets GIT_SSH environment variable" do

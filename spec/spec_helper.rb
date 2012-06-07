@@ -91,11 +91,13 @@ Spec::Runner.configure do |config|
     be_exist
   end
 
+  def deploy_dir
+    @deploy_dir ||= Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
+  end
+
   # When a repo fixture name is specified, the files found in the specified
   # spec/fixtures/repos dir are copied into the test github repository.
   def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
-    @deploy_dir = Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
-
     # set up EY::Serverside::Server like we're on a solo
     EY::Serverside::Server.reset
     EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
@@ -103,10 +105,10 @@ Spec::Runner.configure do |config|
     # run a deploy
     @config = EY::Serverside::Deploy::Configuration.new({
       "strategy"      => "IntegrationSpec",
-      "deploy_to"     => @deploy_dir.to_s,
+      "deploy_to"     => deploy_dir.to_s,
       "group"         => GROUP,
       "stack"         => 'nginx_passenger',
-      "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{@deploy_dir}/path-when-migrating",
+      "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{deploy_dir}/path-when-migrating",
       'app'           => 'rails31',
       'environment_name' => 'env',
       'account_name'  => 'acc',
@@ -116,9 +118,9 @@ Spec::Runner.configure do |config|
     }.merge(extra_config))
 
     # pretend there is a shared bundled_gems directory
-    @deploy_dir.join('shared', 'bundled_gems').mkpath
+    deploy_dir.join('shared', 'bundled_gems').mkpath
     %w(RUBY_VERSION SYSTEM_VERSION).each do |name|
-      @deploy_dir.join('shared', 'bundled_gems', name).open("w") { |f| f.write("old\n") }
+      deploy_dir.join('shared', 'bundled_gems', name).open("w") { |f| f.write("old\n") }
     end
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))

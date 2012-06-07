@@ -7,7 +7,7 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "precompiles assets" do
-      @deploy_dir.join('current', 'precompiled').should exist
+      deploy_dir.join('current', 'precompiled').should exist
     end
   end
 
@@ -17,7 +17,7 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "precompiles assets" do
-      @deploy_dir.join('current', 'precompiled').should exist
+      deploy_dir.join('current', 'precompiled').should exist
     end
   end
 
@@ -27,7 +27,7 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "does not precompile assets" do
-      @deploy_dir.join('current', 'precompiled').should_not exist
+      deploy_dir.join('current', 'precompiled').should_not exist
     end
   end
 
@@ -37,7 +37,7 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "precompiles assets" do
-      @deploy_dir.join('current', 'precompiled').should_not exist
+      deploy_dir.join('current', 'precompiled').should_not exist
     end
   end
 
@@ -47,10 +47,10 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "does not replace the public/assets directory" do
-      @deploy_dir.join('current', 'custom_compiled').should exist
-      @deploy_dir.join('current', 'precompiled').should_not exist
-      @deploy_dir.join('current', 'public', 'assets').should be_directory
-      @deploy_dir.join('current', 'public', 'assets').should_not be_symlink
+      deploy_dir.join('current', 'custom_compiled').should exist
+      deploy_dir.join('current', 'precompiled').should_not exist
+      deploy_dir.join('current', 'public', 'assets').should be_directory
+      deploy_dir.join('current', 'public', 'assets').should_not be_symlink
     end
   end
 end
