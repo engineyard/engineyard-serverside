@@ -60,7 +60,7 @@ module EY
 
       desc "deploy", "Deploy code from /data/<app>"
       def deploy(default_task=:deploy)
-        config, shell = init_and_propagate(options, 'deploy')
+        config, shell = init_and_propagate(options, default_task.to_s)
         EY::Serverside::Deploy.new(config, shell).send(default_task)
       end
 
