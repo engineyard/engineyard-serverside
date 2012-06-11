@@ -231,8 +231,14 @@ module EY
         configuration['precompile_assets'] == false
       end
 
+      # nil if there is no stack (leaving it to method missing causes NoMethodError)
+      def stack
+        configuration['stack']
+      end
+
+      # Assume downtime required if stack is not specified (nil) just in case.
       def required_downtime_stack?
-        %w[ nginx_mongrel glassfish ].include? stack
+        [nil, 'nginx_mongrel', 'glassfish'].include? stack
       end
 
       def enable_maintenance_page_on_restart?
@@ -243,8 +249,14 @@ module EY
         configuration.fetch('maintenance_on_migrate', true)
       end
 
+      # Enable if stack requires it or if overridden in the ey.yml config.
       def enable_maintenance_page?
         enable_maintenance_page_on_restart? || (migrate? && enable_maintenance_page_on_migrate?)
+      end
+
+      # We disable the maintenance page if we would have enabled.
+      def disable_maintenance_page?
+        enable_maintenance_page?
       end
 
       def maintenance_page_enabled_path

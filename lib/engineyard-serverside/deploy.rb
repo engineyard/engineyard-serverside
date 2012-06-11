@@ -44,7 +44,7 @@ module EY
 
         callback(:after_symlink)
         run_with_callbacks(:restart)
-        disable_maintenance_page
+        conditionally_disable_maintenance_page
 
         cleanup_old_releases
         shell.status "Finished deploy at #{Time.now.asctime}"
@@ -138,6 +138,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
           File.exists?(file)
         end
 
+        shell.status "Enabling maintenance page."
         @maintenance_up = true
         roles :app_master, :app, :solo do
           run Escape.shell_command(['mkdir', '-p', File.dirname(c.maintenance_page_enabled_path)])
@@ -148,19 +149,46 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       def conditionally_enable_maintenance_page
         if c.enable_maintenance_page?
           enable_maintenance_page
+        else
+          explain_not_enabling_maintenance_page
+        end
+      end
+
+      def explain_not_enabling_maintenance_page
+        if c.migrate?
+          if !c.enable_maintenance_page_on_migrate? && !c.enable_maintenance_page_on_restart?
+            shell.status "Skipping maintenance page. (maintenance_on_migrate is false in ey.yml)"
+            shell.notice "[Caution] No maintenance migrations must be non-destructive!"
+            shell.notice "Requests may be served during a partially migrated state."
+          end
+        else
+          if c.required_downtime_stack? && !c.enable_maintenance_page_on_restart?
+            shell.status "Skipping maintenance page. (maintenance_on_restart is false in ey.yml, overriding recommended default)"
+            unless File.exist?(c.maintenance_page_enabled_path)
+              shell.warning <<-WARN
+No maintenance page! Brief downtime may be possible during restart.
+This application stack does not support no-downtime restarts.
+              WARN
+            end
+          elsif !c.required_downtime_stack?
+            shell.status "Skipping maintenance page. (no-downtime restarts supported)"
+          end
         end
       end
 
       def disable_maintenance_page
-        if c.enable_maintenance_page?
-          @maintenance_up = false
-          roles :app_master, :app, :solo do
-            run "rm -f #{c.maintenance_page_enabled_path}"
-          end
-        else
-          if File.exists?(c.maintenance_page_enabled_path)
-            shell.notice "[Attention] Maintenance page is still up. You must remove it manually."
-          end
+        shell.status "Removing maintenance page."
+        @maintenance_up = false
+        roles :app_master, :app, :solo do
+          run "rm -f #{c.maintenance_page_enabled_path}"
+        end
+      end
+
+      def conditionally_disable_maintenance_page
+        if c.disable_maintenance_page?
+          disable_maintenance_page
+        elsif File.exists?(c.maintenance_page_enabled_path)
+          shell.notice "[Attention] Maintenance page is still up.\nYou must remove it manually using `ey web enable`."
         end
       end
 
@@ -472,7 +500,7 @@ WRAP
       def with_maintenance_page
         conditionally_enable_maintenance_page
         yield if block_given?
-        disable_maintenance_page
+        conditionally_disable_maintenance_page
       end
 
       def with_failed_release_cleanup
