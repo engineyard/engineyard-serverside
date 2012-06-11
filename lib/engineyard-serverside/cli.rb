@@ -143,16 +143,15 @@ module EY
                                       :aliases  => ["-v"]
       desc "integrate", "Integrate other instances into this cluster"
       def integrate
-
         app_dir = Pathname.new "/data/#{options[:app]}"
-        current_app_dir = app_dir + "current"
+        current_app_dir = app_dir.join("current")
 
         # so that we deploy to the same place there that we have here
         integrate_options = options.dup
         integrate_options[:release_path] = current_app_dir.realpath.to_s
 
         # we have to deploy the same SHA there as here
-        integrate_options[:branch] = (current_app_dir + 'REVISION').read.strip
+        integrate_options[:branch] = current_app_dir.join('REVISION').read.strip
 
         config, shell = init_and_propagate(integrate_options, 'integrate')
 
@@ -162,7 +161,7 @@ module EY
           # first. otherwise, non-idempotent deploy hooks could screw
           # things up, and since we don't control deploy hooks, we must
           # assume the worst.
-          run_on_server(server,"rm -rf #{current_app_dir}")
+          shell.logged_system server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
         end
 
         # deploy local-ref to other instances into /data/$app/local-current
@@ -281,10 +280,6 @@ module EY
         shell  = EY::Serverside::Shell.new(:verbose  => config.verbose, :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log"))
         shell.debug "Initializing engineyard-serverside #{EY::Serverside::VERSION}."
         [config, shell]
-      end
-
-      def run_on_server(server, command)
-        shell.logged_system(server.command_on_server('sh -l -c', command))
       end
 
       def load_servers(config)
