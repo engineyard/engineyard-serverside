@@ -1,10 +1,13 @@
 require 'json'
 require 'thor'
 require 'pp'
+require 'engineyard-serverside/paths'
 
 module EY
   module Serverside
     class Deploy::Configuration
+      include Paths::LegacyHelpers
+
       DEFAULT_CONFIG = Thor::CoreExt::HashWithIndifferentAccess.new({
         "branch"         => "master",
         "strategy"       => "Git",
@@ -31,7 +34,7 @@ module EY
       end
 
       def respond_to?(meth, include_private=false)
-        configuration.key?(meth.to_s) ? true : super
+        configuration.key?(meth.to_s) || super
       end
 
       def load_ey_yml_data(data, shell)
@@ -86,24 +89,38 @@ module EY
         configuration['account_name'].to_s
       end
 
-      def ssh_identity_file
-        "~/.ssh/#{c.app}-deploy-key"
-      end
-
       def strategy_class
         EY::Serverside::Strategies.const_get(strategy)
       end
 
+      def paths
+        @paths ||= Paths.new({
+          :hame             => @home,
+          :app_name         => app_name,
+          :deploy_root      => configuration['deploy_to'],
+          :active_release   => @release_path,
+          :repository_cache => configuration['repository_cache'],
+        })
+      end
+
+      def rollback_paths!
+        if rollback_paths = paths.rollback
+          @paths = rollback_paths
+        else
+          nil
+        end
+      end
+
       def revision
-        IO.read(File.join(latest_release, 'REVISION'))
+        paths.revision.read
       end
 
-      def repository_cache
-        configuration['repository_cache'] || File.join(deploy_to, 'shared', 'cached-copy')
+      def ruby_version_command
+        "ruby -v"
       end
 
-      def deploy_to
-        configuration['deploy_to'] || "/data/#{app}"
+      def system_version_command
+        "uname -m"
       end
 
       def migrate?
@@ -146,23 +163,6 @@ module EY
         configuration['framework_env']
       end
 
-      def latest_release
-        all_releases.last
-      end
-
-      def previous_release(current=latest_release)
-        index = all_releases.index(current)
-        all_releases[index-1]
-      end
-
-      def all_releases
-        Dir.glob("#{release_dir}/*").sort
-      end
-
-      def binstubs_path
-        release_path + '/ey_bundler_binstubs'
-      end
-
       def framework_env_names
         %w[RAILS_ENV RACK_ENV NODE_ENV MERB_ENV]
       end
@@ -173,50 +173,6 @@ module EY
 
       def set_framework_envs
         framework_env_names.each { |e| ENV[e] = environment }
-      end
-
-      def current_path
-        File.join(deploy_to, "current")
-      end
-
-      def shared_path
-        File.join(deploy_to, "shared")
-      end
-
-      def bundled_gems_path
-        File.join(shared_path, "bundled_gems")
-      end
-
-      def gemfile_path
-        File.join(release_path, "Gemfile")
-      end
-
-      def ruby_version_file
-        File.join(bundled_gems_path, "RUBY_VERSION")
-      end
-
-      def ruby_version_command
-        "ruby -v"
-      end
-
-      def system_version_file
-        File.join(bundled_gems_path, "SYSTEM_VERSION")
-      end
-
-      def system_version_command
-        "uname -m"
-      end
-
-      def release_dir
-        File.join(deploy_to, "releases")
-      end
-
-      def failed_release_dir
-        File.join(deploy_to, "releases_failed")
-      end
-
-      def release_path
-        @release_path ||= File.join(release_dir, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end
 
       def precompile_assets_inferred?
@@ -257,10 +213,6 @@ module EY
       # We disable the maintenance page if we would have enabled.
       def disable_maintenance_page?
         enable_maintenance_page?
-      end
-
-      def maintenance_page_enabled_path
-        File.join(shared_path, "system", "maintenance.html")
       end
 
       def exclusions
