@@ -3,10 +3,12 @@ require 'pathname'
 require 'engineyard-serverside/deploy'
 require 'engineyard-serverside/shell'
 require 'engineyard-serverside/server'
+require 'engineyard-serverside/cli_helpers'
 
 module EY
   module Serverside
     class CLI < Thor
+      extend CLIHelpers
 
       method_option :migrate,         :type     => :string,
                                       :desc     => "Run migrations with this deploy",
@@ -19,44 +21,12 @@ module EY
       method_option :repo,            :type     => :string,
                                       :desc     => "Remote repo to deploy",
                                       :aliases  => ["-r"]
-
-      method_option :app,             :type     => :string,
-                                      :required => true,
-                                      :desc     => "Application to deploy",
-                                      :aliases  => ["-a"]
-
-      method_option :environment_name,:type     => :string,
-                                      :required => true,
-                                      :desc     => "Environment name"
-
-      method_option :account_name,    :type     => :string,
-                                      :required => true,
-                                      :desc     => "Account name"
-
-      method_option :framework_env,   :type     => :string,
-                                      :desc     => "Ruby web framework environment",
-                                      :aliases  => ["-e"]
-
-      method_option :config,          :type     => :string,
-                                      :desc     => "Additional configuration"
-
-      method_option :stack,           :type     => :string,
-                                      :desc     => "Web stack (so we can restart it correctly)"
-
-      method_option :instances,       :type     => :array,
-                                      :desc     => "Hostnames of instances to deploy to, e.g. --instances localhost app1 app2"
-
-      method_option :instance_roles,  :type     => :hash,
-                                      :default  => {},
-                                      :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
-
-      method_option :instance_names,  :type     => :hash,
-                                      :default  => {},
-                                      :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
-
-      method_option :verbose,         :type     => :boolean,
-                                      :desc     => "Verbose output",
-                                      :aliases  => ["-v"]
+      account_app_env_options
+      config_option
+      framework_env_option
+      instances_options
+      stack_option
+      verbose_option
 
       desc "deploy", "Deploy code from /data/<app>"
       def deploy(default_task=:deploy)
@@ -64,18 +34,7 @@ module EY
         EY::Serverside::Deploy.new(config, shell).send(default_task)
       end
 
-      method_option :app,           :type     => :string,
-                                    :required => true,
-                                    :desc     => "Which application's hooks to run",
-                                    :aliases  => ["-a"]
 
-      method_option :environment_name, :type     => :string,
-                                       :required => true,
-                                       :desc     => "Environment name"
-
-      method_option :account_name,  :type     => :string,
-                                    :required => true,
-                                    :desc     => "Account name"
 
       method_option :release_path,  :type     => :string,
                                     :desc     => "Value for #release_path in hooks (mostly for internal coordination)",
@@ -84,63 +43,24 @@ module EY
       method_option :current_roles, :type     => :array,
                                     :desc     => "Value for #current_roles in hooks"
 
-      method_option :framework_env, :type     => :string,
-                                    :required => true,
-                                    :desc     => "Ruby web framework environment",
-                                    :aliases  => ["-e"]
-
-      method_option :config,        :type     => :string,
-                                    :desc     => "Additional configuration"
-
       method_option :current_name,  :type     => :string,
                                     :desc     => "Value for #current_name in hooks"
-
-      method_option :verbose,       :type     => :boolean,
-                                    :desc     => "Verbose output",
-                                    :aliases  => ["-v"]
-
+      account_app_env_options
+      config_option
+      framework_env_option
+      verbose_option
       desc "hook [NAME]", "Run a particular deploy hook"
       def hook(hook_name)
         config, shell = init(options, "hook-#{hook_name}")
         EY::Serverside::DeployHook.new(config, shell).run(hook_name)
       end
 
-
-      method_option :app,             :type     => :string,
-                                      :required => true,
-                                      :desc     => "Application to deploy",
-                                      :aliases  => ["-a"]
-
-      method_option :environment_name,:type     => :string,
-                                      :required => true,
-                                      :desc     => "Environment name"
-
-      method_option :account_name,    :type     => :string,
-                                      :required => true,
-                                      :desc     => "Account name"
-
-      method_option :framework_env,   :type     => :string,
-                                      :required => true,
-                                      :desc     => "Ruby web framework environment",
-                                      :aliases  => ["-e"]
-
-      method_option :stack,           :type     => :string,
-                                      :desc     => "Web stack (so we can restart it correctly)"
-
-      method_option :instances,       :type     => :array,
-                                      :desc     => "Hostnames of instances to deploy to, e.g. --instances localhost app1 app2"
-
-      method_option :instance_roles,  :type     => :hash,
-                                      :default  => {},
-                                      :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
-
-      method_option :instance_names,  :type     => :hash,
-                                      :default  => {},
-                                      :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
-
-      method_option :verbose,         :type     => :boolean,
-                                      :desc     => "Verbose output",
-                                      :aliases  => ["-v"]
+      account_app_env_options
+      config_option
+      framework_env_option
+      instances_options
+      stack_option
+      verbose_option
       desc "integrate", "Integrate other instances into this cluster"
       def integrate
         app_dir = Pathname.new "/data/#{options[:app]}"
@@ -168,36 +88,10 @@ module EY
         EY::Serverside::Deploy.new(config, shell).cached_deploy
       end
 
-      method_option :app,             :type     => :string,
-                                      :required => true,
-                                      :desc     => "Application to deploy",
-                                      :aliases  => ["-a"]
-
-      method_option :environment_name,:type     => :string,
-                                      :required => true,
-                                      :desc     => "Environment name"
-
-      method_option :account_name,    :type     => :string,
-                                      :required => true,
-                                      :desc     => "Account name"
-
-      method_option :stack,           :type     => :string,
-                                      :desc     => "Web stack (so we can restart it correctly)"
-
-      method_option :instances,       :type     => :array,
-                                      :desc     => "Hostnames of instances to deploy to, e.g. --instances localhost app1 app2"
-
-      method_option :instance_roles,  :type     => :hash,
-                                      :default  => {},
-                                      :desc     => "Roles of instances, keyed on hostname, comma-separated. e.g. instance1:app_master,etc instance2:db,memcached ..."
-
-      method_option :instance_names,  :type     => :hash,
-                                      :default  => {},
-                                      :desc     => "Instance names, keyed on hostname. e.g. instance1:name1 instance2:name2"
-
-      method_option :verbose,         :type     => :boolean,
-                                      :desc     => "Verbose output",
-                                      :aliases  => ["-v"]
+      account_app_env_options
+      instances_options
+      stack_option
+      verbose_option
       desc "restart", "Restart app servers, conditionally enabling maintenance page"
       def restart
         config, shell = init_and_propagate(options, 'restart')
