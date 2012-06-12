@@ -37,7 +37,10 @@ describe "deploy hooks" do
   context "deploy hook API" do
 
     def deploy_hook(options={})
-      config = EY::Serverside::Deploy::Configuration.new(options)
+      config = EY::Serverside::Deploy::Configuration.new({
+        'framework_env' => 'staging',
+        'current_roles' => ['solo'],
+      }.merge(options))
       EY::Serverside::DeployHook.new(config, test_shell)
     end
 
@@ -191,7 +194,7 @@ describe "deploy hooks" do
 
       def where_code_runs_with(code)
         scenarios.select do |role, name|
-          hook = deploy_hook(:current_roles => role.split(','), :current_name => name)
+          hook = deploy_hook('current_roles' => role.split(','), 'current_name' => name)
           hook.eval_hook("#{code} { 'ran' } == 'ran'")
         end.map do |scenario|
           scenario.compact.join("_")
@@ -246,7 +249,7 @@ describe "deploy hooks" do
 
     context "is compatible with older deploy hook scripts" do
       it "#current_role returns the first role" do
-        deploy_hook(:current_roles => %w(a b)).eval_hook('current_role').should == 'a'
+        deploy_hook('current_roles' => %w(a b)).eval_hook('current_role').should == 'a'
       end
 
       it "has info, warning, debug, logged_system, and access to shell" do

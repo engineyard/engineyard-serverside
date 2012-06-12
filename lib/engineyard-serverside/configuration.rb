@@ -8,48 +8,113 @@ module EY
     class Deploy::Configuration
       include Paths::LegacyHelpers
 
-      DEFAULT_CONFIG = Thor::CoreExt::HashWithIndifferentAccess.new({
-        "branch"         => "master",
-        "strategy"       => "Git",
-        "bundle_without" => "test development",
-      })
+      # Defines a fetch method for the specified key.
+      # If no default and no block is specified, it means the key is required
+      # and if it's accessed without a value, it should raise.
+      def self.def_option(name, default=nil, key=nil, &block)
+        key ||= name.to_s
+        if block_given?
+          define_method(name) { fetch(key) {instance_eval(&block)} }
+        else
+          define_method(name) { fetch(key, default) }
+        end
+      end
 
-      attr_writer :release_path
+      # Calls def_option and adds a name? predicate method
+      def self.def_boolean_option(name, default=nil, &block)
+        def_option(name, default, &block)
+        alias_method(:"#{name}?", name)
+      end
 
-      def initialize(options={})
-        opts = options.inject({}) { |h,(k,v)| h[k.to_s] = v; h }
-        @release_path = opts['release_path']
+      # Required options do not have a default value.
+      # An option being required does not mean that it is always supplied,
+      # it just means that if it is accessed and it does not exist, an error
+      # will be raised instead of returning a nil default value.
+      def self.def_required_option(name, key=nil)
+        key ||= name.to_s
+        define_method(name) do
+          fetch(key) { raise "Required configuration option not found: #{key.inspect}" }
+        end
+      end
+
+      def_required_option :app
+      def_required_option :environment_name
+      def_required_option :account_name
+      def_required_option :framework_env
+      def_required_option :instances
+      def_required_option :instance_roles
+      def_required_option :instance_names
+
+      def_option :repo,              nil
+      def_option :migrate,           nil
+      def_option :precompile_assets, nil
+      def_option :stack,             nil
+      def_option :strategy,          'Git'
+      def_option :branch,            'master'
+      def_option :bundle_without,    'test development'
+      def_option :current_roles,     []
+      def_option :copy_exclude,      []
+      def_option(:user)              { ENV['USER'] }
+      def_option(:group)             { user }
+
+      def_boolean_option :verbose,                         false
+      def_boolean_option :ignore_database_adapter_warning, false
+      def_boolean_option :maintenance_on_migrate,          true
+      def_boolean_option(:maintenance_on_restart)          { required_downtime_stack? }
+
+      alias app_name app
+      alias environment framework_env # legacy because it would be nice to have less confusion around "environment"
+      alias migration_command migrate
+
+      def initialize(options)
+        opts = string_keys(options)
         config = JSON.parse(opts.delete("config") || "{}")
-        @configs = [config, opts] # low to high priority
+        append_config_source opts # high priority
+        append_config_source config # lower priority
+      end
+
+      def string_keys(hsh)
+        hsh.inject({}) { |h,(k,v)| h[k.to_s] = v; h }
+      end
+
+      def append_config_source(config_source)
+        @config_sources ||= []
+        @config_sources.unshift(config_source.dup)
+        reload_configuration!
       end
 
       def configuration
-        @configuration ||= @configs.inject(DEFAULT_CONFIG) {|low,high| low.merge(high)}
+        @configuration ||= @config_sources.inject({}) {|low,high| low.merge(high)}
       end
-      alias :c :configuration # FIXME: awful, but someone is probably using it :(
+      # FIXME: single letter variable is of very questionable value
+      alias :c :configuration
 
-      # Delegate to the configuration objects
-      def method_missing(meth, *args, &blk)
-        configuration.key?(meth.to_s) ? configuration[meth.to_s] : super
-      end
-
-      def respond_to?(meth, include_private=false)
-        configuration.key?(meth.to_s) || super
+      # reset cached configuration hash
+      def reload_configuration!
+        @configuration = nil
       end
 
       def load_ey_yml_data(data, shell)
         environments = data['environments']
-        if environments && (env_data = environments[environment_name])
+        if environments && environments[environment_name]
           shell.substatus "ey.yml configuration loaded for environment #{environment_name.inspect}."
-          shell.debug "#{environment_name}: #{env_data.pretty_inspect}"
-          @configuration = nil # reset cached configuration hash
-          @configs.unshift(env_data) # insert just above default configuration
+
+          env_data = string_keys(environments[environment_name])
+          shell.debug "#{environment_name}:\n#{env_data.pretty_inspect}"
+
+          append_config_source(string_keys(env_data)) # insert at lowest priority so as not to disturb important config
           true
         else
           shell.info "No matching ey.yml configuration found for environment #{environment_name.inspect}."
           shell.debug "ey.yml:\n#{data.pretty_inspect}"
           false
         end
+      end
+
+      # Fetch a key from the config.
+      # You must supply either a default second argument, or a default block
+      def fetch(key, *args, &block)
+        configuration.fetch(key.to_s, *args, &block)
       end
 
       def [](key)
@@ -64,6 +129,15 @@ module EY
         respond_to?(key.to_sym) || configuration.has_key?(key)
       end
 
+      # Delegate to the configuration objects
+      def method_missing(meth, *args, &blk)
+        configuration.key?(meth.to_s) ? configuration.fetch(meth.to_s) : super
+      end
+
+      def respond_to?(meth, include_private=false)
+        configuration.key?(meth.to_s) || super
+      end
+
       def to_json
         configuration.to_json
       end
@@ -72,43 +146,27 @@ module EY
         EY::Serverside.node
       end
 
-      def verbose
-        configuration['verbose']
-      end
-
-      def app
-        configuration['app'].to_s
-      end
-      alias app_name app
-
-      def environment_name
-        configuration['environment_name'].to_s
-      end
-
-      def account_name
-        configuration['account_name'].to_s
-      end
-
       def strategy_class
         EY::Serverside::Strategies.const_get(strategy)
       end
 
       def paths
         @paths ||= Paths.new({
-          :hame             => @home,
+          :home             => configuration['home_path'],
           :app_name         => app_name,
           :deploy_root      => configuration['deploy_to'],
-          :active_release   => @release_path,
+          :active_release   => configuration['release_path'],
           :repository_cache => configuration['repository_cache'],
         })
       end
 
       def rollback_paths!
-        if rollback_paths = paths.rollback
+        rollback_paths = paths.rollback
+        if rollback_paths
           @paths = rollback_paths
-          paths.latest_release
+          true
         else
-          nil
+          false
         end
       end
 
@@ -121,43 +179,15 @@ module EY
       end
 
       def migrate?
-        !!configuration['migrate']
-      end
-
-      def migration_command
-        configuration['migrate'] == "migrate" ? DEFAULT_CONFIG["migrate"] : configuration['migrate']
-      end
-
-      def bundle_without
-        configuration['bundle_without']
-      end
-
-      def user
-        configuration['user'] || ENV['USER']
-      end
-
-      def group
-        configuration['group'] || user
+        !!migration_command
       end
 
       def role
         node['instance_role']
       end
 
-      def current_roles
-        configuration['current_roles'] || []
-      end
-
       def current_role
         current_roles.first
-      end
-
-      def copy_exclude
-        @copy_exclude ||= Array(configuration.fetch("copy_exclude", []))
-      end
-
-      def environment
-        configuration['framework_env']
       end
 
       def framework_env_names
@@ -165,7 +195,7 @@ module EY
       end
 
       def framework_envs
-        framework_env_names.map { |e| "#{e}=#{environment}" }.join(' ')
+        framework_env_names.map { |e| "#{e}=#{framework_env}" }.join(' ')
       end
 
       def set_framework_envs
@@ -177,16 +207,11 @@ module EY
       end
 
       def precompile_assets?
-        configuration['precompile_assets'] == true
+        precompile_assets == true
       end
 
       def skip_precompile_assets?
-        configuration['precompile_assets'] == false
-      end
-
-      # nil if there is no stack (leaving it to method missing causes NoMethodError)
-      def stack
-        configuration['stack']
+        precompile_assets == false
       end
 
       # Assume downtime required if stack is not specified (nil) just in case.
@@ -194,30 +219,14 @@ module EY
         [nil, 'nginx_mongrel', 'glassfish'].include? stack
       end
 
-      def enable_maintenance_page_on_restart?
-        configuration.fetch('maintenance_on_restart', required_downtime_stack?)
-      end
-
-      def enable_maintenance_page_on_migrate?
-        configuration.fetch('maintenance_on_migrate', true)
-      end
-
       # Enable if stack requires it or if overridden in the ey.yml config.
       def enable_maintenance_page?
-        enable_maintenance_page_on_restart? || (migrate? && enable_maintenance_page_on_migrate?)
+        maintenance_on_restart? || (migrate? && maintenance_on_migrate?)
       end
 
       # We disable the maintenance page if we would have enabled.
       def disable_maintenance_page?
         enable_maintenance_page?
-      end
-
-      def exclusions
-        copy_exclude.map { |e| %|--exclude="#{e}"| }.join(' ')
-      end
-
-      def ignore_database_adapter_warning?
-        configuration.fetch('ignore_database_adapter_warning', false)
       end
 
     end

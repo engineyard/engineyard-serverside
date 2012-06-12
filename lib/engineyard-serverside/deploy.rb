@@ -156,13 +156,13 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
       def explain_not_enabling_maintenance_page
         if c.migrate?
-          if !c.enable_maintenance_page_on_migrate? && !c.enable_maintenance_page_on_restart?
+          if !c.maintenance_on_migrate? && !c.maintenance_on_restart?
             shell.status "Skipping maintenance page. (maintenance_on_migrate is false in ey.yml)"
             shell.notice "[Caution] No maintenance migrations must be non-destructive!"
             shell.notice "Requests may be served during a partially migrated state."
           end
         else
-          if c.required_downtime_stack? && !c.enable_maintenance_page_on_restart?
+          if c.required_downtime_stack? && !c.maintenance_on_restart?
             shell.status "Skipping maintenance page. (maintenance_on_restart is false in ey.yml, overriding recommended default)"
             unless File.exist?(c.maintenance_page_enabled_path)
               shell.warning <<-WARN
@@ -288,8 +288,9 @@ chmod 0700 #{path}
 
       # task
       def rollback
-        if rolled_back_release = c.rollback_paths!
+        if c.rollback_paths!
           begin
+            rolled_back_release = c.paths.latest_release
             shell.status "Rolling back to previous release: #{short_log_message(c.active_revision)}"
             run_with_callbacks(:symlink)
             sudo "rm -rf #{rolled_back_release}"
@@ -322,7 +323,8 @@ chmod 0700 #{path}
       # task
       def copy_repository_cache
         shell.status "Copying to #{c.release_path}"
-        run("mkdir -p #{c.release_path} #{c.failed_release_dir} && rsync -aq #{c.exclusions} #{c.repository_cache}/ #{c.release_path}")
+        exclusions = Array(c.copy_exclude).map { |e| %|--exclude="#{e}"| }.join(' ')
+        run("mkdir -p #{c.release_path} #{c.failed_release_dir} && rsync -aq #{exclusions} #{c.repository_cache}/ #{c.release_path}")
 
         shell.status "Ensuring proper ownership."
         sudo("chown -R #{c.user}:#{c.group} #{c.release_path} #{c.failed_release_dir}")
@@ -468,7 +470,7 @@ WRAP
         cmd << '--environment-name' << config.environment_name
         cmd << '--account-name'     << config.account_name
         cmd << '--release-path'     << config.release_path.to_s
-        cmd << '--framework-env'    << config.environment.to_s
+        cmd << '--framework-env'    << config.framework_env.to_s
         cmd << '--verbose' if config.verbose
         cmd
       end

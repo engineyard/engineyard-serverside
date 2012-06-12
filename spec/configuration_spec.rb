@@ -6,6 +6,7 @@ describe EY::Serverside::Deploy::Configuration do
       @tempdir = `mktemp -d -t ey_yml_spec.XXXXX`.strip
       @config = EY::Serverside::Deploy::Configuration.new({
         'repository_cache' => @tempdir,
+        'app' => 'app_name',
         'environment_name' => 'env_name',
         'account_name' => 'acc',
         'migrate' => nil,

@@ -33,7 +33,12 @@ describe "the EY::Serverside::Deploy API" do
       def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
     end
 
-    td = TestDeploy.new(EY::Serverside::Deploy::Configuration.new, test_shell)
+    config = EY::Serverside::Deploy::Configuration.new({
+      'app' => 'app_name',
+      'framework_env' => 'staging',
+    })
+
+    td = TestDeploy.new(config, test_shell)
     td.deploy
     td.call_order.should == %w(
       push_code
@@ -58,7 +63,7 @@ describe "the EY::Serverside::Deploy API" do
 
     before(:each) do
       @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
-      @config = EY::Serverside::Deploy::Configuration.new('repository_cache' => @tempdir)
+      @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir)
       @deploy = TestQuietDeploy.new(@config, test_shell)
     end
 
