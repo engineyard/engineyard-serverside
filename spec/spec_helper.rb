@@ -95,12 +95,16 @@ Spec::Runner.configure do |config|
     @deploy_dir ||= Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
   end
 
+  # set up EY::Serverside::Server like we're on a solo
+  def setup_test_servers
+    EY::Serverside::Server.reset
+    EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
+  end
+
   # When a repo fixture name is specified, the files found in the specified
   # spec/fixtures/repos dir are copied into the test github repository.
   def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
-    # set up EY::Serverside::Server like we're on a solo
-    EY::Serverside::Server.reset
-    EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
+    setup_test_servers
 
     # run a deploy
     @config = EY::Serverside::Deploy::Configuration.new({
