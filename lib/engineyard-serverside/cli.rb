@@ -117,8 +117,7 @@ module EY
       private
 
       # Put the same engineyard-serverside on all the servers (Used to be public but is unused as an actual CLI command now)
-      def propagate(shell)
-        config          = EY::Serverside::Deploy::Configuration.new
+      def propagate(config, shell)
         gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
         local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
         remote_gem_file = File.join(Dir.tmpdir, gem_filename)
@@ -165,7 +164,7 @@ module EY
       def init_and_propagate(*args)
         config, shell = init(*args)
         load_servers(config)
-        propagate(shell)
+        propagate(config, shell)
         [config, shell]
       end
 
