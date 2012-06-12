@@ -21,7 +21,9 @@ module EY
         def system_version_file()           paths.system_version.to_s                   end
         def binstubs_path()                 paths.binstubs.to_s                         end
         def gemfile_path()                  paths.gemfile.to_s                          end
-        def revision()                      paths.latest_revision.read                  end
+        def active_revision()               paths.active_revision.read.strip            end
+        def latest_revision()               paths.latest_revision.read.strip            end
+        alias revision latest_revision
         def ssh_identity_file()             paths.ssh_identity.to_s                     end
       end
 
@@ -44,15 +46,17 @@ module EY
       def_path :ruby_version,             [:bundled_gems,   'RUBY_VERSION']
       def_path :system_version,           [:bundled_gems,   'SYSTEM_VERSION']
       def_path :latest_revision,          [:latest_release, 'REVISION']
+      def_path :active_revision,          [:active_release, 'REVISION']
       def_path :binstubs,                 [:active_release, 'ey_bundler_binstubs']
       def_path :gemfile,                  [:active_release, 'Gemfile']
 
       def initialize(opts)
-        @home             = Pathname.new(opts[:hame] || ENV['HOME'])
-        @app_name         = opts[:app_name]
-        @active_release   = Pathname.new(opts[:active_release])   if opts[:active_release]
-        @repository_cache = Pathname.new(opts[:repository_cache]) if opts[:repository_cache]
-        @deploy_root      = Pathname.new(opts[:deploy_root] || "/data/#{@app_name}")
+        @opts             = opts
+        @home             = Pathname.new(@opts[:hame] || ENV['HOME'])
+        @app_name         = @opts[:app_name]
+        @active_release   = Pathname.new(@opts[:active_release])   if @opts[:active_release]
+        @repository_cache = Pathname.new(@opts[:repository_cache]) if @opts[:repository_cache]
+        @deploy_root      = Pathname.new(@opts[:deploy_root] || "/data/#{@app_name}")
       end
 
       def ssh_identity

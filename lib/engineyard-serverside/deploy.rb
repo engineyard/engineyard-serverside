@@ -288,20 +288,22 @@ chmod 0700 #{path}
 
       # task
       def rollback
-        if c.all_releases.size > 1
-          rolled_back_release = c.latest_release
-          c.release_path = c.previous_release(rolled_back_release)
-
-          revision = File.read(File.join(c.release_path, 'REVISION')).strip
-          shell.status "Rolling back to previous release: #{short_log_message(revision)}"
-
-          run_with_callbacks(:symlink)
-          sudo "rm -rf #{rolled_back_release}"
-          bundle
-          shell.status "Restarting with previous release."
-          with_maintenance_page { run_with_callbacks(:restart) }
+        if rolled_back_release = c.rollback_paths!
+          begin
+            shell.status "Rolling back to previous release: #{short_log_message(c.active_revision)}"
+            run_with_callbacks(:symlink)
+            sudo "rm -rf #{rolled_back_release}"
+            bundle
+            shell.status "Restarting with previous release."
+            with_maintenance_page { run_with_callbacks(:restart) }
+            shell.status "Finished rollback at #{Time.now.asctime}"
+          rescue Exception
+            shell.status "Failed to rollback at #{Time.now.asctime}"
+            puts_deploy_failure
+            raise
+          end
         else
-          shell.status "Already at oldest release, nothing to roll back to."
+          shell.fatal "Already at oldest release, nothing to roll back to."
           exit(1)
         end
       end

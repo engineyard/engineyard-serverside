@@ -106,13 +106,10 @@ module EY
       def rollback_paths!
         if rollback_paths = paths.rollback
           @paths = rollback_paths
+          paths.latest_release
         else
           nil
         end
-      end
-
-      def revision
-        paths.revision.read
       end
 
       def ruby_version_command
