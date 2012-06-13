@@ -38,7 +38,7 @@ describe "the EY::Serverside::Deploy API" do
       'framework_env' => 'staging',
     })
 
-    td = TestDeploy.new(config, test_shell)
+    td = TestDeploy.new(test_servers, config, test_shell)
     td.deploy
     td.call_order.should == %w(
       push_code
@@ -64,7 +64,7 @@ describe "the EY::Serverside::Deploy API" do
     before(:each) do
       @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
       @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir)
-      @deploy = TestQuietDeploy.new(@config, test_shell)
+      @deploy = TestQuietDeploy.new(test_servers, @config, test_shell)
     end
 
     def write_eydeploy(relative_path, contents = "def got_new_methods() 'from the file on disk' end")
@@ -96,7 +96,7 @@ describe "the EY::Serverside::Deploy API" do
         def value() 'base' end
       end
 
-      deploy = TestDeploySuper.new(@config, test_shell)
+      deploy = TestDeploySuper.new(test_servers, @config, test_shell)
       deploy.require_custom_tasks.should be_true
       deploy.value.should == "base + derived"
     end

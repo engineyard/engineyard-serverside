@@ -2,7 +2,7 @@ require 'thor'
 require 'pathname'
 require 'engineyard-serverside/deploy'
 require 'engineyard-serverside/shell'
-require 'engineyard-serverside/server'
+require 'engineyard-serverside/servers'
 require 'engineyard-serverside/cli_helpers'
 
 module EY
@@ -30,8 +30,8 @@ module EY
 
       desc "deploy", "Deploy code from /data/<app>"
       def deploy(default_task=:deploy)
-        config, shell = init_and_propagate(options, default_task.to_s)
-        EY::Serverside::Deploy.new(config, shell).send(default_task)
+        servers, config, shell = init_and_propagate(options, default_task.to_s)
+        EY::Serverside::Deploy.new(servers, config, shell).send(default_task)
       end
 
 
@@ -73,9 +73,9 @@ module EY
         # we have to deploy the same SHA there as here
         integrate_options[:branch] = current_app_dir.join('REVISION').read.strip
 
-        config, shell = init_and_propagate(integrate_options, 'integrate')
+        servers, config, shell = init_and_propagate(integrate_options, 'integrate')
 
-        EY::Serverside::Server.all.each do |server|
+        servers.each do |server|
           shell.logged_system server.sync_directory_command(app_dir)
           # we're just about to recreate this, so it has to be gone
           # first. otherwise, non-idempotent deploy hooks could screw
@@ -85,7 +85,7 @@ module EY
         end
 
         # deploy local-ref to other instances into /data/$app/local-current
-        EY::Serverside::Deploy.new(config, shell).cached_deploy
+        EY::Serverside::Deploy.new(servers, config, shell).cached_deploy
       end
 
       account_app_env_options
@@ -94,9 +94,9 @@ module EY
       verbose_option
       desc "restart", "Restart app servers, conditionally enabling maintenance page"
       def restart
-        config, shell = init_and_propagate(options, 'restart')
+        servers, config, shell = init_and_propagate(options, 'restart')
 
-        EY::Serverside::Deploy.new(config, shell).restart_with_maintenance_page
+        EY::Serverside::Deploy.new(servers, config, shell).restart_with_maintenance_page
       end
 
       desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
@@ -117,13 +117,15 @@ module EY
       private
 
       # Put the same engineyard-serverside on all the servers (Used to be public but is unused as an actual CLI command now)
-      def propagate(config, shell)
+      def propagate(servers, config, shell)
         gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
         local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
         remote_gem_file = File.join(Dir.tmpdir, gem_filename)
         gem_binary      = File.join(Gem.default_bindir, 'gem')
 
-        servers = EY::Serverside::Server.all.find_all { |server| !server.local? }
+        servers = servers.remote
+
+        return if servers.empty?
 
         shell.status "Propagating engineyard-serverside #{EY::Serverside::VERSION} to #{servers.size} server#{servers.size == 1 ? '' : 's' }."
 
@@ -163,9 +165,9 @@ module EY
 
       def init_and_propagate(*args)
         config, shell = init(*args)
-        load_servers(config)
-        propagate(config, shell)
-        [config, shell]
+        servers = load_servers(config)
+        propagate(servers, config, shell)
+        [servers, config, shell]
       end
 
       def init(options, action)
@@ -179,7 +181,7 @@ module EY
       end
 
       def load_servers(config)
-        EY::Serverside::Server.load_all_from_array(assemble_instance_hashes(config))
+        EY::Serverside::Servers.from_hashes(assemble_instance_hashes(config))
       end
 
       def assemble_instance_hashes(config)

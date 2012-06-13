@@ -67,7 +67,7 @@ module EY
       end
 
       def parse_configured_services
-        result = YAML.load_file "#{c.shared_path}/config/ey_services_config_deploy.yml"
+        result = YAML.load_file "#{c.paths.shared_config}/ey_services_config_deploy.yml"
         return {} unless result.is_a?(Hash)
         result
       rescue
@@ -201,7 +201,7 @@ This application stack does not support no-downtime restarts.
       # task
       def push_code
         shell.status "Pushing code to all servers"
-        commands = EY::Serverside::Server.all.reject { |server| server.local? }.map do |server|
+        commands = servers.remote.map do |server|
           cmd = server.sync_directory_command(config.repository_cache)
           proc { shell.logged_system(cmd) }
         end
@@ -257,7 +257,7 @@ chmod 0700 #{path}
       end
 
       def ssh_wrapper_path
-        "#{c.shared_path}/config/#{c.app}-ssh-wrapper"
+        "#{c.paths.shared_config}/#{c.app}-ssh-wrapper"
       end
 
       # task
@@ -313,8 +313,8 @@ chmod 0700 #{path}
       def migrate
         return unless c.migrate?
         @migrations_reached = true
+        cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} #{c.migration_command}"
         roles :app_master, :solo do
-          cmd = "cd #{c.release_path} && PATH=#{c.binstubs_path}:$PATH #{c.framework_envs} #{c.migration_command}"
           shell.status "Migrating: #{cmd}"
           run(cmd)
         end
@@ -324,7 +324,7 @@ chmod 0700 #{path}
       def copy_repository_cache
         shell.status "Copying to #{c.release_path}"
         exclusions = Array(c.copy_exclude).map { |e| %|--exclude="#{e}"| }.join(' ')
-        run("mkdir -p #{c.release_path} #{c.failed_release_dir} && rsync -aq #{exclusions} #{c.repository_cache}/ #{c.release_path}")
+        run("mkdir -p #{c.release_path} #{c.failed_release_dir} #{c.paths.shared_config} && rsync -aq #{exclusions} #{c.repository_cache}/ #{c.release_path}")
 
         shell.status "Ensuring proper ownership."
         sudo("chown -R #{c.user}:#{c.group} #{c.release_path} #{c.failed_release_dir}")
@@ -369,7 +369,7 @@ Deploy again if your services configuration appears incomplete or out of date.
            ["Creating SQLite database if needed", "touch #{c.shared_path}/databases/#{c.framework_env}.sqlite3"],
            ["Create config directory if needed", "mkdir -p #{c.release_path}/config"],
            ["Generating SQLite config", <<-WRAP],
-cat > #{c.shared_path}/config/database.sqlite3.yml<<'YML'
+cat > #{c.paths.shared_config}/database.sqlite3.yml<<'YML'
 #{c.framework_env}:
   adapter: sqlite3
   database: #{c.shared_path}/databases/#{c.framework_env}.sqlite3
@@ -377,7 +377,7 @@ cat > #{c.shared_path}/config/database.sqlite3.yml<<'YML'
   timeout: 5000
 YML
 WRAP
-           ["Symlink database.yml", "ln -nfs #{c.shared_path}/config/database.sqlite3.yml #{c.release_path}/config/database.yml"],
+           ["Symlink database.yml", "ln -nfs #{c.paths.shared_config}/database.sqlite3.yml #{c.release_path}/config/database.yml"],
           ].each do |what, cmd|
             shell.status "#{what}"
             run(cmd)
@@ -405,15 +405,15 @@ WRAP
           ["Set group write permissions", "chmod -R g+w #{release_to_link}"],
           ["Remove revision-tracked shared directories from deployment", "rm -rf #{release_to_link}/log #{release_to_link}/public/system #{release_to_link}/tmp/pids"],
           ["Create tmp directory", "mkdir -p #{release_to_link}/tmp"],
-          ["Symlink shared log directory", "ln -nfs #{c.shared_path}/log #{release_to_link}/log"],
+          ["Symlink shared log directory", "ln -nfs #{c.paths.shared_log} #{release_to_link}/log"],
           ["Create public directory if needed", "mkdir -p #{release_to_link}/public"],
           ["Create config directory if needed", "mkdir -p #{release_to_link}/config"],
-          ["Create system directory if needed", "ln -nfs #{c.shared_path}/system #{release_to_link}/public/system"],
+          ["Create system directory if needed", "ln -nfs #{c.paths.shared_system} #{release_to_link}/public/system"],
           ["Symlink shared pids directory", "ln -nfs #{c.shared_path}/pids #{release_to_link}/tmp/pids"],
-          ["Symlink other shared config files", "find #{c.shared_path}/config -type f -not -name 'database.yml' -exec ln -s {} #{release_to_link}/config \\;"],
-          ["Symlink mongrel_cluster.yml", "ln -nfs #{c.shared_path}/config/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml"],
-          ["Symlink database.yml", "ln -nfs #{c.shared_path}/config/database.yml #{release_to_link}/config/database.yml"],
-          ["Symlink newrelic.yml if needed", "if [ -f \"#{c.shared_path}/config/newrelic.yml\" ]; then ln -nfs #{c.shared_path}/config/newrelic.yml #{release_to_link}/config/newrelic.yml; fi"],
+          ["Symlink other shared config files", "find #{c.paths.shared_config} -type f -not -name 'database.yml' -exec ln -s {} #{release_to_link}/config \\;"],
+          ["Symlink mongrel_cluster.yml", "ln -nfs #{c.paths.shared_config}/mongrel_cluster.yml #{release_to_link}/config/mongrel_cluster.yml"],
+          ["Symlink database.yml", "ln -nfs #{c.paths.shared_config}/database.yml #{release_to_link}/config/database.yml"],
+          ["Symlink newrelic.yml if needed", "if [ -f \"#{c.paths.shared_config}/newrelic.yml\" ]; then ln -nfs #{c.paths.shared_config}/newrelic.yml #{release_to_link}/config/newrelic.yml; fi"],
         ]
       end
 
@@ -434,7 +434,7 @@ WRAP
           shell.status "Running deploy hook: deploy/#{what}.rb"
           run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
             per_instance_args = []
-            per_instance_args << '--current-roles' << server.roles.join(' ')
+            per_instance_args << '--current-roles' << server.roles.to_a.join(' ')
             per_instance_args << '--current-name'  << server.name.to_s if server.name
             per_instance_args << '--config'        << c.to_json
             cmd << " " << Escape.shell_command(per_instance_args)

@@ -98,15 +98,14 @@ Spec::Runner.configure do |config|
   end
 
   # set up EY::Serverside::Server like we're on a solo
-  def setup_test_servers
-    EY::Serverside::Server.reset
-    EY::Serverside::Server.add(:hostname => 'localhost', :roles => %w[solo])
+  def test_servers
+    EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo]}])
   end
 
   # When a repo fixture name is specified, the files found in the specified
   # spec/fixtures/repos dir are copied into the test github repository.
   def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
-    setup_test_servers
+    servers = test_servers
 
     # run a deploy
     @config = EY::Serverside::Deploy::Configuration.new({
@@ -130,7 +129,7 @@ Spec::Runner.configure do |config|
     end
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    @deployer = FullTestDeploy.new(@config, test_shell)
+    @deployer = FullTestDeploy.new(servers, @config, test_shell)
     yield @deployer if block_given?
     @deployer.deploy
   end

@@ -1,69 +1,27 @@
-require 'open-uri'
+require 'set'
 
 module EY
   module Serverside
     class Server < Struct.new(:hostname, :roles, :name, :user)
-      class DuplicateHostname < StandardError
-        def initialize(hostname)
-          super "There is already an EY::Serverside::Server with hostname '#{hostname}'"
-        end
+      def self.from_hash(server_hash)
+        new(server_hash[:hostname], Set.new(server_hash[:roles].map{|r|r.to_sym}), server_hash[:name], server_hash[:user])
       end
 
       def initialize(*fields)
         super
-        self.roles = self.roles.map { |r| r.to_sym } if self.roles
-      end
-
-      attr_writer :default_task
-
-      def self.from_roles(*want_roles)
-        want_roles = want_roles.flatten.compact.map{|r| r.to_sym}
-        return all if !want_roles || want_roles.include?(:all) || want_roles.empty?
-
-        all.select do |s|
-          !(s.roles & want_roles).empty?
-        end
       end
 
       def role
         roles.first
       end
 
-      def self.load_all_from_array(server_hashes)
-        server_hashes.each do |instance_hash|
-          add(instance_hash)
-        end
+      def matches_roles?(set)
+        (roles & set).any?
       end
-
-      def self.all
-        @all
-      end
-
-      def self.by_hostname(hostname)
-        all.find{|s| s.hostname == hostname}
-      end
-
-      def self.add(server_hash)
-        hostname = server_hash[:hostname]
-        if by_hostname(hostname)
-          raise DuplicateHostname.new(hostname)
-        end
-        server = new(hostname, server_hash[:roles], server_hash[:name], server_hash[:user])
-        @all << server
-        server
-      end
-
-      def self.current
-        all.find {|s| s.local? }
-      end
-
-      def self.reset
-        @all = []
-      end
-      reset
 
       def roles=(roles)
-        super(roles.map{|r| r.to_sym})
+        roles_set = Set.new roles.map{|r| r.to_sym}
+        super roles_set
       end
 
       def local?

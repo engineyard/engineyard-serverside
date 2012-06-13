@@ -3,10 +3,11 @@ require 'engineyard-serverside/shell/helpers'
 module EY
   module Serverside
     class Task
-      attr_reader :config, :shell
+      attr_reader :servers, :config, :shell
       alias :c :config
 
-      def initialize(conf, shell = nil)
+      def initialize(servers, conf, shell)
+        @servers = servers
         @config = conf
         @shell = shell
         @roles = :all
@@ -69,7 +70,7 @@ module EY
       private
 
       def run_on_roles(prefix, cmd, &block)
-        servers = EY::Serverside::Server.from_roles(@roles)
+        servers = @servers.roles(@roles)
 
         commands = servers.map do |server|
           exec_cmd = server.command_on_server(prefix, cmd, &block)

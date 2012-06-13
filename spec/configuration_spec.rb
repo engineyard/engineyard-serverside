@@ -14,7 +14,7 @@ describe EY::Serverside::Deploy::Configuration do
         'config' => {'custom' => 'custom_from_extra_config'}.to_json
       })
 
-      @deploy = FullTestDeploy.new(@config, test_shell)
+      @deploy = FullTestDeploy.new(test_servers, @config, test_shell)
 
       @yaml_data = {
         'environments' => {

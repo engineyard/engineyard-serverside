@@ -1,76 +1,70 @@
 require 'spec_helper'
 
 describe EY::Serverside::Server do
-  before(:each) do
-    EY::Serverside::Server.reset
+  it "starts off empty" do
+    EY::Serverside::Servers.new([]).should be_empty
   end
 
-  context ".all" do
-    it "starts off empty" do
-      EY::Serverside::Server.all.should be_empty
-    end
+  it "loads from hashes" do
+    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}])
+    servers.size.should == 1
+  end
 
-    it "is added to with .add" do
-      EY::Serverside::Server.add(:hostname => 'otherhost', :roles => %w[fire water])
-      EY::Serverside::Server.all.size.should == 1
-
-      EY::Serverside::Server.by_hostname('otherhost').should_not be_nil
-    end
-
-    it "rejects duplicates" do
-      EY::Serverside::Server.add(:hostname => 'otherhost')
-      lambda do
-        EY::Serverside::Server.add(:hostname => 'otherhost')
-      end.should raise_error(EY::Serverside::Server::DuplicateHostname)
-    end
+  it "rejects duplicates" do
+    lambda do
+      EY::Serverside::Servers.from_hashes([
+        {:hostname => 'otherhost', :roles => [:fire]},
+        {:hostname => 'otherhost', :roles => [:water]},
+      ])
+    end.should raise_error(EY::Serverside::Servers::DuplicateHostname)
   end
 
   it "makes sure your roles are symbols at creation time" do
-    EY::Serverside::Server.add(:hostname => 'otherhost', :roles => ['beerguy'])
-
-    EY::Serverside::Server.by_hostname('otherhost').roles.should == [:beerguy]
+    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}])
+    servers.each { |server| server.roles.should == Set[:fire, :water] }
   end
 
-  it "makes sure your roles are symbols when updated" do
-    EY::Serverside::Server.add(:hostname => 'otherhost')
-
-    server = EY::Serverside::Server.by_hostname('otherhost')
-    server.roles = %w[bourbon scotch beer]
-    server.roles.should == [:bourbon, :scotch, :beer]
-  end
-
-  context ".from_roles" do
+  context "filtering" do
     before(:each) do
-      @localhost = EY::Serverside::Server.add(:hostname => 'localhost', :roles => [:ice, :cold])
-      @host1 = EY::Serverside::Server.add(:hostname => 'host1', :roles => [:fire, :water])
-      @host2 = EY::Serverside::Server.add(:hostname => 'host2', :roles => [:ice, :water])
+      @servers = EY::Serverside::Servers.from_hashes([
+        {:hostname => 'localhost', :roles => [:ice, :cold]},
+        {:hostname => 'firewater', :roles => [:fire, :water]},
+        {:hostname => 'icewater',  :roles => [:ice, :water]},
+      ])
     end
 
-    it "works with strings or symbols" do
-      EY::Serverside::Server.from_roles(:fire).should == [@host1]
-      EY::Serverside::Server.from_roles('fire').should == [@host1]
+    it "#roles works with strings or symbols" do
+      @servers.roles(:fire ).map{|s| s.hostname}.should == ['firewater']
+      @servers.roles('fire').map{|s| s.hostname}.should == ['firewater'] # hits the cache the second time
     end
 
-    it "finds all servers with the specified role" do
-      EY::Serverside::Server.from_roles('ice').size.should == 2
-      EY::Serverside::Server.from_roles('ice').sort do |a, b|
-        a.hostname <=> b.hostname
-      end.should == [@host2, @localhost]
+    it "#roles finds all servers with the specified role" do
+      @servers.roles(:ice).size.should == 2
+      @servers.roles(:ice).map{|s| s.hostname}.sort.should == ['icewater','localhost']
     end
 
-    it "finds all servers with any of the specified roles" do
-      EY::Serverside::Server.from_roles(:ice, :water).should == EY::Serverside::Server.all
+    it "#roles finds all servers with any of the specified roles" do
+      @servers.roles(:ice, :water).should == @servers
     end
 
-    it "returns everything when asked for :all" do
-      EY::Serverside::Server.from_roles(:all).should == EY::Serverside::Server.all
+    it "#roles returns everything when asked for :all" do
+      @servers.roles(:all).should == @servers
     end
-  end
 
-  context "#local?" do
-    it "is true only for localhost" do
-      EY::Serverside::Server.new('localhost').should be_local
-      EY::Serverside::Server.new('neighborhost').should_not be_local
+    it "#roles also yields filtered server set" do
+      @servers.roles(:ice) do |servers|
+        servers.size.should == 2
+        servers.map{|s| s.hostname}.sort.should == ['icewater','localhost']
+      end
+    end
+
+    it "#localhost returns the localhost server" do
+      @servers.localhost.hostname.should == 'localhost'
+    end
+
+    it "#remote returns non-localhost servers" do
+      @servers.remote.size.should == 2
+      @servers.remote.map {|s| s.hostname}.sort.should == ['firewater','icewater']
     end
   end
 end
