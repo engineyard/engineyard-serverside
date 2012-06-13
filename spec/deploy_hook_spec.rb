@@ -38,10 +38,11 @@ describe "deploy hooks" do
 
     def deploy_hook(options={})
       config = EY::Serverside::Deploy::Configuration.new({
+        'app' => 'app_name',
         'framework_env' => 'staging',
         'current_roles' => ['solo'],
       }.merge(options))
-      EY::Serverside::DeployHook.new(config, test_shell)
+      EY::Serverside::DeployHook.new(config, test_shell, 'fake_test_hook')
     end
 
     context "#run" do
@@ -244,6 +245,18 @@ describe "deploy hooks" do
         hook_path = File.expand_path('../fixtures/invalid_hook.rb', __FILE__)
         error = Regexp.escape("spec/fixtures/invalid_hook.rb:1: syntax error, unexpected '^'")
         deploy_hook.syntax_error(hook_path).should =~ /#{error}/
+      end
+    end
+
+    context "errors in hooks" do
+      it "shows the error in a helpful way" do
+        lambda {
+          deploy_hook.eval_hook('methedo_no_existo')
+        }.should raise_error(NameError)
+        out = read_output
+        out.should =~ %r|FATAL: Exception raised in deploy hook "/data/app_name/releases/\d+/deploy/fake_test_hook.rb".|
+        out.should =~ %r|NameError: undefined local variable or method `methedo_no_existo' for|
+        out.should =~ %r|Please fix this error before retrying.|
       end
     end
 

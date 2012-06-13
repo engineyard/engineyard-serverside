@@ -2,15 +2,22 @@ require 'engineyard-serverside/shell/helpers'
 
 module EY
   module Serverside
-    class DeployHook < Task
-      def callback_context
-        @context ||= CallbackContext.new(config, shell)
+    class DeployHook
+      def initialize(config, shell, hook_name)
+        @config, @shell, @hook_name = config, shell, hook_name
       end
 
-      def run(hook)
-        hook_path = "#{c.release_path}/deploy/#{hook}.rb"
+      def hook_path
+        "#{@config.release_path}/deploy/#{@hook_name}.rb"
+      end
+
+      def callback_context
+        @context ||= CallbackContext.new(@config, @shell, hook_path)
+      end
+
+      def call
         if File.exist?(hook_path)
-          Dir.chdir(c.release_path) do
+          Dir.chdir(@config.release_path) do
             if desc = syntax_error(hook_path)
               hook_name = File.basename(hook_path)
               abort "*** [Error] Invalid Ruby syntax in hook: #{hook_name} ***\n*** #{desc.chomp} ***"
@@ -23,6 +30,19 @@ module EY
 
       def eval_hook(code)
         callback_context.instance_eval(code)
+      rescue Exception => exception
+        display_hook_error(exception, code, hook_path)
+        raise exception
+      end
+
+      def display_hook_error(exception, code, hook_path)
+        @shell.fatal <<-ERROR
+Exception raised in deploy hook #{hook_path.inspect}.
+
+#{exception.class}: #{exception.to_s}
+
+Please fix this error before retrying.
+        ERROR
       end
 
       def syntax_error(file)
@@ -35,15 +55,20 @@ module EY
 
         attr_reader :shell
 
-        def initialize(config, shell)
+        def initialize(config, shell, hook_path)
           @configuration = config
           @configuration.set_framework_envs
           @shell = shell
           @node = node
+          @hook_path = hook_path
         end
 
         def config
           @configuration
+        end
+
+        def inspect
+          "#<DeployHook::CallbackContext #{hook_path.inspect}>"
         end
 
         def method_missing(meth, *args, &blk)

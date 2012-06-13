@@ -52,7 +52,7 @@ module EY
       desc "hook [NAME]", "Run a particular deploy hook"
       def hook(hook_name)
         config, shell = init(options, "hook-#{hook_name}")
-        EY::Serverside::DeployHook.new(config, shell).run(hook_name)
+        EY::Serverside::DeployHook.new(config, shell, hook_name).call
       end
 
       account_app_env_options
@@ -170,7 +170,10 @@ module EY
 
       def init(options, action)
         config = EY::Serverside::Deploy::Configuration.new(options)
-        shell  = EY::Serverside::Shell.new(:verbose  => config.verbose, :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log"))
+        shell  = EY::Serverside::Shell.new(
+          :verbose  => config.verbose,
+          :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log")
+        )
         shell.debug "Initializing engineyard-serverside #{EY::Serverside::VERSION}."
         [config, shell]
       end

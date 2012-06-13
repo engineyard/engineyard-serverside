@@ -16,6 +16,7 @@
   * Supports new ey.yml option to ignore the missing database adapter warning:
   * `ignore_database_adapter_warning: true (default: false)`
   * Give better feedback when maintenance is enabled/disabled (or not).
+  * Output a better error when a deploy hook fails.
 
 ## v1.6.4 (2012-04-26)
 

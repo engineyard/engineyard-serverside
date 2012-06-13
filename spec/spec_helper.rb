@@ -83,8 +83,10 @@ Spec::Runner.configure do |config|
   end
 
   def test_shell
-    log_path =  Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}.log")
-    EY::Serverside::Shell.new(:verbose => true, :log_path => log_path, :stdout => stdout, :stderr => stderr)
+    @test_shell ||= begin
+                      log_path = Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}.log")
+                      EY::Serverside::Shell.new(:verbose => true, :log_path => log_path, :stdout => stdout, :stderr => stderr)
+                    end
   end
 
   def exist
