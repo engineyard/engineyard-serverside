@@ -43,15 +43,16 @@ describe "Deploying an app with ey.yml" do
     end
 
     it "does not remove an existing maintenance page" do
+      maintenance = EY::Serverside::Maintenance.new(test_servers, @config, test_shell)
       deploy_dir.join('current','maintenance_disabled').delete
-      @deployer.enable_maintenance_page
+      maintenance.manually_enable
       deploy_dir.join('shared','system','maintenance.html').should exist
       redeploy_test_application
       read_output.should =~ /Maintenance page is still up./
       deploy_dir.join('shared','system','maintenance.html').should exist
       deploy_dir.join('current','maintenance_disabled').should_not exist
       deploy_dir.join('current','maintenance_enabled').should exist
-      @deployer.disable_maintenance_page
+      maintenance.manually_disable
       deploy_dir.join('shared','system','maintenance.html').should_not exist
     end
 
