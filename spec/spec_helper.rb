@@ -17,6 +17,7 @@ require 'engineyard-serverside'
 require File.expand_path('../support/integration', __FILE__)
 
 FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
+TMPDIR = Pathname.new(__FILE__).dirname.parent.join('tmp')
 GROUP = `id -gn`.strip
 
 module EY
@@ -48,7 +49,12 @@ Spec::Runner.configure do |config|
   end
 
   config.before(:all) do
+    make_tmpdir
     EY::Serverside.dna_json = {}.to_json
+  end
+
+  config.after(:all) do
+    delete_tmpdir
   end
 
   class VerboseStringIO < StringIO
@@ -58,6 +64,18 @@ Spec::Runner.configure do |config|
       end
       super
     end
+  end
+
+  def tmpdir
+    TMPDIR
+  end
+
+  def make_tmpdir
+    tmpdir.mkpath
+  end
+
+  def delete_tmpdir
+    tmpdir.exist? && tmpdir.rmtree
   end
 
   def stdout
@@ -84,7 +102,7 @@ Spec::Runner.configure do |config|
 
   def test_shell
     @test_shell ||= begin
-                      log_path = Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}.log")
+                      log_path = tmpdir.join("serverside-deploy-#{Time.now.to_i}-#{$$}.log")
                       EY::Serverside::Shell.new(:verbose => true, :log_path => log_path, :stdout => stdout, :stderr => stderr)
                     end
   end
@@ -94,7 +112,7 @@ Spec::Runner.configure do |config|
   end
 
   def deploy_dir
-    @deploy_dir ||= Pathname.new(Dir.tmpdir).join("serverside-deploy-#{Time.now.to_i}-#{$$}")
+    @deploy_dir ||= tmpdir.join("serverside-deploy-#{Time.now.to_i}-#{$$}")
   end
 
   # set up EY::Serverside::Server like we're on a solo

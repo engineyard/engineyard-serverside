@@ -3,7 +3,7 @@ require 'spec_helper'
 describe "the git deploy strategy" do
   subject do
     fixtures_dir = Pathname.new(__FILE__).dirname.join("fixtures")
-    gitrepo_dir = Pathname.new(Dir.tmpdir).join("gitrepo-#{Time.now.to_i}-#{$$}")
+    gitrepo_dir = tmpdir.join("gitrepo-#{Time.now.to_i}-#{$$}")
     gitrepo_dir.mkdir
     system "tar xzf #{fixtures_dir.join('gitrepo.tar.gz')} --strip-components 1 -C #{gitrepo_dir}"
 

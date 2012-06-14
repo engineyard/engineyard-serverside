@@ -9,7 +9,7 @@ describe EY::Serverside::Shell do
     time3 = Time.local(2008, 9, 1, 12, 10, 25)
 
     @output = StringIO.new
-    @shell = EY::Serverside::Shell.new(:verbose => true, :stdout => @output, :stderr => @output, :log_path => Pathname.new(Dir.tmpdir).join("engineyard-serverside-#{Time.now.to_i}-${$$}.log"), :start_time => time1)
+    @shell = EY::Serverside::Shell.new(:verbose => true, :stdout => @output, :stderr => @output, :log_path => tmpdir.join("engineyard-serverside-#{Time.now.to_i}-#{$$}.log"), :start_time => time1)
 
     Timecop.freeze(time1) do
       @shell.debug('debug')
