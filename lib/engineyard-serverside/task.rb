@@ -59,31 +59,14 @@ module EY
         end
       end
 
-      def run(cmd, &blk)
-        run_on_roles('sh -l -c', cmd, &blk)
+      def run(cmd, &block)
+        servers.roles(@roles).run(shell, cmd, &block)
       end
 
-      def sudo(cmd, &blk)
-        run_on_roles('sudo sh -l -c', cmd, &blk)
+      def sudo(cmd, &block)
+        servers.roles(@roles).sudo(shell, cmd, &block)
       end
 
-      private
-
-      def run_on_roles(prefix, cmd, &block)
-        servers = @servers.roles(@roles)
-
-        commands = servers.map do |server|
-          exec_cmd = server.command_on_server(prefix, cmd, &block)
-          proc { shell.logged_system(exec_cmd) }
-        end
-
-        futures = EY::Serverside::Future.call(commands)
-
-        unless EY::Serverside::Future.success?(futures)
-          failures = futures.select {|f| f.error? }.map {|f| f.inspect}.join("\n")
-          raise EY::Serverside::RemoteFailure.new(failures)
-        end
-      end
     end
   end
 end

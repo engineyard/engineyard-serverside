@@ -63,18 +63,18 @@ module EY
       end
 
       # Run a command on this set of servers.
-      def run(cmd, &blk)
-        run_on_servers('sh -l -c', cmd, &blk)
+      def run(shell, cmd, &blk)
+        run_on_servers(shell, 'sh -l -c', cmd, &blk)
       end
 
       # Run a sudo command on this set of servers.
-      def sudo(cmd, &blk)
-        run_on_servers('sudo sh -l -c', cmd, &blk)
+      def sudo(shell, cmd, &blk)
+        run_on_servers(shell, 'sudo sh -l -c', cmd, &blk)
       end
 
       private
 
-      def run_on_servers(prefix, cmd, &block)
+      def run_on_servers(shell, prefix, cmd, &block)
         commands = map do |server|
           exec_cmd = server.command_on_server(prefix, cmd, &block)
           proc { shell.logged_system(exec_cmd) }
