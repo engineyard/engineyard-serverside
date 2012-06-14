@@ -34,7 +34,25 @@ module EY
         EY::Serverside::Deploy.new(servers, config, shell).send(default_task)
       end
 
+      account_app_env_options
+      config_option
+      instances_options
+      verbose_option
+      desc "enable_maintenance", "Enable maintenance page (disables web access)"
+      def enable_maintenance
+        servers, config, shell = init_and_propagate(options, 'enable_maintenance')
+        EY::Serverside::Maintenance.new(servers, config, shell).manually_enable
+      end
 
+      account_app_env_options
+      config_option
+      instances_options
+      verbose_option
+      desc "disable_maintenance", "Disable maintenance page (enables web access)"
+      def disable_maintenance
+        servers, config, shell = init_and_propagate(options, 'disable_maintenance')
+        EY::Serverside::Maintenance.new(servers, config, shell).manually_disable
+      end
 
       method_option :release_path,  :type     => :string,
                                     :desc     => "Value for #release_path in hooks (mostly for internal coordination)",
@@ -95,7 +113,6 @@ module EY
       desc "restart", "Restart app servers, conditionally enabling maintenance page"
       def restart
         servers, config, shell = init_and_propagate(options, 'restart')
-
         EY::Serverside::Deploy.new(servers, config, shell).restart_with_maintenance_page
       end
 

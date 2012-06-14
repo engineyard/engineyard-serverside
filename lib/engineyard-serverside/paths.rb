@@ -27,10 +27,23 @@ module EY
         def ssh_identity_file()             paths.ssh_identity.to_s                     end
       end
 
+      # Maintenance page candidates in order of search preference.
+      MAINTENANCE_CANDIDATES = [
+        "public/maintenance.html.custom",
+        "public/maintenance.html.tmp",
+        "public/maintenance.html",
+        "public/system/maintenance.html.default",
+      ]
+
+      # This one is guaranteed to exist.
+      DEFAULT_MAINTENANCE_PAGE = Pathname.new("default_maintenance_page.html").expand_path(File.dirname(__FILE__))
+
+      # Define methods that get us paths
       def self.def_path(name, parts)
         define_method(name.to_sym) { path(*parts) }
       end
 
+      # Load a path given a root and more parts
       def path(root, *parts)
         send(root).join(*parts)
       end
@@ -93,8 +106,24 @@ module EY
         all_releases.last
       end
 
+      def deployed?
+        !!latest_release
+      end
+
+      def maintenance_page_candidates
+        if latest_release
+          candidates = MAINTENANCE_CANDIDATES.map do |file|
+            path(:latest_release, file)
+          end
+        else
+          candidates = []
+        end
+        candidates << DEFAULT_MAINTENANCE_PAGE
+        candidates
+      end
+
       def rollback
-        if previous_release
+        if deployed? && previous_release
           self.class.new(@opts.dup.merge(:active_release => previous_release))
         else
           nil

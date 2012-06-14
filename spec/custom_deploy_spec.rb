@@ -18,19 +18,19 @@ describe "the EY::Serverside::Deploy API" do
         @call_order = []
       end
 
-      def push_code()                              @call_order << 'push_code'                              end
-      def copy_repository_cache()                  @call_order << 'copy_repository_cache'                  end
-      def create_revision_file()                   @call_order << 'create_revision_file'                   end
-      def bundle()                                 @call_order << 'bundle'                                 end
-      def setup_services()                         @call_order << 'setup_services'                         end
-      def symlink_configs()                        @call_order << 'symlink_configs'                        end
-      def migrate()                                @call_order << 'migrate'                                end
-      def compile_assets()                         @call_order << 'compile_assets'                         end
-      def symlink()                                @call_order << 'symlink'                                end
-      def restart()                                @call_order << 'restart'                                end
-      def cleanup_old_releases()                   @call_order << 'cleanup_old_releases'                   end
-      def conditionally_enable_maintenance_page()  @call_order << 'conditionally_enable_maintenance_page'  end
-      def disable_maintenance_page()               @call_order << 'disable_maintenance_page'               end
+      def push_code()                @call_order << 'push_code'                end
+      def copy_repository_cache()    @call_order << 'copy_repository_cache'    end
+      def create_revision_file()     @call_order << 'create_revision_file'     end
+      def bundle()                   @call_order << 'bundle'                   end
+      def setup_services()           @call_order << 'setup_services'           end
+      def symlink_configs()          @call_order << 'symlink_configs'          end
+      def migrate()                  @call_order << 'migrate'                  end
+      def compile_assets()           @call_order << 'compile_assets'           end
+      def symlink()                  @call_order << 'symlink'                  end
+      def restart()                  @call_order << 'restart'                  end
+      def cleanup_old_releases()     @call_order << 'cleanup_old_releases'     end
+      def enable_maintenance_page()  @call_order << 'enable_maintenance_page'  end
+      def disable_maintenance_page() @call_order << 'disable_maintenance_page' end
     end
 
     config = EY::Serverside::Deploy::Configuration.new({
@@ -40,6 +40,17 @@ describe "the EY::Serverside::Deploy API" do
 
     td = TestDeploy.new(test_servers, config, test_shell)
     td.deploy
+
+    ############################# IMPORTANT ####################################
+    #
+    # Call order is referenced in the engineyard gem eydeploy.rb documentation.
+    #
+    # https://support.cloud.engineyard.com/entries/20996661-customize-your-deployment
+    #
+    # Changing call order or removing methods may adversely affect customers
+    # that are using eydeploy.rb and relying on this documentation.
+    #
+    ############################################################################
     td.call_order.should == %w(
       push_code
       copy_repository_cache
@@ -47,7 +58,7 @@ describe "the EY::Serverside::Deploy API" do
       bundle
       setup_services
       symlink_configs
-      conditionally_enable_maintenance_page
+      enable_maintenance_page
       migrate
       compile_assets
       symlink

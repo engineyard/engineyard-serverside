@@ -3,6 +3,7 @@ require 'base64'
 require 'fileutils'
 require 'json'
 require 'engineyard-serverside/rails_asset_support'
+require 'engineyard-serverside/maintenance'
 
 module EY
   module Serverside
@@ -33,7 +34,7 @@ module EY
           check_for_ey_config
           symlink_configs
           setup_sqlite3_if_necessary
-          conditionally_enable_maintenance_page
+          enable_maintenance_page
           run_with_callbacks(:migrate)
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
           callback(:before_symlink)
@@ -44,7 +45,7 @@ module EY
 
         callback(:after_symlink)
         run_with_callbacks(:restart)
-        conditionally_disable_maintenance_page
+        disable_maintenance_page
 
         cleanup_old_releases
         shell.status "Finished deploy at #{Time.now.asctime}"
@@ -117,79 +118,17 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
       def restart_with_maintenance_page
         require_custom_tasks
-        with_maintenance_page { restart }
+        enable_maintenance_page
+        restart
+        disable_maintenance_page
       end
 
       def enable_maintenance_page
-        maintenance_page_candidates = [
-          "public/maintenance.html.custom",
-          "public/maintenance.html.tmp",
-          "public/maintenance.html",
-          "public/system/maintenance.html.default",
-        ].map do |file|
-          File.join(c.latest_release, file)
-        end
-
-        # this one is guaranteed to exist
-        maintenance_page_candidates << File.expand_path("default_maintenance_page.html", File.dirname(__FILE__))
-
-        # put in the maintenance page
-        maintenance_file = maintenance_page_candidates.detect do |file|
-          File.exists?(file)
-        end
-
-        shell.status "Enabling maintenance page."
-        @maintenance_up = true
-        roles :app_master, :app, :solo do
-          run Escape.shell_command(['mkdir', '-p', File.dirname(c.maintenance_page_enabled_path)])
-          run Escape.shell_command(['cp', maintenance_file, c.maintenance_page_enabled_path])
-        end
-      end
-
-      def conditionally_enable_maintenance_page
-        if c.enable_maintenance_page?
-          enable_maintenance_page
-        else
-          explain_not_enabling_maintenance_page
-        end
-      end
-
-      def explain_not_enabling_maintenance_page
-        if c.migrate?
-          if !c.maintenance_on_migrate? && !c.maintenance_on_restart?
-            shell.status "Skipping maintenance page. (maintenance_on_migrate is false in ey.yml)"
-            shell.notice "[Caution] No maintenance migrations must be non-destructive!"
-            shell.notice "Requests may be served during a partially migrated state."
-          end
-        else
-          if c.required_downtime_stack? && !c.maintenance_on_restart?
-            shell.status "Skipping maintenance page. (maintenance_on_restart is false in ey.yml, overriding recommended default)"
-            unless File.exist?(c.maintenance_page_enabled_path)
-              shell.warning <<-WARN
-No maintenance page! Brief downtime may be possible during restart.
-This application stack does not support no-downtime restarts.
-              WARN
-            end
-          elsif !c.required_downtime_stack?
-            shell.status "Skipping maintenance page. (no-downtime restarts supported)"
-          end
-        end
+        maintenance.conditionally_enable
       end
 
       def disable_maintenance_page
-        shell.status "Removing maintenance page."
-        @maintenance_up = false
-        roles :app_master, :app, :solo do
-          run "rm -f #{c.maintenance_page_enabled_path}"
-        end
-      end
-
-      def conditionally_disable_maintenance_page
-        if c.disable_maintenance_page?
-          disable_maintenance_page
-        elsif File.exists?(c.maintenance_page_enabled_path)
-          shell.notice "[Attention] Maintenance page is still up.\nYou must remove it manually using `ey web enable`."
-        end
+        maintenance.conditionally_disable
       end
 
       def run_with_callbacks(task)
@@ -296,7 +235,9 @@ chmod 0700 #{path}
             sudo "rm -rf #{rolled_back_release}"
             bundle
             shell.status "Restarting with previous release."
-            with_maintenance_page { run_with_callbacks(:restart) }
+            enable_maintenance_page
+            run_with_callbacks(:restart)
+            disable_maintenance_page
             shell.status "Finished rollback at #{Time.now.asctime}"
           rescue Exception
             shell.status "Failed to rollback at #{Time.now.asctime}"
@@ -483,7 +424,7 @@ WRAP
       def puts_deploy_failure
         if @cleanup_failed
           shell.notice "[Relax] Your site is running new code, but clean up of old deploys failed."
-        elsif @maintenance_up
+        elsif maintenance.up?
           message = "[Attention] Maintenance page still up, consider the following before removing:\n"
           message << " * Deploy hooks ran. This might cause problems for reverting to old code.\n" if @callbacks_reached
           message << " * Migrations ran. This might cause problems for reverting to old code.\n" if @migrations_reached
@@ -501,10 +442,8 @@ WRAP
         end
       end
 
-      def with_maintenance_page
-        conditionally_enable_maintenance_page
-        yield if block_given?
-        conditionally_disable_maintenance_page
+      def maintenance
+        @maintenance ||= Maintenance.new(servers, config, shell)
       end
 
       def with_failed_release_cleanup
