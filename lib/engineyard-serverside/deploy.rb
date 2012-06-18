@@ -34,9 +34,9 @@ module EY
           check_for_ey_config
           symlink_configs
           setup_sqlite3_if_necessary
+          run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
           enable_maintenance_page
           run_with_callbacks(:migrate)
-          run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
           callback(:before_symlink)
           # We don't use run_with_callbacks for symlink because we need
           # to clean up manually if it fails.
