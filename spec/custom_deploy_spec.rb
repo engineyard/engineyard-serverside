@@ -58,9 +58,9 @@ describe "the EY::Serverside::Deploy API" do
       bundle
       setup_services
       symlink_configs
+      compile_assets
       enable_maintenance_page
       migrate
-      compile_assets
       symlink
       restart
       disable_maintenance_page

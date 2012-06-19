@@ -17,6 +17,7 @@
   * `ignore_database_adapter_warning: true (default: false)`
   * Give better feedback when maintenance is enabled/disabled (or not).
   * Output a better error when a deploy hook fails.
+  * Compile assets before maintenance page is installed.
 
 ## v1.6.4 (2012-04-26)
 
