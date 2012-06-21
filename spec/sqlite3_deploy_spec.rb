@@ -7,8 +7,8 @@ describe "Deploying an application with sqlite3 as the only DB adapter in the Ge
     @framework_env = nil
 
     deploy_test_application('sqlite3') do |deployer|
-      @shared_path   = deployer.shared_path
-      @release_path  = deployer.release_path
+      @shared_path   = deployer.config.paths.shared
+      @release_path  = deployer.config.paths.active_release
       @framework_env = deployer.framework_env
     end
   end

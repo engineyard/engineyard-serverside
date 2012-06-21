@@ -162,7 +162,7 @@ module EY
               shell.status "Installing engineyard-serverside on #{server.hostname}"
 
               shell.logged_system(Escape.shell_command([
-                'scp', '-i', "#{ENV['HOME']}/.ssh/internal",
+                'scp', '-i', config.paths.internal_key.to_s,
                 "-o", "StrictHostKeyChecking=no",
                 local_gem_file,
                "#{config.user}@#{server.hostname}:#{remote_gem_file}",

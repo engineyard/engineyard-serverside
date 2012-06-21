@@ -29,7 +29,7 @@ describe "deploy hooks" do
     end
 
     it "retains the failed release" do
-      release_name = File.basename(@config.release_path)
+      release_name = @config.paths.active_release.basename
       deploy_dir.join('releases_failed', release_name).should be_directory
     end
   end
@@ -254,7 +254,7 @@ describe "deploy hooks" do
           deploy_hook.eval_hook('methedo_no_existo')
         }.should raise_error(NameError)
         out = read_output
-        out.should =~ %r|FATAL: Exception raised in deploy hook "/data/app_name/releases/\d+/deploy/fake_test_hook.rb".|
+        out.should =~ %r|FATAL: Exception raised in deploy hook /data/app_name/releases/\d+/deploy/fake_test_hook.rb.|
         out.should =~ %r|NameError: undefined local variable or method `methedo_no_existo' for|
         out.should =~ %r|Please fix this error before retrying.|
       end

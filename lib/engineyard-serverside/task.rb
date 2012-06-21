@@ -4,7 +4,12 @@ module EY
   module Serverside
     class Task
       attr_reader :servers, :config, :shell
-      alias :c :config
+
+      # deprecated, please don't use
+      def c
+        EY::Serverside.deprecation_warning("The method 'c' is deprecated in favor of 'config' for better clarity.")
+        config
+      end
 
       def initialize(servers, conf, shell)
         @servers = servers
@@ -15,14 +20,14 @@ module EY
 
       def require_custom_tasks
         deploy_file = ["config/eydeploy.rb", "eydeploy.rb"].map do |short_file|
-          File.join(c.repository_cache, short_file)
+          config.paths.repository_cache.join(short_file)
         end.detect do |file|
-          File.exist?(file)
+          file.exist?
         end
 
         if deploy_file
           shell.status "Loading deployment task overrides from #{deploy_file}"
-          instance_eval(File.read(deploy_file))
+          instance_eval(deploy_file.read)
           true
         else
           false
@@ -31,14 +36,14 @@ module EY
 
       def load_ey_yml
         ey_yml = ["config/ey.yml", "ey.yml"].map do |short_file|
-          File.join(c.repository_cache, short_file)
+          config.paths.repository_cache.join(short_file)
         end.detect do |file|
-          File.exist?(file)
+          file.exist?
         end
 
         if ey_yml
           shell.status "Loading deploy configuration in #{ey_yml}"
-          data = YAML.load_file(ey_yml)
+          data = YAML.load_file(ey_yml.to_s)
           config.load_ey_yml_data(data, shell)
         else
           false

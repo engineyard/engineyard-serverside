@@ -5,7 +5,7 @@ describe "Deploying an application with services" do
     describe "with services" do
       before do
         deploy_test_application('no_ey_config') do |deployer|
-          @shared_services_file = deployer.shared_path.join('config', 'ey_services_config_deploy.yml')
+          @shared_services_file = deployer.config.paths.shared_config.join('ey_services_config_deploy.yml')
           @services_yml = {"servicio" => {"foo" => "bar"}}.to_yaml
           deployer.mock_services_setup!("echo '#{@services_yml}' > #{@shared_services_file}")
         end
@@ -30,8 +30,8 @@ describe "Deploying an application with services" do
   describe "deploy with invalid yaml ey_services_config_deploy" do
     before do
       deploy_test_application do |deployer|
-        @shared_services_file    = deployer.shared_path.join('config', 'ey_services_config_deploy.yml')
-        @symlinked_services_file = deployer.release_path.join('config', 'ey_services_config_deploy.yml')
+        @shared_services_file    = deployer.config.paths.shared_config.join('ey_services_config_deploy.yml')
+        @symlinked_services_file = deployer.config.paths.active_release_config.join('ey_services_config_deploy.yml')
         @invalid_services_yml = "42"
         deployer.mock_services_setup!("echo '#{@invalid_services_yml}' > #{@shared_services_file}")
       end
@@ -53,8 +53,8 @@ describe "Deploying an application with services" do
   describe "a succesful deploy" do
     before do
       deploy_test_application do |deployer|
-        @shared_services_file    = deployer.shared_path.join('config', 'ey_services_config_deploy.yml')
-        @symlinked_services_file = deployer.release_path.join('config', 'ey_services_config_deploy.yml')
+        @shared_services_file    = deployer.config.paths.shared_config.join('ey_services_config_deploy.yml')
+        @symlinked_services_file = deployer.config.paths.active_release_config.join('ey_services_config_deploy.yml')
         @services_yml = {"servicio" => {"foo" => "bar"}}.to_yaml
 
         deployer.mock_services_setup!("echo '#{@services_yml}' > #{@shared_services_file}")

@@ -8,7 +8,7 @@ module EY
       end
 
       def hook_path
-        "#{@config.release_path}/deploy/#{@hook_name}.rb"
+        @config.paths.deploy_hook(@hook_name)
       end
 
       def callback_context
@@ -16,13 +16,13 @@ module EY
       end
 
       def call
-        if File.exist?(hook_path)
-          Dir.chdir(@config.release_path) do
+        if hook_path.exist?
+          Dir.chdir(@config.paths.active_release.to_s) do
             if desc = syntax_error(hook_path)
-              hook_name = File.basename(hook_path)
+              hook_name = hook_path.basename
               abort "*** [Error] Invalid Ruby syntax in hook: #{hook_name} ***\n*** #{desc.chomp} ***"
             else
-              eval_hook(IO.read(hook_path))
+              eval_hook(hook_path.read)
             end
           end
         end
@@ -37,7 +37,7 @@ module EY
 
       def display_hook_error(exception, code, hook_path)
         @shell.fatal <<-ERROR
-Exception raised in deploy hook #{hook_path.inspect}.
+Exception raised in deploy hook #{hook_path}.
 
 #{exception.class}: #{exception.to_s}
 

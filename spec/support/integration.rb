@@ -33,7 +33,7 @@ class FullTestDeploy < EY::Serverside::Deploy
   end
 
   def restart_command
-    Escape.shell_command(["echo", super]) + "> #{c.release_path}/restart"
+    Escape.shell_command(["echo", super]) + "> #{config.paths.active_release}/restart"
   end
 
   # we're probably running this spec under bundler, but a real
@@ -51,14 +51,6 @@ class FullTestDeploy < EY::Serverside::Deploy
 
     ENV.replace(my_env)
     result
-  end
-
-  def shared_path
-    Pathname.new(config.shared_path)
-  end
-
-  def release_path
-    Pathname.new(config.release_path)
   end
 
   def framework_env

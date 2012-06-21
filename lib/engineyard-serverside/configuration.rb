@@ -178,6 +178,15 @@ module EY
         "uname -m"
       end
 
+      def active_revision
+        paths.active_revision.read.strip
+      end
+
+      def latest_revision
+        paths.latest_revision.read.strip
+      end
+      alias revision latest_revision
+
       def migrate?
         !!migration_command
       end

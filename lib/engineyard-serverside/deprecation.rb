@@ -3,7 +3,7 @@ require 'engineyard-serverside/shell/helpers'
 module EY
   module Serverside
     def self.deprecation_warning(msg)
-      $stderr.puts "DEPRECATION WARNING: #{msg}"
+      $stderr.puts "DEPRECATION WARNING: #{msg}\n\t#{caller(2).first}"
     end
 
     def self.const_missing(const)
