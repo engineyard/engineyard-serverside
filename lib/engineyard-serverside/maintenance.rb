@@ -17,7 +17,7 @@ module EY
       def manually_enable
         if paths.deployed?
           enable
-          shell.info "Maintenance page enabled"
+          shell.status "Maintenance page enabled"
         else
           shell.fatal "Cannot enabled maintenance page. Application #{config.app_name} has never been deployed."
           false
@@ -27,7 +27,7 @@ module EY
       def manually_disable
         if paths.deployed?
           disable
-          shell.info "Maintenance page disabled"
+          shell.status "Maintenance page disabled"
         else
           shell.fatal "Cannot enabled maintenance page. Application #{config.app_name} has never been deployed."
           false
