@@ -2,34 +2,12 @@ require 'logger'
 require 'pathname'
 require 'systemu'
 require 'engineyard-serverside/shell/formatter'
+require 'engineyard-serverside/shell/command_result'
+require 'engineyard-serverside/shell/yieldio'
 
 module EY
   module Serverside
     class Shell
-      class YieldIO
-        def initialize(&block)
-          @block = block
-        end
-        def <<(str)
-          @block.call str
-        end
-      end
-
-      class CommandResult < Struct.new(:command, :exitstatus, :output)
-        def success?
-          exitstatus.zero?
-        end
-
-        def inspect
-          <<-EOM
-$ #{command}
-#{output}
-
-# => #{exitstatus}
-          EOM
-        end
-      end
-
       attr_reader :logger
 
       def initialize(options)
