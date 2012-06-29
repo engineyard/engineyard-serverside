@@ -30,15 +30,40 @@ rdoc_task.new do |rdoc|
   rdoc.rdoc_files.exclude('lib/vendor/**/*.rb')
 end
 
-desc "Build the gem + install it on the instance: rake install_on[[user@]host]"
-task :install_on, [:instance] do |t, args|
-  instance = args.instance
+desc "Build the gem + install it on the app master of the environment: rake install_on[(account/)environment]"
+task :install_on, [:environment] do |t, args|
+  require 'engineyard-cloud-client'
+  require 'engineyard-cloud-client/test/ui'
 
-  system("gem build engineyard-serverside.gemspec")
-  gemname = Dir["*.gem"].last   # hopefully true
-  abort "Failed to build gem; aborting!" unless gemname
-  system("scp #{gemname} #{instance}: ")
-  system("ssh #{instance} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gemname} --no-rdoc --no-ri'")
+  account_name, environment_name = if args.environment =~ /\//
+                                     args.environment.split('/')
+                                   else
+                                     ['', args.environment]
+                                   end
+
+  unless `gem build engineyard-serverside.gemspec 2>&1` =~ /File: (engineyard-serverside-.*\.gem)/
+    abort "Failed to build gem; aborting!"
+  end
+
+  gemname = $1
+
+  # hacky loading with no error checking
+  client = EY::CloudClient.new(YAML.load_file("#{ENV['HOME']}/.eyrc")['api_token'], EY::CloudClient::Test::UI.new)
+
+  result = client.resolve_environments({
+    :account_name     => account_name,
+    :environment_name => environment_name,
+  })
+
+  result.one_match do |env|
+    puts "Environment found: #{env.account.name}/#{env.name}"
+    env.deploy_to_instances.each do |instance|
+      user_host = "#{env.username}@#{instance.hostname}"
+      puts "Installing #{gemname} to #{instance.hostname}"
+      system("scp -o CheckHostIP=no -o StrictHostKeyChecking=no #{gemname} #{user_host}: ")
+      system("ssh -o CheckHostIP=no -o StrictHostKeyChecking=no #{user_host} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gemname} --no-rdoc --no-ri'")
+    end
+  end
 end
 
 def bump
