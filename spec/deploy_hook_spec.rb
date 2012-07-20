@@ -63,6 +63,16 @@ describe "deploy hooks" do
         deploy_hook.eval_hook('run("true")').should be_true
         deploy_hook.eval_hook('run("false")').should be_false
       end
+
+      it "raises when the bang method alternative is used" do
+        lambda {
+          deploy_hook.eval_hook('run!("false")')
+        }.should raise_error(RuntimeError)
+        out = read_output
+        out.should =~ %r|FATAL: Exception raised in deploy hook /data/app_name/releases/\d+/deploy/fake_test_hook.rb.|
+        out.should =~ %r|RuntimeError: .*run!.*Command failed. false|
+        out.should =~ %r|Please fix this error before retrying.|
+      end
     end
 
     context "#sudo" do
@@ -76,6 +86,20 @@ describe "deploy hooks" do
         result = EY::Serverside::Shell::CommandResult.new(cmd, 0, "out\nerr")
         hook.callback_context.shell.should_receive(:logged_system).with(cmd).and_return(result)
         hook.eval_hook('sudo("do it as root") || raise("failed")')
+      end
+
+      it "raises when the bang method alternative is used" do
+        hook = deploy_hook
+        cmd = "sudo sh -l -c false"
+        result = EY::Serverside::Shell::CommandResult.new(cmd, 1, "fail")
+        hook.callback_context.shell.should_receive(:logged_system).with(cmd).and_return(result)
+        lambda {
+          hook.eval_hook('sudo!("false")')
+        }.should raise_error(RuntimeError)
+        out = read_output
+        out.should =~ %r|FATAL: Exception raised in deploy hook /data/app_name/releases/\d+/deploy/fake_test_hook.rb.|
+        out.should =~ %r|RuntimeError: .*sudo!.*Command failed. false|
+        out.should =~ %r|Please fix this error before retrying.|
       end
     end
 

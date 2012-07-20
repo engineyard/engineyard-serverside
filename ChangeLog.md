@@ -18,6 +18,7 @@
   * Give better feedback when maintenance is enabled/disabled (or not).
   * Output a better error when a deploy hook fails.
   * Compile assets before maintenance page is installed.
+  * Provide run! and sudo! to deploy hooks. If the command exits non-zero the deploy hook will fail, stopping the deploy.
 
 ## v1.6.4 (2012-04-26)
 

@@ -87,8 +87,16 @@ Please fix this error before retrying.
           shell.logged_system(Escape.shell_command(["sh", "-l", "-c", cmd])).success?
         end
 
+        def run!(cmd)
+          run(cmd) or raise("run: Command failed. #{cmd}")
+        end
+
         def sudo(cmd)
           shell.logged_system(Escape.shell_command(["sudo", "sh", "-l", "-c", cmd])).success?
+        end
+
+        def sudo!(cmd)
+          sudo(cmd) or raise("sudo: Command failed. #{cmd}")
         end
 
         # convenience functions for running on certain instance types
