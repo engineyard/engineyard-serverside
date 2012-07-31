@@ -51,7 +51,7 @@ module EY
       # method and it doesn't yield and it's better than raising)
       def roles(*select_roles, &block)
         if block_given?
-          return yield roles(*select_roles)
+          return yield(roles(*select_roles))
         end
 
         roles_set = Set.new select_roles.flatten.compact.map{|r| r.to_sym}
