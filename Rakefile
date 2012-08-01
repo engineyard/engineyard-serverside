@@ -48,8 +48,12 @@ task :install_on, [:environment] do |t, args|
   gemname = $1
 
   # hacky loading with no error checking
-  client = EY::CloudClient.new(YAML.load_file("#{ENV['HOME']}/.eyrc")['api_token'], EY::CloudClient::Test::UI.new)
+  api_token = YAML.load_file("#{ENV['HOME']}/.eyrc")['api_token'] if File.exist?("#{ENV['HOME']}/.eyrc")
+  unless api_token
+    raise "Couldn't find api_token in ~/.eyrc. Use engineyard gem to login."
+  end
 
+  client = EY::CloudClient.new(api_token)
   result = client.resolve_environments({
     :account_name     => account_name,
     :environment_name => environment_name,
