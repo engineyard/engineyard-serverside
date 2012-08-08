@@ -447,6 +447,7 @@ WRAP
       rescue Exception
         shell.status "Release #{config.paths.active_release} failed, saving release to #{config.paths.releases_failed}."
         sudo "mv #{config.paths.active_release} #{config.paths.releases_failed}"
+        clean_release_directory(config.paths.releases_failed)
         raise
       end
 
