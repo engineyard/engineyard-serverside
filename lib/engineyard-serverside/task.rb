@@ -42,8 +42,6 @@ module EY
           shell.status "Loading deploy configuration in #{ey_yml}"
           data = YAML.load_file(ey_yml.to_s)
           config.load_ey_yml_data(data, shell)
-        else
-          false
         end
       rescue Exception
         shell.error "Error loading YAML in #{ey_yml}"
