@@ -118,6 +118,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
       def restart_with_maintenance_page
         require_custom_tasks
+        load_ey_yml
         enable_maintenance_page
         restart
         disable_maintenance_page
