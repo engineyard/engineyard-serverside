@@ -90,13 +90,13 @@ describe "the EY::Serverside::Deploy API" do
 
     it "requires 'eydeploy.rb' and adds any defined methods to the deploy" do
       write_eydeploy 'eydeploy.rb'
-      @deploy.require_custom_tasks.should be_true
+      @deploy.require_custom_tasks
       @deploy.got_new_methods.should == 'from the file on disk'
     end
 
     it "falls back to 'config/eydeploy.rb'" do
       write_eydeploy 'config/eydeploy.rb'
-      @deploy.require_custom_tasks.should be_true
+      @deploy.require_custom_tasks
       @deploy.got_new_methods.should == 'from the file on disk'
     end
 
@@ -108,7 +108,7 @@ describe "the EY::Serverside::Deploy API" do
       end
 
       deploy = TestDeploySuper.new(test_servers, @config, test_shell)
-      deploy.require_custom_tasks.should be_true
+      deploy.require_custom_tasks
       deploy.value.should == "base + derived"
     end
   end

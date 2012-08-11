@@ -28,9 +28,6 @@ module EY
         if deploy_file
           shell.status "Loading deployment task overrides from #{deploy_file}"
           instance_eval(deploy_file.read)
-          true
-        else
-          false
         end
       end
 
