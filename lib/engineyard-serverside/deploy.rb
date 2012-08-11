@@ -388,7 +388,7 @@ WRAP
       # Rollback doesn't know about the repository location (nor
       # should it need to), but it would like to use #short_log_message.
       def strategy
-        ENV['GIT_SSH'] = ssh_executable
+        ENV['GIT_SSH'] = ssh_executable.to_s
         @strategy ||= config.strategy_class.new(
           shell,
           :repository_cache => config.paths.repository_cache.to_s,
