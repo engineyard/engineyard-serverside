@@ -33,7 +33,6 @@ end
 desc "Build the gem + install it on the app master of the environment: rake install_on[(account/)environment]"
 task :install_on, [:environment] do |t, args|
   require 'engineyard-cloud-client'
-  require 'engineyard-cloud-client/test/ui'
 
   account_name, environment_name = if args.environment =~ /\//
                                      args.environment.split('/')
@@ -53,7 +52,7 @@ task :install_on, [:environment] do |t, args|
     raise "Couldn't find api_token in ~/.eyrc. Use engineyard gem to login."
   end
 
-  client = EY::CloudClient.new(api_token)
+  client = EY::CloudClient.new(:token => api_token)
   result = client.resolve_environments({
     :account_name     => account_name,
     :environment_name => environment_name,

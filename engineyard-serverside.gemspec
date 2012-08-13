@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rdoc')
   s.add_development_dependency('timecop')
   s.add_development_dependency('simplecov')
-  s.add_development_dependency('engineyard-cloud-client')
+  s.add_development_dependency('engineyard-cloud-client', '~>1.0.4')
 
   s.required_rubygems_version = %q{>= 1.3.6}
   s.test_files = Dir.glob("spec/**/*")
