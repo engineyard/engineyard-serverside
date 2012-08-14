@@ -88,7 +88,7 @@ Please fix this error before retrying.
         end
 
         def run!(cmd)
-          run(cmd) or raise("run: Command failed. #{cmd}")
+          run(cmd) or raise("run!: Command failed. #{cmd}")
         end
 
         def sudo(cmd)
@@ -96,7 +96,7 @@ Please fix this error before retrying.
         end
 
         def sudo!(cmd)
-          sudo(cmd) or raise("sudo: Command failed. #{cmd}")
+          sudo(cmd) or raise("sudo!: Command failed. #{cmd}")
         end
 
         # convenience functions for running on certain instance types
