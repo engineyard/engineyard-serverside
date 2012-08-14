@@ -2,7 +2,7 @@ require 'yaml'
 module EY
   module Serverside
     class LockfileParser
-      DEFAULT = "1.1.3"
+      DEFAULT = "1.1.5"
 
       def self.default_version
         DEFAULT

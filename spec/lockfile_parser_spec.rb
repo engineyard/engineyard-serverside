@@ -19,8 +19,8 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   it "has a default version" do
-    EY::Serverside::LockfileParser.default_version.should == "1.1.3"
-    EY::Serverside::LockfileParser::DEFAULT.should == "1.1.3"
+    EY::Serverside::LockfileParser.default_version.should == "1.1.5"
+    EY::Serverside::LockfileParser::DEFAULT.should == "1.1.5"
   end
 
   it "returns the default version for a 1.0 lockfile without a bundler dependency" do
