@@ -11,10 +11,12 @@ engineyard-serverside is the serverside component of the Engine Yard AppCloud CL
     --instances=one two three              # Instances in cluster
     -b, --ref, --tag, --branch=BRANCH      # Git ref to deploy, defaults to master. May be a branch, a tag, or a SHA
     -a, --app=APP                          # Application to deploy
+    --environment-name=ENV_NAME            # Environment name
+    --account-name=ACCOUNT_NAME            # Account name
 
 ### Running the spec suite
 
-Bundler doesn't work on ruby 1.8.6-p287, which is what 'ey_resin' currently provides.
+Bundler doesn't work on ruby 1.8.6-p287, which is what 'ey\_resin' currently provides.
 To test engineyard-serverside under the same ruby, you can run:
 
   gem build engineyard-serverside.gemspec
