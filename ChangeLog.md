@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.0.0 (2012-08-16)
+
   * Default bundler version is now 1.1.5.
   * Deploy hooks now have access to `account_name` and `environment_name`.
   * Improves deploy output, especially for `--verbose`.
