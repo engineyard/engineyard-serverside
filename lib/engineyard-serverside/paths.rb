@@ -7,7 +7,6 @@ module EY
       module LegacyHelpers
         def self.legacy_path_helper(name, new_name)
           define_method(name) do |*a|
-            EY::Serverside.deprecation_warning("config.#{name} is deprecated. Please use 'config.paths.#{new_name}' which returns a Pathname object.")
             paths.send(new_name).to_s
           end
         end
