@@ -18,8 +18,9 @@ class Thor
     #
     #   copy_file "doc/README"
     #
-    def copy_file(source, destination=nil, config={}, &block)
-      destination ||= source
+    def copy_file(source, *args, &block)
+      config = args.last.is_a?(Hash) ? args.pop : {}
+      destination = args.first || source
       source = File.expand_path(find_in_source_paths(source.to_s))
 
       create_file destination, nil, config do
@@ -27,6 +28,28 @@ class Thor
         content = block.call(content) if block
         content
       end
+    end
+
+    # Links the file from the relative source to the relative destination. If
+    # the destination is not given it's assumed to be equal to the source.
+    #
+    # ==== Parameters
+    # source<String>:: the relative path to the source root.
+    # destination<String>:: the relative path to the destination root.
+    # config<Hash>:: give :verbose => false to not log the status.
+    #
+    # ==== Examples
+    #
+    #   link_file "README", "doc/README"
+    #
+    #   link_file "doc/README"
+    #
+    def link_file(source, *args, &block)
+      config = args.last.is_a?(Hash) ? args.pop : {}
+      destination = args.first || source
+      source = File.expand_path(find_in_source_paths(source.to_s))
+
+      create_link destination, source, config
     end
 
     # Gets the content at the given address and places it at the given relative
@@ -46,9 +69,12 @@ class Thor
     #     content.split("\n").first
     #   end
     #
-    def get(source, destination=nil, config={}, &block)
-      source = File.expand_path(find_in_source_paths(source.to_s)) unless source =~ /^http\:\/\//
-      render = open(source).binmode.read
+    def get(source, *args, &block)
+      config = args.last.is_a?(Hash) ? args.pop : {}
+      destination = args.first
+
+      source = File.expand_path(find_in_source_paths(source.to_s)) unless source =~ /^https?\:\/\//
+      render = open(source) {|input| input.binmode.read }
 
       destination ||= if block_given?
         block.arity == 1 ? block.call(render) : block.call
@@ -74,13 +100,15 @@ class Thor
     #
     #   template "doc/README"
     #
-    def template(source, destination=nil, config={}, &block)
-      destination ||= source
+    def template(source, *args, &block)
+      config = args.last.is_a?(Hash) ? args.pop : {}
+      destination = args.first || source.sub(/\.tt$/, '')
+
       source  = File.expand_path(find_in_source_paths(source.to_s))
       context = instance_eval('binding')
 
       create_file destination, nil, config do
-        content = ERB.new(::File.binread(source), nil, '-').result(context)
+        content = ERB.new(::File.binread(source), nil, '-', '@output_buffer').result(context)
         content = block.call(content) if block
         content
       end
@@ -104,7 +132,7 @@ class Thor
       FileUtils.chmod_R(mode, path) unless options[:pretend]
     end
 
-    # Prepend text to a file. Since it depends on inject_into_file, it's reversible.
+    # Prepend text to a file. Since it depends on insert_into_file, it's reversible.
     #
     # ==== Parameters
     # path<String>:: path of the file to be changed
@@ -113,19 +141,20 @@ class Thor
     #
     # ==== Example
     #
-    #   prepend_file 'config/environments/test.rb', 'config.gem "rspec"'
+    #   prepend_to_file 'config/environments/test.rb', 'config.gem "rspec"'
     #
-    #   prepend_file 'config/environments/test.rb' do
+    #   prepend_to_file 'config/environments/test.rb' do
     #     'config.gem "rspec"'
     #   end
     #
-    def prepend_file(path, *args, &block)
+    def prepend_to_file(path, *args, &block)
       config = args.last.is_a?(Hash) ? args.pop : {}
       config.merge!(:after => /\A/)
-      inject_into_file(path, *(args << config), &block)
+      insert_into_file(path, *(args << config), &block)
     end
+    alias_method :prepend_file, :prepend_to_file
 
-    # Append text to a file. Since it depends on inject_into_file, it's reversible.
+    # Append text to a file. Since it depends on insert_into_file, it's reversible.
     #
     # ==== Parameters
     # path<String>:: path of the file to be changed
@@ -134,20 +163,21 @@ class Thor
     #
     # ==== Example
     #
-    #   append_file 'config/environments/test.rb', 'config.gem "rspec"'
+    #   append_to_file 'config/environments/test.rb', 'config.gem "rspec"'
     #
-    #   append_file 'config/environments/test.rb' do
+    #   append_to_file 'config/environments/test.rb' do
     #     'config.gem "rspec"'
     #   end
     #
-    def append_file(path, *args, &block)
+    def append_to_file(path, *args, &block)
       config = args.last.is_a?(Hash) ? args.pop : {}
       config.merge!(:before => /\z/)
-      inject_into_file(path, *(args << config), &block)
+      insert_into_file(path, *(args << config), &block)
     end
+    alias_method :append_file, :append_to_file
 
     # Injects text right after the class definition. Since it depends on
-    # inject_into_file, it's reversible.
+    # insert_into_file, it's reversible.
     #
     # ==== Parameters
     # path<String>:: path of the file to be changed
@@ -157,7 +187,7 @@ class Thor
     #
     # ==== Examples
     #
-    #   inject_into_class "app/controllers/application_controller.rb", "  filter_parameter :password\n"
+    #   inject_into_class "app/controllers/application_controller.rb", ApplicationController, "  filter_parameter :password\n"
     #
     #   inject_into_class "app/controllers/application_controller.rb", ApplicationController do
     #     "  filter_parameter :password\n"
@@ -166,7 +196,7 @@ class Thor
     def inject_into_class(path, klass, *args, &block)
       config = args.last.is_a?(Hash) ? args.pop : {}
       config.merge!(:after => /class #{klass}\n|class #{klass} .*\n/)
-      inject_into_file(path, *(args << config), &block)
+      insert_into_file(path, *(args << config), &block)
     end
 
     # Run a regular expression replacement on a file.
@@ -199,6 +229,44 @@ class Thor
       end
     end
 
+    # Uncomment all lines matching a given regex.  It will leave the space
+    # which existed before the comment hash in tact but will remove any spacing
+    # between the comment hash and the beginning of the line.
+    #
+    # ==== Parameters
+    # path<String>:: path of the file to be changed
+    # flag<Regexp|String>:: the regexp or string used to decide which lines to uncomment
+    # config<Hash>:: give :verbose => false to not log the status.
+    #
+    # ==== Example
+    #
+    #   uncomment_lines 'config/initializers/session_store.rb', /active_record/
+    #
+    def uncomment_lines(path, flag, *args)
+      flag = flag.respond_to?(:source) ? flag.source : flag
+
+      gsub_file(path, /^(\s*)#\s*(.*#{flag})/, '\1\2', *args)
+    end
+
+    # Comment all lines matching a given regex.  It will leave the space
+    # which existed before the beginning of the line in tact and will insert
+    # a single space after the comment hash.
+    #
+    # ==== Parameters
+    # path<String>:: path of the file to be changed
+    # flag<Regexp|String>:: the regexp or string used to decide which lines to comment
+    # config<Hash>:: give :verbose => false to not log the status.
+    #
+    # ==== Example
+    #
+    #   comment_lines 'config/initializers/session_store.rb', /cookie_store/
+    #
+    def comment_lines(path, flag, *args)
+      flag = flag.respond_to?(:source) ? flag.source : flag
+
+      gsub_file(path, /^(\s*)([^#|\n]*#{flag})/, '\1# \2', *args)
+    end
+
     # Removes a file at the given location.
     #
     # ==== Parameters
@@ -219,5 +287,22 @@ class Thor
     end
     alias :remove_dir :remove_file
 
+  private
+    attr_accessor :output_buffer
+    def concat(string)
+      @output_buffer.concat(string)
+    end
+
+    def capture(*args, &block)
+      with_output_buffer { block.call(*args) }
+    end
+
+    def with_output_buffer(buf = '') #:nodoc:
+      self.output_buffer, old_buffer = buf, output_buffer
+      yield
+      output_buffer
+    ensure
+      self.output_buffer = old_buffer
+    end
   end
 end

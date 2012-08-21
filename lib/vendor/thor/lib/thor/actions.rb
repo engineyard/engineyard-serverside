@@ -1,9 +1,12 @@
 require 'fileutils'
+require 'uri'
 require 'thor/core_ext/file_binary_read'
-
-Dir[File.join(File.dirname(__FILE__), "actions", "*.rb")].each do |action|
-  require action
-end
+require 'thor/actions/create_file'
+require 'thor/actions/create_link'
+require 'thor/actions/directory'
+require 'thor/actions/empty_directory'
+require 'thor/actions/file_manipulation'
+require 'thor/actions/inject_into_file'
 
 class Thor
   module Actions
@@ -19,7 +22,13 @@ class Thor
       # inherited paths and the source root.
       #
       def source_paths
-        @source_paths ||= []
+        @_source_paths ||= []
+      end
+
+      # Stores and return the source root for this class
+      def source_root(path=nil)
+        @_source_root = path if path
+        @_source_root
       end
 
       # Returns the source paths in the following order:
@@ -31,7 +40,7 @@ class Thor
       def source_paths_for_search
         paths = []
         paths += self.source_paths
-        paths << self.source_root if self.respond_to?(:source_root)
+        paths << self.source_root if self.source_root
         paths += from_superclass(:source_paths, [])
         paths
       end
@@ -46,7 +55,7 @@ class Thor
                                :desc => "Run but do not make any changes"
 
         class_option :quiet, :type => :boolean, :aliases => "-q", :group => :runtime,
-                             :desc => "Supress status output"
+                             :desc => "Suppress status output"
 
         class_option :skip, :type => :boolean, :aliases => "-s", :group => :runtime,
                             :desc => "Skip files that already exist"
@@ -105,8 +114,12 @@ class Thor
     # the script started).
     #
     def relative_to_original_destination_root(path, remove_dot=true)
-      path = path.gsub(@destination_stack[0], '.')
-      remove_dot ? (path[2..-1] || '') : path
+      path = path.dup
+      if path.gsub!(@destination_stack[0], '.')
+        remove_dot ? (path[2..-1] || '') : path
+      else
+        path
+      end
     end
 
     # Holds source paths in instance so they can be manipulated.
@@ -115,7 +128,7 @@ class Thor
       @source_paths ||= self.class.source_paths_for_search
     end
 
-    # Receives a file or directory and search for it in the source paths. 
+    # Receives a file or directory and search for it in the source paths.
     #
     def find_in_source_paths(file)
       relative_root = relative_to_original_destination_root(destination_root, false)
@@ -125,12 +138,19 @@ class Thor
         return source_file if File.exists?(source_file)
       end
 
-      if source_paths.empty?
-        raise Error, "You don't have any source path defined for class #{self.class.name}. To fix this, " <<
-                     "you can define a source_root in your class."
-      else
-        raise Error, "Could not find #{file.inspect} in source paths."
+      message = "Could not find #{file.inspect} in any of your source paths. "
+
+      unless self.class.source_root
+        message << "Please invoke #{self.class.name}.source_root(PATH) with the PATH containing your templates. "
       end
+
+      if source_paths.empty?
+        message << "Currently you have no source paths."
+      else
+        message << "Your current source paths are: \n#{source_paths.join("\n")}"
+      end
+
+      raise Error, message
     end
 
     # Do something in the root or on a provided subfolder. If a relative path
@@ -144,13 +164,23 @@ class Thor
     #
     def inside(dir='', config={}, &block)
       verbose = config.fetch(:verbose, false)
+      pretend = options[:pretend]
 
       say_status :inside, dir, verbose
       shell.padding += 1 if verbose
       @destination_stack.push File.expand_path(dir, destination_root)
 
-      FileUtils.mkdir_p(destination_root) unless File.exist?(destination_root)
-      FileUtils.cd(destination_root) { block.arity == 1 ? yield(destination_root) : yield }
+      # If the directory doesnt exist and we're not pretending
+      if !File.exist?(destination_root) && !pretend
+        FileUtils.mkdir_p(destination_root)
+      end
+
+      if pretend
+        # In pretend mode, just yield down to the block
+        block.arity == 1 ? yield(destination_root) : yield
+      else
+        FileUtils.cd(destination_root) { block.arity == 1 ? yield(destination_root) : yield }
+      end
 
       @destination_stack.pop
       shell.padding -= 1 if verbose
@@ -176,11 +206,19 @@ class Thor
     #
     def apply(path, config={})
       verbose = config.fetch(:verbose, true)
-      path    = find_in_source_paths(path) unless path =~ /^http\:\/\//
+      is_uri  = path =~ /^https?\:\/\//
+      path    = find_in_source_paths(path) unless is_uri
 
       say_status :apply, path, verbose
       shell.padding += 1 if verbose
-      instance_eval(open(path).read)
+
+      if is_uri
+        contents = open(path, "Accept" => "application/x-thor-template") {|io| io.read }
+      else
+        contents = open(path) {|io| io.read }
+      end
+
+      instance_eval(contents, path)
       shell.padding -= 1 if verbose
     end
 
@@ -188,7 +226,7 @@ class Thor
     #
     # ==== Parameters
     # command<String>:: the command to be executed.
-    # config<Hash>:: give :verbose => false to not log the status. Specify :with
+    # config<Hash>:: give :verbose => false to not log the status, :capture => true to hide to output. Specify :with
     #                to append an executable to command executation.
     #
     # ==== Example
@@ -209,7 +247,10 @@ class Thor
       end
 
       say_status :run, desc, config.fetch(:verbose, true)
-      `#{command}` unless options[:pretend]
+
+      unless options[:pretend]
+        config[:capture] ? `#{command}` : system("#{command}")
+      end
     end
 
     # Executes a ruby script (taking into account WIN32 platform quirks).
@@ -223,14 +264,15 @@ class Thor
       run command, config.merge(:with => Thor::Util.ruby_command)
     end
 
-    # Run a thor command. A hash of options can be given and it's converted to 
+    # Run a thor command. A hash of options can be given and it's converted to
     # switches.
     #
     # ==== Parameters
     # task<String>:: the task to be invoked
     # args<Array>:: arguments to the task
-    # config<Hash>:: give :verbose => false to not log the status. Other options
-    #                are given as parameter to Thor.
+    # config<Hash>:: give :verbose => false to not log the status, :capture => true to hide to output.
+    #                Other options are given as parameter to Thor.
+    #
     #
     # ==== Examples
     #
@@ -244,12 +286,13 @@ class Thor
       config  = args.last.is_a?(Hash) ? args.pop : {}
       verbose = config.key?(:verbose) ? config.delete(:verbose) : true
       pretend = config.key?(:pretend) ? config.delete(:pretend) : false
+      capture = config.key?(:capture) ? config.delete(:capture) : false
 
       args.unshift task
       args.push Thor::Options.to_switches(config)
       command = args.join(' ').strip
 
-      run command, :with => :thor, :verbose => verbose, :pretend => pretend
+      run command, :with => :thor, :verbose => verbose, :pretend => pretend, :capture => capture
     end
 
     protected

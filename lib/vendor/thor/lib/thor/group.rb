@@ -6,7 +6,7 @@ require 'thor/base'
 # tasks.
 class Thor::Group
   class << self
-    # The descrition for this Thor::Group. If none is provided, but a source root
+    # The description for this Thor::Group. If none is provided, but a source root
     # exists, tries to find the USAGE one folder above it, otherwise searches
     # in the superclass.
     #
@@ -19,21 +19,6 @@ class Thor::Group
           @desc ||= from_superclass(:desc, nil)
         else
           @desc = description
-      end
-    end
-
-    # Start works differently in Thor::Group, it simply invokes all tasks
-    # inside the class.
-    #
-    def start(original_args=ARGV, config={})
-      super do |given_args|
-        if Thor::HELP_MAPPINGS.include?(given_args.first)
-          help(config[:shell])
-          return
-        end
-
-        args, opts = Thor::Options.split(given_args)
-        new(args, opts, config).invoke
       end
     end
 
@@ -119,7 +104,7 @@ class Thor::Group
     #
     # ==== Custom invocations
     #
-    # You can also supply a block to customize how the option is giong to be
+    # You can also supply a block to customize how the option is going to be
     # invoked. The block receives two parameters, an instance of the current
     # class and the klass to be invoked.
     #
@@ -129,7 +114,7 @@ class Thor::Group
 
       names.each do |name|
         unless class_options.key?(name)
-          raise ArgumentError, "You have to define the option #{name.inspect} " << 
+          raise ArgumentError, "You have to define the option #{name.inspect} " <<
                                "before setting invoke_from_option."
         end
 
@@ -195,16 +180,16 @@ class Thor::Group
         end
         next unless value
 
-        klass, task = prepare_for_invocation(name, value)
+        klass, _ = prepare_for_invocation(name, value)
         next unless klass && klass.respond_to?(:class_options)
 
         value = value.to_s
         human_name = value.respond_to?(:classify) ? value.classify : value
 
         group_options[human_name] ||= []
-        group_options[human_name] += klass.class_options.values.select do |option|
-          base_options[option.name.to_sym].nil? && option.group.nil? &&
-          !group_options.values.flatten.any? { |i| i.name == option.name }
+        group_options[human_name] += klass.class_options.values.select do |class_option|
+          base_options[class_option.name.to_sym].nil? && class_option.group.nil? &&
+          !group_options.values.flatten.any? { |i| i.name == class_option.name }
         end
 
         yield klass if block_given?
@@ -219,21 +204,50 @@ class Thor::Group
       [item]
     end
 
-    def handle_argument_error(task, error) #:nodoc:
-      raise error, "#{task.name.inspect} was called incorrectly. Are you sure it has arity equals to 0?"
+    def handle_argument_error(task, error, arity=nil) #:nodoc:
+      if arity > 0
+        msg = "#{basename} #{task.name} takes #{arity} argument"
+        msg << "s" if arity > 1
+        msg << ", but it should not."
+      else
+        msg = "You should not pass arguments to #{basename} #{task.name}."
+      end
+
+      raise error, msg
     end
 
     protected
 
+      # The method responsible for dispatching given the args.
+      def dispatch(task, given_args, given_opts, config) #:nodoc:
+        if Thor::HELP_MAPPINGS.include?(given_args.first)
+          help(config[:shell])
+          return
+        end
+
+        args, opts = Thor::Options.split(given_args)
+        opts = given_opts || opts
+
+        instance = new(args, opts, config)
+        yield instance if block_given?
+        args = instance.args
+
+        if task
+          instance.invoke_task(all_tasks[task])
+        else
+          instance.invoke_all
+        end
+      end
+
       # The banner for this class. You can customize it if you are invoking the
       # thor class by another ways which is not the Thor::Runner.
       def banner
-        "#{banner_base} #{self_task.formatted_usage(self, false)}"
+        "#{basename} #{self_task.formatted_usage(self, false)}"
       end
 
       # Represents the whole class as a task.
       def self_task #:nodoc:
-        Thor::Task::Dynamic.new(self.namespace, class_options)
+        Thor::DynamicTask.new(self.namespace, class_options)
       end
 
       def baseclass #:nodoc:
@@ -241,7 +255,7 @@ class Thor::Group
       end
 
       def create_task(meth) #:nodoc:
-        tasks[meth.to_s] = Thor::Task.new(meth, nil, nil, nil)
+        tasks[meth.to_s] = Thor::Task.new(meth, nil, nil, nil, nil)
         true
       end
   end

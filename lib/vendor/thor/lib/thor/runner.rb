@@ -13,10 +13,11 @@ class Thor::Runner < Thor #:nodoc:
 
   # Override Thor#help so it can give information about any class and any method.
   #
-  def help(meth=nil)
+  def help(meth = nil)
     if meth && !self.respond_to?(meth)
       initialize_thorfiles(meth)
-      klass, task = Thor::Util.find_class_and_task_by_namespace!(meth)
+      klass, task = Thor::Util.find_class_and_task_by_namespace(meth)
+      self.class.handle_no_task_error(task, false) if klass.nil?
       klass.start(["-h", task].compact, :shell => self.shell)
     else
       super
@@ -29,7 +30,8 @@ class Thor::Runner < Thor #:nodoc:
   def method_missing(meth, *args)
     meth = meth.to_s
     initialize_thorfiles(meth)
-    klass, task = Thor::Util.find_class_and_task_by_namespace!(meth)
+    klass, task = Thor::Util.find_class_and_task_by_namespace(meth)
+    self.class.handle_no_task_error(task, false) if klass.nil?
     args.unshift(task) if task
     klass.start(args, :shell => self.shell)
   end
@@ -39,15 +41,15 @@ class Thor::Runner < Thor #:nodoc:
   def install(name)
     initialize_thorfiles
 
-    # If a directory name is provided as the argument, look for a 'main.thor' 
+    # If a directory name is provided as the argument, look for a 'main.thor'
     # task in said directory.
     begin
       if File.directory?(File.expand_path(name))
         base, package = File.join(name, "main.thor"), :directory
-        contents      = open(base).read
+        contents      = open(base) {|input| input.read }
       else
         base, package = name, :file
-        contents      = open(name).read
+        contents      = open(name) {|input| input.read }
       end
     rescue OpenURI::HTTPError
       raise Error, "Error opening URI '#{name}'"
@@ -73,7 +75,7 @@ class Thor::Runner < Thor #:nodoc:
       as = basename if as.empty?
     end
 
-    location = if options[:relative] || name =~ /^http:\/\//
+    location = if options[:relative] || name =~ /^https?:\/\//
       name
     else
       File.expand_path(name)
@@ -124,7 +126,17 @@ class Thor::Runner < Thor #:nodoc:
 
     old_filename = thor_yaml[name][:filename]
     self.options = self.options.merge("as" => name)
-    filename     = install(thor_yaml[name][:location])
+
+    if File.directory? File.expand_path(name)
+      FileUtils.rm_rf(File.join(thor_root, old_filename))
+
+      thor_yaml.delete(old_filename)
+      save_yaml(thor_yaml)
+
+      filename = install(name)
+    else
+      filename = install(thor_yaml[name][:location])
+    end
 
     unless filename == old_filename
       File.delete(File.join(thor_root, old_filename))
@@ -139,7 +151,7 @@ class Thor::Runner < Thor #:nodoc:
   end
 
   desc "list [SEARCH]", "List the available thor tasks (--substring means .*SEARCH)"
-  method_options :substring => :boolean, :group => :string, :all => :boolean
+  method_options :substring => :boolean, :group => :string, :all => :boolean, :debug => :boolean
   def list(search="")
     initialize_thorfiles
 
@@ -156,8 +168,8 @@ class Thor::Runner < Thor #:nodoc:
 
   private
 
-    def self.banner(task)
-      "thor " + task.formatted_usage(self, false)
+    def self.banner(task, all = false, subcommand = false)
+      "thor " + task.formatted_usage(self, all, subcommand)
     end
 
     def thor_root
@@ -190,7 +202,7 @@ class Thor::Runner < Thor #:nodoc:
       true
     end
 
-    # Load the thorfiles. If relevant_to is supplied, looks for specific files
+    # Load the Thorfiles. If relevant_to is supplied, looks for specific files
     # in the thor_root instead of loading them all.
     #
     # By default, it also traverses the current path until find Thor files, as
@@ -199,7 +211,7 @@ class Thor::Runner < Thor #:nodoc:
     #
     def initialize_thorfiles(relevant_to=nil, skip_lookup=false)
       thorfiles(relevant_to, skip_lookup).each do |f|
-        Thor::Util.load_thorfile(f) unless Thor::Base.subclass_files.keys.include?(File.expand_path(f))
+        Thor::Util.load_thorfile(f, nil, options[:debug]) unless Thor::Base.subclass_files.keys.include?(File.expand_path(f))
       end
     end
 
@@ -244,7 +256,7 @@ class Thor::Runner < Thor #:nodoc:
       end
     end
 
-    # Load thorfiles relevant to the given method. If you provide "foo:bar" it
+    # Load Thorfiles relevant to the given method. If you provide "foo:bar" it
     # will load all thor files in the thor.yaml that has "foo" e "foo:bar"
     # namespaces registered.
     #
@@ -267,16 +279,11 @@ class Thor::Runner < Thor #:nodoc:
       raise Error, "No Thor tasks available" if klasses.empty?
       show_modules if with_modules && !thor_yaml.empty?
 
-      # Remove subclasses
-      klasses.dup.each do |klass|
-        klasses -= Thor::Util.thor_classes_in(klass)
-      end
-
       list = Hash.new { |h,k| h[k] = [] }
       groups = klasses.select { |k| k.ancestors.include?(Thor::Group) }
 
       # Get classes which inherit from Thor
-      (klasses - groups).each { |k| list[k.namespace] += k.printable_tasks(false) }
+      (klasses - groups).each { |k| list[k.namespace.split(":").first] += k.printable_tasks(false) }
 
       # Get classes which inherit from Thor::Base
       groups.map! { |k| k.printable_tasks(false).first }

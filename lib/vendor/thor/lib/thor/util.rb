@@ -8,11 +8,11 @@ class Thor
   #
   # 1) Methods to convert thor namespaces to constants and vice-versa.
   #
-  #   Thor::Utils.namespace_from_thor_class(Foo::Bar::Baz) #=> "foo:bar:baz"
+  #   Thor::Util.namespace_from_thor_class(Foo::Bar::Baz) #=> "foo:bar:baz"
   #
   # 2) Loading thor files and sandboxing:
   #
-  #   Thor::Utils.load_thorfile("~/.thor/foo")
+  #   Thor::Util.load_thorfile("~/.thor/foo")
   #
   module Util
 
@@ -128,38 +128,37 @@ class Thor
     # ==== Parameters
     # namespace<String>
     #
-    def self.find_class_and_task_by_namespace(namespace)
-      if namespace.include?(?:)
+    def self.find_class_and_task_by_namespace(namespace, fallback = true)
+      if namespace.include?(?:) # look for a namespaced task
         pieces = namespace.split(":")
         task   = pieces.pop
         klass  = Thor::Util.find_by_namespace(pieces.join(":"))
       end
-
-      unless klass
+      unless klass # look for a Thor::Group with the right name
         klass, task = Thor::Util.find_by_namespace(namespace), nil
       end
-
-      return klass, task
-    end
-
-    # The same as namespace_to_thor_class_and_task!, but raises an error if a klass
-    # could not be found.
-    def self.find_class_and_task_by_namespace!(namespace)
-      klass, task = find_class_and_task_by_namespace(namespace)
-      raise Error, "Could not find namespace or task #{namespace.inspect}." unless klass
+      if !klass && fallback # try a task in the default namespace
+        task = namespace
+        klass = Thor::Util.find_by_namespace('')
+      end
       return klass, task
     end
 
     # Receives a path and load the thor file in the path. The file is evaluated
     # inside the sandbox to avoid namespacing conflicts.
     #
-    def self.load_thorfile(path, content=nil)
+    def self.load_thorfile(path, content=nil, debug=false)
       content ||= File.binread(path)
 
       begin
         Thor::Sandbox.class_eval(content, path)
       rescue Exception => e
-        $stderr.puts "WARNING: unable to load thorfile #{path.inspect}: #{e.message}"
+        $stderr.puts("WARNING: unable to load thorfile #{path.inspect}: #{e.message}")
+        if debug
+          $stderr.puts(*e.backtrace)
+        else
+          $stderr.puts(e.backtrace.first)
+        end
       end
     end
 
@@ -185,7 +184,7 @@ class Thor
       end
     end
 
-    # Returns the root where thor files are located, dependending on the OS.
+    # Returns the root where thor files are located, depending on the OS.
     #
     def self.thor_root
       File.join(user_home, ".thor").gsub(/\\/, '/')
@@ -199,7 +198,7 @@ class Thor
     # If we don't #gsub the \ character, Dir.glob will fail.
     #
     def self.thor_root_glob
-      files = Dir["#{thor_root}/*"]
+      files = Dir["#{escape_globs(thor_root)}/*"]
 
       files.map! do |file|
         File.directory?(file) ? File.join(file, "main.thor") : file
@@ -209,6 +208,7 @@ class Thor
     # Where to look for Thor files.
     #
     def self.globs_for(path)
+      path = escape_globs(path)
       ["#{path}/Thorfile", "#{path}/*.thor", "#{path}/tasks/*.thor", "#{path}/lib/tasks/*.thor"]
     end
 
@@ -217,13 +217,49 @@ class Thor
     #
     def self.ruby_command
       @ruby_command ||= begin
-        ruby = File.join(Config::CONFIG['bindir'], Config::CONFIG['ruby_install_name'])
-        ruby << Config::CONFIG['EXEEXT']
+        ruby_name = RbConfig::CONFIG['ruby_install_name']
+        ruby = File.join(RbConfig::CONFIG['bindir'], ruby_name)
+        ruby << RbConfig::CONFIG['EXEEXT']
+
+        # avoid using different name than ruby (on platforms supporting links)
+        if ruby_name != 'ruby' && File.respond_to?(:readlink)
+          begin
+            alternate_ruby = File.join(RbConfig::CONFIG['bindir'], 'ruby')
+            alternate_ruby << RbConfig::CONFIG['EXEEXT']
+
+            # ruby is a symlink
+            if File.symlink? alternate_ruby
+              linked_ruby = File.readlink alternate_ruby
+
+              # symlink points to 'ruby_install_name'
+              ruby = alternate_ruby if linked_ruby == ruby_name || linked_ruby == ruby
+            end
+          rescue NotImplementedError
+            # just ignore on windows
+          end
+        end
 
         # escape string in case path to ruby executable contain spaces.
         ruby.sub!(/.*\s.*/m, '"\&"')
         ruby
       end
+    end
+
+    # Returns a string that has had any glob characters escaped.
+    # The glob characters are `* ? { } [ ]`.
+    #
+    # ==== Examples
+    #
+    #   Thor::Util.escape_globs('[apps]')   # => '\[apps\]'
+    #
+    # ==== Parameters
+    # String
+    #
+    # ==== Returns
+    # String
+    #
+    def self.escape_globs(path)
+      path.to_s.gsub(/[*?{}\[\]]/, '\\\\\\&')
     end
 
   end

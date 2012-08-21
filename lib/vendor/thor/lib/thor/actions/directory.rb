@@ -2,13 +2,13 @@ require 'thor/actions/empty_directory'
 
 class Thor
   module Actions
-
     # Copies recursively the files from source directory to root directory.
     # If any of the files finishes with .tt, it's considered to be a template
     # and is placed in the destination without the extension .tt. If any
     # empty directory is found, it's copied and all .empty_directory files are
-    # ignored. Remember that file paths can also be encoded, let's suppose a doc
-    # directory with the following files:
+    # ignored. If any file name is wrapped within % signs, the text within
+    # the % signs will be executed as a method and replaced with the returned
+    # value. Let's suppose a doc directory with the following files:
     #
     #   doc/
     #     components/.empty_directory
@@ -21,13 +21,17 @@ class Thor
     #   directory "doc"
     #
     # It will create a doc directory in the destination with the following
-    # files (assuming that the app_name is "blog"):
+    # files (assuming that the `app_name` method returns the value "blog"):
     #
     #   doc/
     #     components/
     #     README
     #     rdoc.rb
     #     blog.rb
+    #
+    # <b>Encoded path note:</b> Since Thor internals use Object#respond_to? to check if it can
+    # expand %something%, this `something` should be a public method in the class calling
+    # #directory. If a method is private, Thor stack raises PrivateMethodEncodedError.
     #
     # ==== Parameters
     # source<String>:: the relative path to the source root.
@@ -40,7 +44,9 @@ class Thor
     #   directory "doc"
     #   directory "doc", "docs", :recursive => false
     #
-    def directory(source, destination=nil, config={}, &block)
+    def directory(source, *args, &block)
+      config = args.last.is_a?(Hash) ? args.pop : {}
+      destination = args.first || source
       action Directory.new(self, source, destination || source, config, &block)
     end
 
@@ -65,10 +71,11 @@ class Thor
       protected
 
         def execute!
-          lookup = config[:recursive] ? File.join(source, '**') : source
+          lookup = Util.escape_globs(source)
+          lookup = config[:recursive] ? File.join(lookup, '**') : lookup
           lookup = File.join(lookup, '{*,.[a-z]*}')
 
-          Dir[lookup].each do |file_source|
+          Dir[lookup].sort.each do |file_source|
             next if File.directory?(file_source)
             file_destination = File.join(given_destination, file_source.gsub(source, '.'))
             file_destination.gsub!('/./', '/')

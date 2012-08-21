@@ -28,7 +28,7 @@ class Thor
       @switches = arguments
 
       arguments.each do |argument|
-        if argument.default
+        if argument.default != nil
           @assigns[argument.human_name] = argument.default
         elsif argument.required?
           @non_assigned_required << argument
@@ -49,7 +49,16 @@ class Thor
       @assigns
     end
 
+    def remaining
+      @pile
+    end
+
     private
+
+      def no_or_skip?(arg)
+        arg =~ /^--(no|skip)-([-\w]+)$/
+        $2
+      end
 
       def last?
         @pile.empty?
@@ -89,7 +98,7 @@ class Thor
         hash = {}
 
         while current_is_value? && peek.include?(?:)
-          key, value = shift.split(':')
+          key, value = shift.split(':',2)
           hash[key] = value
         end
         hash
@@ -114,7 +123,7 @@ class Thor
         array
       end
 
-      # Check if the peel is numeric ofrmat and return a Float or Integer.
+      # Check if the peek is numeric format and return a Float or Integer.
       # Otherwise raises an error.
       #
       def parse_numeric(name)
@@ -127,10 +136,22 @@ class Thor
         $&.index('.') ? shift.to_f : shift.to_i
       end
 
-      # Parse string, i.e., just return the current value in the pile.
+      # Parse string:
+      # for --string-arg, just return the current value in the pile
+      # for --no-string-arg, nil
       #
       def parse_string(name)
-        shift
+        if no_or_skip?(name)
+          nil
+        else
+          value = shift
+          if @switches.is_a?(Hash) && switch = @switches[name]
+            if switch.enum && !switch.enum.include?(value)
+              raise MalformattedArgumentError, "Expected '#{name}' to be one of #{switch.enum.join(', ')}; got #{value}"
+            end
+          end
+          value
+        end
       end
 
       # Raises an error if @non_assigned_required array is not empty.

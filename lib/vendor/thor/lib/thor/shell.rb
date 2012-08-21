@@ -1,5 +1,4 @@
 require 'rbconfig'
-require 'thor/shell/color'
 
 class Thor
   module Base
@@ -7,7 +6,9 @@ class Thor
     # it will use a colored log, otherwise it will use a basic one without color.
     #
     def self.shell
-      @shell ||= if Config::CONFIG['host_os'] =~ /mswin|mingw/
+      @shell ||= if ENV['THOR_SHELL'] && ENV['THOR_SHELL'].size > 0
+        Thor::Shell.const_get(ENV['THOR_SHELL'])
+      elsif ((RbConfig::CONFIG['host_os'] =~ /mswin|mingw/) && !(ENV['ANSICON']))
         Thor::Shell::Basic
       else
         Thor::Shell::Color
@@ -22,7 +23,11 @@ class Thor
   end
 
   module Shell
-    SHELL_DELEGATED_METHODS = [:ask, :yes?, :no?, :say, :say_status, :print_table]
+    SHELL_DELEGATED_METHODS = [:ask, :error, :set_color, :yes?, :no?, :say, :say_status, :print_in_columns, :print_table, :print_wrapped, :file_collision, :terminal_width]
+
+    autoload :Basic, 'thor/shell/basic'
+    autoload :Color, 'thor/shell/color'
+    autoload :HTML,  'thor/shell/html'
 
     # Add shell to initialize config values.
     #
@@ -57,8 +62,8 @@ class Thor
     # Common methods that are delegated to the shell.
     SHELL_DELEGATED_METHODS.each do |method|
       module_eval <<-METHOD, __FILE__, __LINE__
-        def #{method}(*args)
-          shell.#{method}(*args)
+        def #{method}(*args,&block)
+          shell.#{method}(*args,&block)
         end
       METHOD
     end

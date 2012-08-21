@@ -1,7 +1,4 @@
 class Thor
-  # This is a modified version of Daniel Berger's Getopt::Long class, licensed
-  # under Ruby's license.
-  #
   class Options < Arguments #:nodoc:
     LONG_RE     = /^(--\w+(?:-\w+)*)$/
     SHORT_RE    = /^(-[a-z])$/i
@@ -38,7 +35,7 @@ class Thor
         @non_assigned_required.delete(hash_options[key])
       end
 
-      @shorts, @switches, @unknown = {}, {}, []
+      @shorts, @switches, @extra = {}, {}, []
 
       options.each do |option|
         @switches[option.switch_name] = option
@@ -49,12 +46,19 @@ class Thor
       end
     end
 
+    def remaining
+      @extra
+    end
+
     def parse(args)
       @pile = args.dup
 
       while peek
-        if current_is_switch?
-          case shift
+        match, is_switch = current_is_switch?
+        shifted = shift
+
+        if is_switch
+          case shifted
             when SHORT_SQ_RE
               unshift($1.split('').map { |f| "-#{f}" })
               next
@@ -68,10 +72,11 @@ class Thor
           switch = normalize_switch(switch)
           option = switch_option(switch)
           @assigns[option.human_name] = parse_peek(switch, option)
-        elsif current_is_switch_formatted?
-          @unknown << shift
+        elsif match
+          @extra << shifted
+          @extra << shift while peek && peek !~ /^-/
         else
-          shift
+          @extra << shifted
         end
       end
 
@@ -83,7 +88,9 @@ class Thor
     end
 
     def check_unknown!
-      raise UnknownArgumentError, "Unknown switches '#{@unknown.join(', ')}'" unless @unknown.empty?
+      # an unknown option starts with - or -- and has no more --'s afterward.
+      unknown = @extra.select { |str| str =~ /^--?(?:(?!--).)*$/ }
+      raise UnknownArgumentError, "Unknown switches '#{unknown.join(', ')}'" unless unknown.empty?
     end
 
     protected
@@ -92,15 +99,17 @@ class Thor
       #
       def current_is_switch?
         case peek
-          when LONG_RE, SHORT_RE, EQ_RE, SHORT_NUM
-            switch?($1)
-          when SHORT_SQ_RE
-            $1.split('').any? { |f| switch?("-#{f}") }
+        when LONG_RE, SHORT_RE, EQ_RE, SHORT_NUM
+          [true, switch?($1)]
+        when SHORT_SQ_RE
+          [true, $1.split('').any? { |f| switch?("-#{f}") }]
+        else
+          [false, false]
         end
       end
 
-      def switch_formatted?(arg)
-        case arg
+      def current_is_switch_formatted?
+        case peek
         when LONG_RE, SHORT_RE, EQ_RE, SHORT_NUM, SHORT_SQ_RE
           true
         else
@@ -108,12 +117,8 @@ class Thor
         end
       end
 
-      def current_is_switch_formatted?
-        switch_formatted? peek
-      end
-
       def switch?(arg)
-        switch_option(arg) || @shorts.key?(arg)
+        switch_option(normalize_switch(arg))
       end
 
       def switch_option(arg)
@@ -124,22 +129,25 @@ class Thor
         end
       end
 
-      def no_or_skip?(arg)
-        arg =~ /^--(no|skip)-([-\w]+)$/
-        $2
-      end
-
       # Check if the given argument is actually a shortcut.
       #
       def normalize_switch(arg)
-        @shorts.key?(arg) ? @shorts[arg] : arg
+        (@shorts[arg] || arg).tr('_', '-')
       end
 
       # Parse boolean values which can be given as --foo=true, --foo or --no-foo.
       #
       def parse_boolean(switch)
         if current_is_value?
-          ["true", "TRUE", "t", "T", true].include?(shift)
+          if ["true", "TRUE", "t", "T", true].include?(peek)
+            shift
+            true
+          elsif ["false", "FALSE", "f", "F", false].include?(peek)
+            shift
+            false
+          else
+            true
+          end
         else
           @switches.key?(switch) || !no_or_skip?(switch)
         end
@@ -155,7 +163,9 @@ class Thor
             return nil # User set value to nil
           elsif option.string? && !option.required?
             # Return the default if there is one, else the human name
-            return option.default || option.human_name
+            return option.lazy_default || option.default || option.human_name
+          elsif option.lazy_default
+            return option.lazy_default
           else
             raise MalformattedArgumentError, "No value provided for option '#{switch}'"
           end
@@ -164,6 +174,5 @@ class Thor
         @non_assigned_required.delete(option)
         send(:"parse_#{option.type}", switch)
       end
-
   end
 end
