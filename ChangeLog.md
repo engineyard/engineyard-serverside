@@ -6,7 +6,7 @@
 
 ## v2.0.1 (2012-08-21)
 
-  *
+  * Reduce the number of deprecation warnings.
 
 ## v2.0.0 (2012-08-16)
 
