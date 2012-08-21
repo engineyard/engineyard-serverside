@@ -4,6 +4,10 @@
 
   *
 
+## v2.0.1 (2012-08-21)
+
+  *
+
 ## v2.0.0 (2012-08-16)
 
   * Default bundler version is now 1.1.5.
