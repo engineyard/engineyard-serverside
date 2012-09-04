@@ -92,11 +92,11 @@ module EY
             if !config.ignore_database_adapter_warning? && !lockfile.any_database_adapter?
               shell.warning <<-WARN
 Gemfile.lock does not contain a recognized database adapter.
-A database-adapter gem such as mysql2, mysql, or do_mysql was expected.
-This can prevent applications that use MySQL or PostreSQL from booting.
+A database-adapter gem such as pg, mysql2, mysql, or do_mysql was expected.
+This can prevent applications that use PostgreSQL or MySQL from booting.
 
 To fix, add any needed adapter to your Gemfile, bundle, commit, and redeploy.
-Applications not using MySQL or PostgreSQL can safely ignore this warning by
+Applications not using PostgreSQL or MySQL can safely ignore this warning by
 adding ignore_database_adapter_warning: true to the application's ey.yml file
 under this environment's name and adding the file to your repository.
               WARN
