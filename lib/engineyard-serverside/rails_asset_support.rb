@@ -6,7 +6,7 @@ module EY
         rails_version = bundled_rails_version
         roles :app_master, :app, :solo do
           keep_existing_assets
-          cmd = "cd #{config.paths.active_release} && PATH=#{config.paths.binstubs}:$PATH #{config.framework_envs} rake assets:precompile"
+          cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake assets:precompile"
 
           if rails_version
             shell.status "Precompiling assets for rails v#{rails_version}"
@@ -40,20 +40,20 @@ module EY
           return false
         end
 
-        app_rb_path = config.paths.active_release_config.join('application.rb')
+        app_rb_path = paths.active_release_config.join('application.rb')
         unless app_rb_path.readable? # Not a Rails app in the first place.
           shell.status "Skipping asset precompilation. (not a Rails application)"
           return false
         end
 
-        if config.paths.active_release.join('app','assets').exist?
+        if paths.active_release.join('app','assets').exist?
           shell.status "Attempting Rails asset precompilation. (found directory: 'app/assets')"
         else
           shell.status "Skipping asset precompilation. (directory not found: 'app/assets')"
           return false
         end
 
-        if config.paths.public_assets.exist?
+        if paths.public_assets.exist?
           shell.status "Skipping asset compilation. Already compiled. (found directory: 'public/assets')"
           return false
         end
@@ -87,13 +87,13 @@ module EY
       def app_has_asset_task?
         # We just run this locally on the app master; everybody else should
         # have the same code anyway.
-        task_check = "PATH=#{config.paths.binstubs}:$PATH #{config.framework_envs} rake -T assets:precompile |grep 'assets:precompile'"
-        cmd = "cd #{config.paths.active_release} && #{task_check}"
-        shell.logged_system("cd #{config.paths.active_release} && #{task_check}").success?
+        task_check = "PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake -T assets:precompile |grep 'assets:precompile'"
+        cmd = "cd #{paths.active_release} && #{task_check}"
+        shell.logged_system("cd #{paths.active_release} && #{task_check}").success?
       end
 
       def app_builds_own_assets?
-        config.paths.public_assets.exist?
+        paths.public_assets.exist?
       end
 
       # To support operations like Unicorn's hot reload, it is useful to have
@@ -101,8 +101,8 @@ module EY
       # clients may request stale assets that you just deleted.
       # Making use of this requires a properly-configured front-end HTTP server.
       def keep_existing_assets
-        current = config.paths.shared_assets
-        last_asset_path = config.paths.shared.join('last_assets')
+        current = paths.shared_assets
+        last_asset_path = paths.shared.join('last_assets')
         # If there are current shared assets, move them under a 'last_assets' directory.
         run <<-COMMAND
 if [ -d #{current} ]; then
@@ -110,11 +110,11 @@ if [ -d #{current} ]; then
 else
   mkdir -p #{current} #{last_asset_path};
 fi;
-ln -nfs #{current} #{last_asset_path} #{config.paths.public}
+ln -nfs #{current} #{last_asset_path} #{paths.public}
         COMMAND
        end
 
-      def bundled_rails_version(lockfile_path = config.paths.gemfile_lock)
+      def bundled_rails_version(lockfile_path = paths.gemfile_lock)
         return unless lockfile_path.exist?
         lockfile = lockfile_path.read
         lockfile.each_line do |line|

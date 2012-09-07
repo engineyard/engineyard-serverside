@@ -60,7 +60,7 @@ module EY
       end
 
       def create_revision_file_command
-        strategy.create_revision_file_command(config.paths.active_release)
+        strategy.create_revision_file_command(paths.active_release)
       end
 
       def short_log_message(revision)
@@ -68,7 +68,7 @@ module EY
       end
 
       def parse_configured_services
-        result = YAML.load_file "#{config.paths.shared_config}/ey_services_config_deploy.yml"
+        result = YAML.load_file "#{paths.shared_config}/ey_services_config_deploy.yml"
         return {} unless result.is_a?(Hash)
         result
       rescue
@@ -142,7 +142,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       def push_code
         shell.status "Pushing code to all servers"
         commands = servers.remote.map do |server|
-          cmd = server.sync_directory_command(config.paths.repository_cache)
+          cmd = server.sync_directory_command(paths.repository_cache)
           proc { shell.logged_system(cmd) }
         end
         futures = EY::Serverside::Future.call(commands)
@@ -174,7 +174,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
                               roles :app_master, :app, :solo, :util do
                                 run(generate_ssh_wrapper)
                               end
-                              config.paths.ssh_wrapper
+                              paths.ssh_wrapper
                             end
       end
 
@@ -184,13 +184,13 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # Learned this at http://lists.mindrot.org/pipermail/openssh-unix-dev/2009-February/027271.html
       # (Thanks Jim L.)
       def generate_ssh_wrapper
-        path = config.paths.ssh_wrapper
+        path = paths.ssh_wrapper
         <<-SCRIPT
 mkdir -p #{path.dirname}
 [[ -x #{path} ]] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
-ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=INFO -o IdentityFile=#{config.paths.deploy_key} -o IdentitiesOnly=yes $*
+ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=INFO -o IdentityFile=#{paths.deploy_key} -o IdentitiesOnly=yes $*
 SSH
 chmod 0700 #{path}
         SCRIPT
@@ -206,8 +206,8 @@ chmod 0700 #{path}
 
       # task
       def cleanup_old_releases
-        clean_release_directory(config.paths.releases)
-        clean_release_directory(config.paths.releases_failed)
+        clean_release_directory(paths.releases)
+        clean_release_directory(paths.releases_failed)
       end
 
       # Remove all but the most-recent +count+ releases from the specified
@@ -226,7 +226,7 @@ chmod 0700 #{path}
       def rollback
         if config.rollback_paths!
           begin
-            rolled_back_release = config.paths.latest_release
+            rolled_back_release = paths.latest_release
             shell.status "Rolling back to previous release: #{short_log_message(config.active_revision)}"
             run_with_callbacks(:symlink)
             sudo "rm -rf #{rolled_back_release}"
@@ -251,7 +251,7 @@ chmod 0700 #{path}
       def migrate
         return unless config.migrate?
         @migrations_reached = true
-        cmd = "cd #{config.paths.active_release} && PATH=#{config.paths.binstubs}:$PATH #{config.framework_envs} #{config.migration_command}"
+        cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} #{config.migration_command}"
         roles :app_master, :solo do
           shell.status "Migrating: #{cmd}"
           run(cmd)
@@ -260,12 +260,12 @@ chmod 0700 #{path}
 
       # task
       def copy_repository_cache
-        shell.status "Copying to #{config.paths.active_release}"
+        shell.status "Copying to #{paths.active_release}"
         exclusions = Array(config.copy_exclude).map { |e| %|--exclude="#{e}"| }.join(' ')
-        run("mkdir -p #{config.paths.active_release} #{config.paths.releases_failed} #{config.paths.shared_config} && rsync -aq #{exclusions} #{config.paths.repository_cache}/ #{config.paths.active_release}")
+        run("mkdir -p #{paths.active_release} #{paths.releases_failed} #{paths.shared_config} && rsync -aq #{exclusions} #{paths.repository_cache}/ #{paths.active_release}")
 
         shell.status "Ensuring proper ownership."
-        sudo("chown -R #{config.user}:#{config.group} #{config.paths.active_release} #{config.paths.releases_failed}")
+        sudo("chown -R #{config.user}:#{config.group} #{paths.active_release} #{paths.releases_failed}")
       end
 
       def create_revision_file
@@ -303,19 +303,19 @@ Deploy again if your services configuration appears incomplete or out of date.
       def setup_sqlite3_if_necessary
         if gemfile? && lockfile && lockfile.uses_sqlite3?
           [
-           ["Create databases directory if needed", "mkdir -p #{config.paths.shared}/databases"],
-           ["Creating SQLite database if needed", "touch #{config.paths.shared}/databases/#{config.framework_env}.sqlite3"],
-           ["Create config directory if needed", "mkdir -p #{config.paths.active_release_config}"],
+           ["Create databases directory if needed", "mkdir -p #{paths.shared}/databases"],
+           ["Creating SQLite database if needed", "touch #{paths.shared}/databases/#{config.framework_env}.sqlite3"],
+           ["Create config directory if needed", "mkdir -p #{paths.active_release_config}"],
            ["Generating SQLite config", <<-WRAP],
-cat > #{config.paths.shared_config}/database.sqlite3.yml<<'YML'
+cat > #{paths.shared_config}/database.sqlite3.yml<<'YML'
 #{config.framework_env}:
   adapter: sqlite3
-  database: #{config.paths.shared}/databases/#{config.framework_env}.sqlite3
+  database: #{paths.shared}/databases/#{config.framework_env}.sqlite3
   pool: 5
   timeout: 5000
 YML
 WRAP
-           ["Symlink database.yml", "ln -nfs #{config.paths.shared_config}/database.sqlite3.yml #{config.paths.active_release_config}/database.yml"],
+           ["Symlink database.yml", "ln -nfs #{paths.shared_config}/database.sqlite3.yml #{paths.active_release_config}/database.yml"],
           ].each do |what, cmd|
             shell.status "#{what}"
             run(cmd)
@@ -323,7 +323,7 @@ WRAP
 
           owner = [config.user, config.group].join(':')
           shell.status "Setting ownership to #{owner}"
-          sudo "chown -R #{owner} #{config.paths.active_release}"
+          sudo "chown -R #{owner} #{paths.active_release}"
         end
       end
 
@@ -335,40 +335,40 @@ WRAP
         end
         owner = [config.user, config.group].join(':')
         shell.status "Setting ownership to #{owner}"
-        sudo "chown -R #{owner} #{config.paths.active_release}"
+        sudo "chown -R #{owner} #{paths.active_release}"
       end
 
       def symlink_tasks
         [
-          ["Set group write permissions", "chmod -R g+w #{config.paths.active_release}"],
-          ["Remove revision-tracked shared directories from deployment", "rm -rf #{config.paths.active_log} #{config.paths.public_system} #{config.paths.active_release}/tmp/pids"],
-          ["Create tmp directory", "mkdir -p #{config.paths.active_release}/tmp"],
-          ["Symlink shared log directory", "ln -nfs #{config.paths.shared_log} #{config.paths.active_log}"],
-          ["Create public directory if needed", "mkdir -p #{config.paths.public}"],
-          ["Create config directory if needed", "mkdir -p #{config.paths.active_release_config}"],
-          ["Create system directory if needed", "ln -nfs #{config.paths.shared_system} #{config.paths.public_system}"],
-          ["Symlink shared pids directory", "ln -nfs #{config.paths.shared}/pids #{config.paths.active_release}/tmp/pids"],
-          ["Symlink other shared config files", "find #{config.paths.shared_config} -type f -not -name 'database.yml' -exec ln -s {} #{config.paths.active_release_config} \\;"],
-          ["Symlink mongrel_cluster.yml", "ln -nfs #{config.paths.shared_config}/mongrel_cluster.yml #{config.paths.active_release_config}/mongrel_cluster.yml"],
-          ["Symlink database.yml", "ln -nfs #{config.paths.shared_config}/database.yml #{config.paths.active_release_config}/database.yml"],
-          ["Symlink newrelic.yml if needed", "if [ -f \"#{config.paths.shared_config}/newrelic.yml\" ]; then ln -nfs #{config.paths.shared_config}/newrelic.yml #{config.paths.active_release_config}/newrelic.yml; fi"],
+          ["Set group write permissions",           "chmod -R g+w #{paths.active_release}"],
+          ["Remove symlinked shared directories",   "rm -rf #{paths.active_log} #{paths.public_system} #{paths.active_release}/tmp/pids"],
+          ["Create tmp directory",                  "mkdir -p #{paths.active_release}/tmp"],
+          ["Create public directory",               "mkdir -p #{paths.public}"],
+          ["Create config directory",               "mkdir -p #{paths.active_release_config}"],
+          ["Symlink shared log directory",          "ln -nfs #{paths.shared_log} #{paths.active_log}"],
+          ["Lymlink pubilc system directory",       "ln -nfs #{paths.shared_system} #{paths.public_system}"],
+          ["Symlink shared pids directory",         "ln -nfs #{paths.shared}/pids #{paths.active_release}/tmp/pids"],
+          ["Symlink other shared config files",     "find #{paths.shared_config} -type f -not -name 'database.yml' -exec ln -s {} #{paths.active_release_config} \\;"],
+          ["Symlink mongrel_cluster.yml",           "ln -nfs #{paths.shared_config}/mongrel_cluster.yml #{paths.active_release_config}/mongrel_cluster.yml"],
+          ["Symlink database.yml",                  "ln -nfs #{paths.shared_config}/database.yml #{paths.active_release_config}/database.yml"],
+          ["Symlink newrelic.yml if needed",        "if [ -f \"#{paths.shared_config}/newrelic.yml\" ]; then ln -nfs #{paths.shared_config}/newrelic.yml #{paths.active_release_config}/newrelic.yml; fi"],
         ]
       end
 
       # task
       def symlink
         shell.status "Symlinking code."
-        run "rm -f #{config.paths.current} && ln -nfs #{config.paths.active_release} #{config.paths.current} && find #{config.paths.current} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
+        run "rm -f #{paths.current} && ln -nfs #{paths.active_release} #{paths.current} && find #{paths.current} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
         @symlink_changed = true
       rescue Exception
-        sudo "rm -f #{config.paths.current} && ln -nfs #{config.paths.previous_release(config.paths.active_release)} #{config.paths.current} && chown -R #{config.user}:#{config.group} #{config.paths.current}"
+        sudo "rm -f #{paths.current} && ln -nfs #{paths.previous_release(paths.active_release)} #{paths.current} && chown -R #{config.user}:#{config.group} #{paths.current}"
         @symlink_changed = false
         raise
       end
 
       def callback(what)
         @callbacks_reached ||= true
-        if config.paths.deploy_hook(what).exist?
+        if paths.deploy_hook(what).exist?
           shell.status "Running deploy hook: deploy/#{what}.rb"
           run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
             per_instance_args = []
@@ -391,7 +391,7 @@ WRAP
         ENV['GIT_SSH'] = ssh_executable.to_s
         @strategy ||= config.strategy_class.new(
           shell,
-          :repository_cache => config.paths.repository_cache.to_s,
+          :repository_cache => paths.repository_cache.to_s,
           :app              => config.app,
           :repo             => config[:repo],
           :ref              => config[:branch]
@@ -399,7 +399,7 @@ WRAP
       end
 
       def gemfile?
-        config.paths.gemfile.exist?
+        paths.gemfile.exist?
       end
 
       def base_callback_command_for(what)
@@ -407,7 +407,7 @@ WRAP
         cmd << '--app'              << config.app
         cmd << '--environment-name' << config.environment_name
         cmd << '--account-name'     << config.account_name
-        cmd << '--release-path'     << config.paths.active_release.to_s
+        cmd << '--release-path'     << paths.active_release.to_s
         cmd << '--framework-env'    << config.framework_env.to_s
         cmd << '--verbose' if config.verbose
         cmd
@@ -446,18 +446,18 @@ WRAP
       def with_failed_release_cleanup
         yield
       rescue Exception
-        shell.status "Release #{config.paths.active_release} failed, saving release to #{config.paths.releases_failed}."
-        sudo "mv #{config.paths.active_release} #{config.paths.releases_failed}"
-        clean_release_directory(config.paths.releases_failed)
+        shell.status "Release #{paths.active_release} failed, saving release to #{paths.releases_failed}."
+        sudo "mv #{paths.active_release} #{paths.releases_failed}"
+        clean_release_directory(paths.releases_failed)
         raise
       end
 
       def bundler_config
         version = LockfileParser.default_version
         options = [
-          "--gemfile #{config.paths.gemfile}",
-          "--path #{config.paths.bundled_gems}",
-          "--binstubs #{config.paths.binstubs}",
+          "--gemfile #{paths.gemfile}",
+          "--path #{paths.bundled_gems}",
+          "--binstubs #{paths.binstubs}",
           "--without #{config.bundle_without}"
         ]
 
@@ -470,7 +470,7 @@ WRAP
       end
 
       def lockfile
-        lockfile_path = config.paths.gemfile_lock
+        lockfile_path = paths.gemfile_lock
         if lockfile_path.exist?
           @lockfile_parser ||= LockfileParser.new(lockfile_path.read)
         else
@@ -486,7 +486,7 @@ WRAP
 
           bundler_version, install_switches = bundler_config
           sudo "#{clean_environment} && #{serverside_bin} install_bundler #{bundler_version}"
-          run  "#{clean_environment} && cd #{config.paths.active_release} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
+          run  "#{clean_environment} && cd #{paths.active_release} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
 
           write_system_version
         end
@@ -494,25 +494,25 @@ WRAP
 
       def clean_bundle_on_system_version_change
         # diff exits with 0 for same and 1/2 for different/file not found.
-        check_ruby   = "#{config.ruby_version_command} | diff - #{config.paths.ruby_version} >/dev/null 2>&1"
-        check_system = "#{config.system_version_command} | diff - #{config.paths.system_version} >/dev/null 2>&1"
+        check_ruby   = "#{config.ruby_version_command} | diff - #{paths.ruby_version} >/dev/null 2>&1"
+        check_system = "#{config.system_version_command} | diff - #{paths.system_version} >/dev/null 2>&1"
         say_cleaning = "echo 'New deploy or system version change detected, cleaning bundled gems.'"
-        clean_bundle = "rm -Rf #{config.paths.bundled_gems}"
+        clean_bundle = "rm -Rf #{paths.bundled_gems}"
 
         run "#{check_ruby} && #{check_system} || (#{say_cleaning} && #{clean_bundle})"
       end
 
       def write_system_version
-        store_ruby_version   = "#{config.ruby_version_command} > #{config.paths.ruby_version}"
-        store_system_version = "#{config.system_version_command} > #{config.paths.system_version}"
+        store_ruby_version   = "#{config.ruby_version_command} > #{paths.ruby_version}"
+        store_system_version = "#{config.system_version_command} > #{paths.system_version}"
 
-        run "mkdir -p #{config.paths.bundled_gems} && #{store_ruby_version} && #{store_system_version}"
+        run "mkdir -p #{paths.bundled_gems} && #{store_ruby_version} && #{store_system_version}"
       end
 
       def check_node_npm
-        if config.paths.package_json.exist?
+        if paths.package_json.exist?
           shell.info "~> package.json detected, installing npm packages"
-          run "cd #{config.paths.active_release} && npm install"
+          run "cd #{paths.active_release} && npm install"
         end
       end
     end   # DeployBase

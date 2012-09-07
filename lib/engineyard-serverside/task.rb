@@ -18,9 +18,13 @@ module EY
         @roles = :all
       end
 
+      def paths
+        config.paths
+      end
+
       def require_custom_tasks
         deploy_file = ["config/eydeploy.rb", "eydeploy.rb"].map do |short_file|
-          config.paths.repository_cache.join(short_file)
+          paths.repository_cache.join(short_file)
         end.detect do |file|
           file.exist?
         end
@@ -33,7 +37,7 @@ module EY
 
       def load_ey_yml
         ey_yml = ["config/ey.yml", "ey.yml"].map do |short_file|
-          config.paths.repository_cache.join(short_file)
+          paths.repository_cache.join(short_file)
         end.detect do |file|
           file.exist?
         end
