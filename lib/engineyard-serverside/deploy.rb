@@ -84,12 +84,19 @@ module EY
         end
       end
 
+      # The nodatabase.yml file is dropped by server configuration when there is
+      # no database in the cluster.
+      def has_database?
+        paths.shared_config.join('database.yml').exist? &&
+          !paths.shared_config.join('nodatabase.yml').exist?
+      end
+
       def check_repository
         if gemfile?
           shell.status "Gemfile found."
           if lockfile
             shell.status "Gemfile.lock found."
-            if !config.ignore_database_adapter_warning? && !lockfile.any_database_adapter?
+            if !config.ignore_database_adapter_warning? && has_database? && !lockfile.any_database_adapter?
               shell.warning <<-WARN
 Gemfile.lock does not contain a recognized database adapter.
 A database-adapter gem such as pg, mysql2, mysql, or do_mysql was expected.
@@ -348,8 +355,8 @@ WRAP
           ["Symlink shared log directory",          "ln -nfs #{paths.shared_log} #{paths.active_log}"],
           ["Lymlink pubilc system directory",       "ln -nfs #{paths.shared_system} #{paths.public_system}"],
           ["Symlink shared pids directory",         "ln -nfs #{paths.shared}/pids #{paths.active_release}/tmp/pids"],
-          ["Symlink database.yml",                  "ln -nfs #{paths.shared_config}/database.yml #{paths.active_release_config}/database.yml"],
           ["Symlink other shared config files",     "find #{paths.shared_config} -type f -not -name 'database.yml' -exec ln -s {} #{paths.active_release_config} \\;"],
+          ["Symlink database.yml if needed",        "if [ -f \"#{paths.shared_config}/database.yml\" ]; then ln -nfs #{paths.shared_config}/database.yml #{paths.active_release_config}/database.yml; fi"],
           ["Symlink newrelic.yml if needed",        "if [ -f \"#{paths.shared_config}/newrelic.yml\" ]; then ln -nfs #{paths.shared_config}/newrelic.yml #{paths.active_release_config}/newrelic.yml; fi"],
           ["Symlink mongrel_cluster.yml if needed", "if [ -f \"#{paths.shared_config}/mongrel_cluster.yml\" ]; then ln -nfs #{paths.shared_config}/mongrel_cluster.yml #{paths.active_release_config}/mongrel_cluster.yml; fi"],
         ]
