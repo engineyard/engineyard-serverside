@@ -67,7 +67,10 @@ describe "Deploying an app with ey.yml" do
 
   context "with a different ey.yml" do
     before(:all) do
-      deploy_test_application('ey_yml_alt')
+      deploy_test_application('ey_yml_alt') do
+        deploy_dir.join('shared','config').mkpath
+        deploy_dir.join('shared','config','database.yml').open('w') { |f| f << 'something' }
+      end
     end
 
     it "always installs maintenance pages" do
@@ -77,6 +80,20 @@ describe "Deploying an app with ey.yml" do
 
     it "displays the database adapter warning without ignore_database_adapter_warning" do
       read_output.should =~ /WARNING: Gemfile.lock does not contain a recognized database adapter./
+    end
+  end
+
+  context "with nodatabase.yml" do
+    before(:all) do
+      deploy_test_application('ey_yml_alt') do
+        deploy_dir.join('shared','config').mkpath
+        deploy_dir.join('shared','config','nodatabase.yml').open('w') { |f| f << 'something' }
+      end
+
+    end
+
+    it "doesn't display the database adapter warning" do
+      read_output.should_not =~ /WARNING: Gemfile.lock does not contain a recognized database adapter./
     end
   end
 end
