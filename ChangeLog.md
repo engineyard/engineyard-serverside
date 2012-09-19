@@ -2,7 +2,8 @@
 
 ## NEXT
 
-  *
+  * Only symlink shared config files that actually exist.
+  * Don't display the database adapter warning when `nodatabase.yml` is present.
 
 ## v2.0.1 (2012-08-21)
 
