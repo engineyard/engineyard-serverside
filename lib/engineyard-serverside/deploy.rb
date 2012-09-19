@@ -513,7 +513,8 @@ WRAP
         store_ruby_version   = "#{config.ruby_version_command} > #{paths.ruby_version}"
         store_system_version = "#{config.system_version_command} > #{paths.system_version}"
 
-        run "mkdir -p #{paths.bundled_gems} && #{store_ruby_version} && #{store_system_version}"
+        run "mkdir -p #{paths.bundled_gems} && chown #{config.user}:#{config.group} #{paths.bundled_gems}"
+        run "#{store_ruby_version} && #{store_system_version}"
       end
 
       def check_node_npm
