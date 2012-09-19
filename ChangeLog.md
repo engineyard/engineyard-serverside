@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.0.2 (2012-09-19)
+
   * Only symlink shared config files that actually exist.
   * Don't display the database adapter warning when `nodatabase.yml` is present.
   * chown shared/bundled\_gems dir to deploy user to ensure bundle install works.
