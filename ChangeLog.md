@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.0.3 (2012-09-24)
+
   * Make sure command line --config options get turned from strings into booleans if needed
 
 ## v2.0.2 (2012-09-19)
