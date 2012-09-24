@@ -22,7 +22,16 @@ module EY
 
       # Calls def_option and adds a name? predicate method
       def self.def_boolean_option(name, default=nil, &block)
-        def_option(name, default, &block)
+        key ||= name.to_s
+
+        define_method(name) do
+          if block
+            val = fetch(key) {instance_eval(&block)}
+          else
+            val = fetch(key, default)
+          end
+          not [false,nil,'false','nil'].include?(val) # deal with command line options turning booleans into strings
+        end
         alias_method(:"#{name}?", name)
       end
 

@@ -11,7 +11,7 @@ describe EY::Serverside::Deploy::Configuration do
         'account_name' => 'acc',
         'migrate' => nil,
         'branch' => 'branch_from_command_line',
-        'config' => {'custom' => 'custom_from_extra_config'}.to_json
+        'config' => {'custom' => 'custom_from_extra_config', 'maintenance_on_migrate' => 'false'}.to_json
       })
 
       @deploy = FullTestDeploy.new(test_servers, @config, test_shell)
@@ -25,6 +25,7 @@ describe EY::Serverside::Deploy::Configuration do
             'branch' => 'branch_from_ey_yml',
             'custom' => 'custom_from_ey_yml',
             'bundle_without' => 'only test',
+            'maintenance_on_migrate' => true,
           }
         }
       }
@@ -68,6 +69,12 @@ describe EY::Serverside::Deploy::Configuration do
       write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
       @deploy.config.bundle_without.should == 'only test'
+    end
+
+    it "overrides boolean ey.yml only options with --conifg strings" do
+      write_ey_yml 'ey.yml', @yaml_data
+      @deploy.load_ey_yml
+      @deploy.config.should_not be_maintenance_on_migrate
     end
   end
 end
