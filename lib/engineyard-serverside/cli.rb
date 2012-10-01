@@ -135,6 +135,9 @@ module EY
 
         config = EY::Serverside::Deploy::Configuration.new(integrate_options)
 
+        # We have to rsync the entire app dir, so we need all the permissions to be correct!
+        system "sudo sh -l -c 'find #{app_dir} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +'"
+
         load_servers(config)
 
         invoke :propagate
