@@ -111,5 +111,13 @@ describe "the EY::Serverside::Deploy API" do
       deploy.require_custom_tasks
       deploy.value.should == "base + derived"
     end
+
+    it "records exceptions raised from the instance eval in the log" do
+      write_eydeploy 'eydeploy.rb', "raise 'Imma blow up'"
+      lambda { @deploy.require_custom_tasks }.should raise_error
+      log = @log_path.read
+      log.should =~ /Exception while loading .*eydeploy\.rb/
+      log.should include('Imma blow up')
+    end
   end
 end

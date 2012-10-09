@@ -31,7 +31,13 @@ module EY
 
         if deploy_file
           shell.status "Loading deployment task overrides from #{deploy_file}"
-          instance_eval(deploy_file.read)
+          begin
+            instance_eval(deploy_file.read)
+          rescue Exception => e
+            shell.fatal "Exception while loading #{deploy_file}"
+            shell.fatal [e.to_s, e.backtrace].join("\n")
+            raise
+          end
         end
       end
 
