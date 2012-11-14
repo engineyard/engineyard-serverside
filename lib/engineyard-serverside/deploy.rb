@@ -353,7 +353,7 @@ WRAP
           ["Create public directory",               "mkdir -p #{paths.public}"],
           ["Create config directory",               "mkdir -p #{paths.active_release_config}"],
           ["Symlink shared log directory",          "ln -nfs #{paths.shared_log} #{paths.active_log}"],
-          ["Lymlink pubilc system directory",       "ln -nfs #{paths.shared_system} #{paths.public_system}"],
+          ["Symlink public system directory",       "ln -nfs #{paths.shared_system} #{paths.public_system}"],
           ["Symlink shared pids directory",         "ln -nfs #{paths.shared}/pids #{paths.active_release}/tmp/pids"],
           ["Symlink other shared config files",     "find #{paths.shared_config} -type f -not -name 'database.yml' -exec ln -s {} #{paths.active_release_config} \\;"],
           ["Symlink database.yml if needed",        "if [ -f \"#{paths.shared_config}/database.yml\" ]; then ln -nfs #{paths.shared_config}/database.yml #{paths.active_release_config}/database.yml; fi"],
