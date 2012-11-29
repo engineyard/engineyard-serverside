@@ -6,7 +6,7 @@ module EY
         rails_version = bundled_rails_version
         roles :app_master, :app, :solo do
           keep_existing_assets
-          cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake assets:precompile"
+          cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake assets:precompile RAILS_GROUPS=assets"
 
           if rails_version
             shell.status "Precompiling assets for rails v#{rails_version}"
