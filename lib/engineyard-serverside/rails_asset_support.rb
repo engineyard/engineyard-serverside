@@ -4,7 +4,7 @@ module EY
       def compile_assets
         return unless app_needs_assets?
         rails_version = bundled_rails_version
-        roles :app_master, :app, :solo do
+        roles asset_roles do
           keep_existing_assets
           cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake assets:precompile"
 
@@ -125,6 +125,13 @@ ln -nfs #{current} #{last_asset_path} #{paths.public}
           return $2 if $1 == 'rails'
         end
         nil
+      end
+
+      protected
+
+      # Override this to customize on which roles to precompile assets
+      def asset_roles
+        [:app_master, :app, :solo]
       end
     end
   end

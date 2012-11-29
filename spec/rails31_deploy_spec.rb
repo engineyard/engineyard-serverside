@@ -53,4 +53,35 @@ describe "Deploying a Rails 3.1 application" do
       deploy_dir.join('current', 'public', 'assets').should_not be_symlink
     end
   end
+
+  context "without custom asset roles" do
+    before(:all) do
+      # I am not sure how to simulate running the deploy on a util server.
+      # How would I go about doing that?
+      deploy_test_application('assets_enabled')
+    end
+
+    it "does not precompile assets on util instances" do
+      deploy_dir.join('current', 'precompiled').should_not exist
+    end
+  end
+
+  context "with custom asset roles" do
+    module ::EY::Serverside::RailsAssetSupport
+      protected
+      def asset_roles
+        [:app_master, :app, :solo, :util]
+      end
+    end
+
+    before(:all) do
+      # I am not sure how to simulate running the deploy on a util server.
+      # How would I go about doing that?
+      deploy_test_application('assets_enabled')
+    end
+
+    it "precompiles assets on util instances" do
+      deploy_dir.join('current', 'precompiled').should exist
+    end
+  end
 end
