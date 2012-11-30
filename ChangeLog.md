@@ -2,8 +2,9 @@
 
 ## NEXT
 
-  * Supports new ey.yml option to control on which roles asset precompilation happens. Must be an Array or :all (which is [:app, :app\_master, :solo, :util])
-  * `asset_roles: :all (default: [:app, :app_master, :solo])`
+  * Supports new ey.yml option to control on which roles asset precompilation happens.
+    * Must be an Array or :all (which is [:app, :app\_master, :solo, :util])
+    * Syntax: `asset_roles: :all (default: [:app, :app_master, :solo])`
   * Adds `RAILS_GROUPS=assets` to rake assets:precompile to improve asset compilation performance.
   * Records exceptions raised during deploy into the deploy log when possible.
   * Fix a bug where permissions problems may cause integrate action to fail.
