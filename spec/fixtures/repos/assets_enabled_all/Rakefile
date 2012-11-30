@@ -1,0 +1,5 @@
+desc 'Precompile yar assetz'
+task 'assets:precompile' do
+  sh 'touch precompiled'
+end
+

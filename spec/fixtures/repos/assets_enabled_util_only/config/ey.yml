@@ -1,0 +1,5 @@
+environments:
+  env:
+    precompile_assets: true
+    asset_roles:
+    - :util

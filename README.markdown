@@ -14,6 +14,30 @@ engineyard-serverside is the serverside component of the Engine Yard AppCloud CL
     --environment-name=ENV_NAME            # Environment name
     --account-name=ACCOUNT_NAME            # Account name
 
+## ey.yml options
+
+The ey.yml file allows options to be saved for each environment to which an application is deployed. Here's an example ey.yml file in RAILS_ROOT/config/ey.yml:
+
+    $ cat config/ey.yml
+    ---
+    environments:
+      env_production:
+        bundle_without: test development mygroup  # exclude groups on bundle install
+        copy_exclude:                             # don't rsync the following dirs
+        - .git
+        maintenance_on_restart: false             # show maintenance page during app restart (default: false except for glassfish and mongrel)
+        maintenance_on_migrate: false             # show maintenance page during migrations (default: true)
+        precompile_assets: true                   # enables rails assets precompilation (default: inferred using app/assets and config/application.rb)
+        asset_roles: :all                         # specify on which roles to compile assets (default: [:app, :app_master, :solo] - must be an Array)
+        asset_roles:                              # (Array input for multiple roles) - Use hook deploy/before_compile_assets.rb for finer grained control.
+        - :app
+        - :app_master
+        - :util
+        ignore_database_adapter_warning: true     # hide database adapter warning if you don't use MySQL or PostgreSQL (default: false)
+
+
+These options in ey.yml will only work if the file is committed to your application repository. Make sure to commit this file.
+
 ### Running the spec suite
 
 Bundler doesn't work on ruby 1.8.6-p287, which is what 'ey\_resin' currently provides.

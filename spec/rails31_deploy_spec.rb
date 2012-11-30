@@ -21,6 +21,26 @@ describe "Deploying a Rails 3.1 application" do
     end
   end
 
+  context "with asset compilation enabled in ey.yml, but asset_roles is set to only :util" do
+    before(:all) do
+      deploy_test_application('assets_enabled_util_only')
+    end
+
+    it "precompiles assets" do
+      deploy_dir.join('current', 'precompiled').should_not exist
+    end
+  end
+
+  context "with asset compilation enabled in ey.yml, and asset_roles is set to :all" do
+    before(:all) do
+      deploy_test_application('assets_enabled_all')
+    end
+
+    it "precompiles assets" do
+      deploy_dir.join('current', 'precompiled').should exist
+    end
+  end
+
   context "with asset support disabled in its config" do
     before(:all) do
       deploy_test_application('assets_disabled')
