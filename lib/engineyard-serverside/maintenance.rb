@@ -46,7 +46,7 @@ module EY
         if config.disable_maintenance_page?
           disable
         elsif exist?
-          shell.notice "[Attention] Maintenance page is still up.\nYou must remove it manually using `ey web enable`."
+          shell.info "[Attention] Maintenance page is still up.\nYou must remove it manually using `ey web enable`."
         end
       end
 
