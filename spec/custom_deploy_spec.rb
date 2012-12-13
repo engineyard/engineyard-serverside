@@ -31,6 +31,7 @@ describe "the EY::Serverside::Deploy API" do
       def cleanup_old_releases()     @call_order << 'cleanup_old_releases'     end
       def enable_maintenance_page()  @call_order << 'enable_maintenance_page'  end
       def disable_maintenance_page() @call_order << 'disable_maintenance_page' end
+      def gc_repository_cache()      @call_order << 'gc_repository_cache'      end
     end
 
     config = EY::Serverside::Deploy::Configuration.new({
@@ -64,7 +65,8 @@ describe "the EY::Serverside::Deploy API" do
       symlink
       restart
       disable_maintenance_page
-      cleanup_old_releases)
+      cleanup_old_releases
+      gc_repository_cache)
   end
 
   describe "task overrides" do
