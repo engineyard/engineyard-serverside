@@ -7,7 +7,7 @@ module EY
       module LegacyHelpers
         def self.legacy_path_helper(name, new_name)
           define_method(name) do |*a|
-            paths.send(new_name).to_s
+            paths.send(new_name, *a).to_s
           end
         end
 
