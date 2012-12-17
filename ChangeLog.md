@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.0.4 (2012-12-17)
+
   * Supports new ey.yml option to control on which roles asset precompilation happens.
     * Must be a YAML Array syntax (using :app, :app\_master, :solo, :util) or :all.
     * Syntax: `asset_roles: :all (default is to exclude :util but include all others. [:app, :app_master, :solo])`
