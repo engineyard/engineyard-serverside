@@ -3,12 +3,12 @@
 ## NEXT
 
   * Supports new ey.yml option to control on which roles asset precompilation happens.
-    * Must be an Array or :all (which is [:app, :app\_master, :solo, :util])
-    * Syntax: `asset_roles: :all (default: [:app, :app_master, :solo])`
+    * Must be a YAML Array syntax (using :app, :app\_master, :solo, :util) or :all.
+    * Syntax: `asset_roles: :all (default is to exclude :util but include all others. [:app, :app_master, :solo])`
   * Adds `RAILS_GROUPS=assets` to rake assets:precompile to improve asset compilation performance.
   * Records exceptions raised during deploy into the deploy log when possible.
-  * Fix a bug where permissions problems may cause integrate action to fail.
-  * Fix a problem where "maintenance page still up" notice would stay on Cloud Dashboard too long. (downgraded message severity)
+  * Fixes a bug where permissions problems may cause integrate action to fail.
+  * Fixes a problem where "maintenance page still up" notice would stay on Cloud Dashboard too long. Downgraded message severity.
   * Garbage collect git at the end of each deploy. First one may take a while but the next ones will be faster and reduce extra disk usage.
 
 ## v2.0.3 (2012-09-24)
