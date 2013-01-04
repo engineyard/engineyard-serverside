@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Always checkout and deploy from detached branches. Never track because it can cause out-of-date checkouts.
 
 ## v2.0.4 (2012-12-17)
 

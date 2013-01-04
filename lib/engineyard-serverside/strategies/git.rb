@@ -31,7 +31,7 @@ module EY
         def checkout
           shell.status "Deploying revision #{short_log_message(to_checkout)}"
           in_repository_cache do
-            (run("git checkout -q '#{to_checkout}'") ||
+            (run("git checkout --detach -q '#{to_checkout}'") ||
               run("git reset -q --hard '#{to_checkout}'")) &&
               run("git submodule sync") &&
               run("git submodule update --init") &&
