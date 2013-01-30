@@ -3,6 +3,9 @@ require 'forwardable'
 require 'set'
 require 'engineyard-serverside/spawner'
 
+$LOAD_PATH.unshift File.expand_path('../vendor/capissh/lib', File.dirname(__FILE__))
+require 'capissh'
+
 module EY
   module Serverside
     class Servers
@@ -129,6 +132,19 @@ module EY
         end
       end
 
+      # Run a command on this set of servers.
+      def run(session, shell, cmd, &blk)
+        session.run @servers, cmd, :shell => 'sh -l', &shell.command_output_callback
+      rescue Capissh::RemoteError => e
+        raise EY::Serverside::RemoteFailure.new(e.to_s)
+      end
+
+      # Run a sudo command on this set of servers.
+      def sudo(session, shell, cmd, &blk)
+        session.sudo @servers, cmd, :shell => 'sh -l'#, &shell.command_output_callback
+      rescue Capissh::RemoteError => e
+        raise EY::Serverside::RemoteFailure.new(e.to_s)
+      end
     end
   end
 end

@@ -4,8 +4,9 @@ module EY
 
       attr_reader :config, :shell
 
-      def initialize(servers, config, shell)
-        @servers, @config, @shell = servers, config, shell
+      def initialize(config, shell, &runner)
+        @config, @shell = config, shell
+        @runner = runner
       end
 
       def exist?
@@ -80,7 +81,7 @@ module EY
       end
 
       def run(cmd)
-        @servers.roles(:app_master, :app, :solo).run(cmd)
+        @runner.call(cmd)
       end
 
       def paths

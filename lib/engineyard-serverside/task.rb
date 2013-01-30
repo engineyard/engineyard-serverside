@@ -71,11 +71,23 @@ Please consider:
       end
 
       def run(cmd, &block)
-        servers.roles(@roles).run(cmd, &block)
+        servers.roles(@roles).run(session, cmd, &block)
       end
 
       def sudo(cmd, &block)
-        servers.roles(@roles).sudo(cmd, &block)
+        servers.roles(@roles).sudo(session, cmd, &block)
+      end
+
+      def session
+        @session ||= Capissh.new(
+          :level => 3,
+          :pre_exec_callback => lambda { |command, server|
+            command.gsub(/\$EY_SS_ROLES\$/, Escape.shell_command([server.server.roles.to_a.join(' ')]))
+            command.gsub(/\$EY_SS_NAME\$/, Escape.shell_command([server.server.name.to_s]))
+            shell.cmd_show(command)
+            command
+          }
+        )
       end
 
     end

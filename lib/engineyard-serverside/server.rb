@@ -30,6 +30,14 @@ module EY
         super roles_set
       end
 
+      # Capissh looks for #host, #user, #port
+      alias host hostname
+      def port() 22 end # optional, but we might as well specify
+
+      def authority
+        "#{user}@#{hostname}"
+      end
+
       def local?
         hostname == 'localhost'
       end
@@ -42,7 +50,7 @@ module EY
           # File mod times aren't important during deploy, and
           # -a (archive mode) sets --times which causes problems.
           # -a is equivalent to -rlptgoD. We remove the -t, and add -q.
-          Escape.shell_command(%w[rsync --delete -rlpgoDq] + ignore_flag + ["-e", ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
+          Escape.shell_command(%w[rsync --delete -rlpgoDq] + ignore_flag + ["-e", ssh_command, "#{directory}/", "#{authority}:#{directory}"])
         ].join(' && ')
       end
 
@@ -71,7 +79,7 @@ module EY
       # Explicitly putting that space in helps us make sure we don't
       # accidentally leave off the space on the end of ssh_command.
       def remote_command(command)
-        ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command])
+        ssh_command + " " + Escape.shell_command([authority, command])
       end
 
       # Make a known hosts tempfile to absorb host fingerprints so we don't show

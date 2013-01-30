@@ -66,6 +66,13 @@ module EY
       def command_out(msg)  debug   msg.gsub(BOL,CMD_INDENT) end
       def command_err(msg)  unknown msg.gsub(BOL,CMD_INDENT) end
 
+      def command_output_callback(output = nil)
+        Proc.new do |ch, stream, data|
+          output << data if output
+          stream == :err ? command_err(data) : command_out(data)
+        end
+      end
+
       def logged_system(cmd, server = nil)
         EY::Serverside::Spawner.run(cmd, self, server)
       end

@@ -438,13 +438,7 @@ defaults:
 
         if paths.deploy_hook(what).exist?
           shell.status "Running deploy hook: deploy/#{what}.rb"
-          run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
-            per_instance_args = []
-            per_instance_args << '--current-roles' << server.roles.to_a.join(' ')
-            per_instance_args << '--current-name'  << server.name.to_s if server.name
-            per_instance_args << '--config'        << config.to_json
-            cmd << " " << Escape.shell_command(per_instance_args)
-          end
+          run Escape.shell_command(base_callback_command_for(what))
         elsif paths.executable_deploy_hook(what).executable?
           shell.status "Running deploy hook: deploy/#{what}"
           run [About.hook_executor, what.to_s].join(' ') do |server, cmd|
@@ -471,6 +465,9 @@ defaults:
         cmd << '--account-name'     << config.account_name
         cmd << '--release-path'     << paths.active_release.to_s
         cmd << '--framework-env'    << config.framework_env.to_s
+        cmd << '--config'           << config.to_json
+        cmd << '--current-roles'    << '$EY_SS_ROLES$'
+        cmd << '--current-name'     << '$EY_SS_NAME$'
         cmd << '--verbose' if config.verbose
         cmd
       end
@@ -527,7 +524,11 @@ defaults:
       end
 
       def maintenance
-        @maintenance ||= Maintenance.new(servers, config, shell)
+        @maintenance ||= Maintenance.new(config, shell) do |cmd|
+          roles :app_master, :app, :solo do
+            run(cmd)
+          end
+        end
       end
 
       def dependency_manager

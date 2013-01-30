@@ -78,8 +78,9 @@ module EY
           diff = datetime.to_i - @start
           diff = 0 if diff < 0
           div, mod = diff.divmod(60)
-          if div.zero?
+          if div == 0
             SECONDS_FORMAT % mod
+            "+    %02ds  " % mod
           else
             MINUTES_FORMAT % [div,mod]
           end

@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   s.default_executable = "engineyard-serverside"
   s.require_path = 'lib'
 
+  s.add_dependency('net-ssh', '~> 2.1.1')
   s.add_development_dependency('rspec', '~>2.14')
   s.add_development_dependency('rake', '~>10.0.0')
   s.add_development_dependency('rdoc')
