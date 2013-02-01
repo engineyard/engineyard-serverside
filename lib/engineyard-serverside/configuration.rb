@@ -62,6 +62,7 @@ module EY
       def_option :branch,            'master'
       def_option :bundle_without,    'test development'
       def_option :current_roles,     []
+      def_option :current_name,      nil
       def_option :asset_roles,       [:app_master, :app, :solo]
       def_option :copy_exclude,      []
       def_option(:user)              { ENV['USER'] }
