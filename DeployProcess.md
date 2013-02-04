@@ -10,12 +10,7 @@ ruby code to determine how the shell command should run, and this is not shown.
 
 ## Step 1: Get Application Code
 
-Before we can deploy anything we need code. There are many ways to get the code.
-
-* Fetch code from github.com
-* Download bundled code from S3
-* Download bundled code from elsewhere
-* Upload code directly
+Before we can deploy anything we need code.
 
 First we need to generate a permissive GIT_SSH script to be used by git when fetching the app.
 
@@ -27,13 +22,13 @@ First we need to generate a permissive GIT_SSH script to be used by git when fet
       SSH
     $ chmod 0700 app/shared/config/app-ssh-wrapper
 
-Then we fetch the code
+Then we fetch the code from git.
 
     $ GIT_SSH=app-ssh-wrapper git clone git@github.com:user/app.git app/source-cache
     $ GIT_SSH=app-ssh-wrapper git --work-tree app/source-cache fetch origin
 
 Some strategies may require checking out a specified version or possibly
-unpacking an archive.
+unpacking an archive. We check out a branch from the repository.
 
     $ git --work-tree app/source-cache checkout --detach branch-name
       git submodule sync && git submodule update --init && git clean -dfq
@@ -41,7 +36,7 @@ unpacking an archive.
 On multi-server deploys, we have taken the approach of performing the
 application code fetching on one server and rsyncing to other servers
 to guarantee sameness. It also reduces the load on the server that is
-serving the application code.
+serving the application source (github).
 
     $ rsync --delete -aq -e 'ssh -i ~/.ssh/internal -o StrictHostKeyChecking=no \
       -o PasswordAuthentication=no' app/source-cache user@example.com:app/source-cache
@@ -166,7 +161,7 @@ Run the migrate command, if given.
       RAILS_ENV=production RACK_ENV=production NODE_ENV=production MERB_ENV=production \
       rake db:migrate
 
-Step 5: Restart The Application Servers
+## Step 5: Restart The Application Servers
 
 Change the "current" symlink to point to the newest release.
 
@@ -181,7 +176,7 @@ Remove the maintenance page, if it was enabled.
 
     $ rm -f app/shared/system/maintenance.html
 
-Step 6: Clean Up
+## Step 6: Clean Up
 
 Remove all but the last 3 releases, leaving the current release and the 2
 previous releases.
