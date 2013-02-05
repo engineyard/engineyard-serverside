@@ -1,6 +1,6 @@
 require 'logger'
 require 'pathname'
-require 'systemu'
+require 'session'
 require 'engineyard-serverside/shell/formatter'
 require 'engineyard-serverside/shell/command_result'
 require 'engineyard-serverside/shell/yieldio'
@@ -69,7 +69,13 @@ module EY
       # This is the meat of process spawning. It's nice to keep it separate even
       # though it's simple because we've had to modify it frequently.
       def spawn_process(cmd, outio, errio)
-        systemu cmd, 'stdout' => outio, 'stderr' => errio
+        Session::new do |sh|
+          sh.execute(cmd) do |out, err|
+            outio << out if out
+            errio << err if err
+          end
+          sh.exit_status
+        end
       end
     end
   end
