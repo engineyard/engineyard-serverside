@@ -38,7 +38,20 @@ The ey.yml file allows options to be saved for each environment to which an appl
 
 These options in ey.yml will only work if the file is committed to your application repository. Make sure to commit this file.
 
-### Running the spec suite
+### Running the spec suite (ruby 1.8.7+)
+
+Install required gems:
+
+    which bundle >/dev/null || gem install bundler
+    bundle install
+
+Running tests:
+
+    bundle exec rake
+
+Bundler will take care of installing and running proper (older versions) of gems.
+
+### Running the spec suite (ruby 1.8.6)
 
 Bundler doesn't work on ruby 1.8.6-p287, which is what 'ey\_resin' currently provides.
 To test engineyard-serverside under the same ruby, you can run:
