@@ -29,7 +29,7 @@ module EY
     if defined?(Fiber)
       require 'engineyard-serverside/futures/celluloid'
     else
-      require 'engineyard-serverside/futures/dataflow'
+      require 'engineyard-serverside/futures/threads'
     end
   end
 end
