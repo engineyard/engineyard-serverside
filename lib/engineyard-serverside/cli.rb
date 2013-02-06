@@ -149,7 +149,7 @@ module EY
 
         shell.status "Propagating engineyard-serverside #{EY::Serverside::VERSION} to #{servers.size} server#{servers.size == 1 ? '' : 's' }."
 
-        commands = servers.map do |server|
+        servers.run_on_each do |server|
           shell.debug "Building propagate commands for #{server.hostname}"
 
           egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
@@ -157,29 +157,21 @@ module EY
           # 0.5.11, and mistakenly thinking 0.5.1 is there
           has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
 
-          proc do
-            exists = shell.logged_system(server.command_on_server('sh -l -c', has_gem_cmd))
-            if exists.success?
-              exists # Future expects logged system result object
-            else # doesn't have this exact version
-              shell.status "Installing engineyard-serverside on #{server.hostname}"
+          exists = shell.logged_system(server.command_on_server('sh -l -c', has_gem_cmd))
+          if exists.success?
+            exists # Future expects logged system result object
+          else # doesn't have this exact version
+            shell.status "Installing engineyard-serverside on #{server.hostname}"
 
-              shell.logged_system(Escape.shell_command([
-                'scp', '-i', config.paths.internal_key.to_s,
-                "-o", "StrictHostKeyChecking=no",
-                local_gem_file,
-               "#{config.user}@#{server.hostname}:#{remote_gem_file}",
-              ]))
-              install_gem_cmd = "#{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'"
-              shell.logged_system(server.command_on_server('sudo sh -l -c', install_gem_cmd))
-            end
+            shell.logged_system(Escape.shell_command([
+                  'scp', '-i', config.paths.internal_key.to_s,
+                  "-o", "StrictHostKeyChecking=no",
+                  local_gem_file,
+                 "#{config.user}@#{server.hostname}:#{remote_gem_file}",
+            ]))
+            install_gem_cmd = "#{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'"
+            shell.logged_system(server.command_on_server('sudo sh -l -c', install_gem_cmd))
           end
-        end
-
-        futures = EY::Serverside::Future.call(commands)
-        unless EY::Serverside::Future.success?(futures)
-          failures = futures.select {|f| f.error? }.map {|f| f.inspect}.join("\n")
-          raise EY::Serverside::RemoteFailure.new(failures)
         end
       end
 

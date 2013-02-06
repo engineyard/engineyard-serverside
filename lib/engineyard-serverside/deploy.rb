@@ -153,12 +153,10 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
       # task
       def push_code
         shell.status "Pushing code to all servers"
-        commands = servers.remote.map do |server|
+        servers.remote.run_on_each do |server|
           cmd = server.sync_directory_command(paths.repository_cache)
-          proc { shell.logged_system(cmd) }
+          shell.logged_system(cmd)
         end
-        futures = EY::Serverside::Future.call(commands)
-        EY::Serverside::Future.success?(futures)
       end
 
       # task
