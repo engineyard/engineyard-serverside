@@ -1,4 +1,5 @@
 require 'set'
+require 'tempfile'
 
 module EY
   module Serverside
@@ -7,8 +8,8 @@ module EY
         new(server_hash[:hostname], Set.new(server_hash[:roles].map{|r|r.to_sym}), server_hash[:name], server_hash[:user])
       end
 
-      def initialize(*fields)
-        super
+      def authority
+        "#{user}@#{hostname}"
       end
 
       def role

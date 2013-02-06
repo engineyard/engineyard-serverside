@@ -413,7 +413,7 @@ WRAP
       end
 
       def base_callback_command_for(what)
-        cmd =  [serverside_bin, 'hook', what.to_s]
+        cmd =  [About.binary, 'hook', what.to_s]
         cmd << '--app'              << config.app
         cmd << '--environment-name' << config.environment_name
         cmd << '--account-name'     << config.account_name
@@ -424,8 +424,7 @@ WRAP
       end
 
       def serverside_bin
-        basedir = File.expand_path('../../..', __FILE__)
-        File.join(basedir, 'bin', 'engineyard-serverside')
+        About.binary
       end
 
       def puts_deploy_failure
@@ -495,7 +494,7 @@ WRAP
           clean_bundle_on_system_version_change
 
           bundler_version, install_switches = bundler_config
-          sudo "#{clean_environment} && #{serverside_bin} install_bundler #{bundler_version}"
+          sudo "#{clean_environment} && #{About.binary} install_bundler #{bundler_version}"
           run  "#{clean_environment} && cd #{paths.active_release} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
 
           write_system_version

@@ -51,15 +51,15 @@ module EY
       #   $ cmd blah do \
       #   > something more
       #   > end
-      def show_command(cmd)
-        debug cmd.gsub(/^/, '   > ').sub(/>/, '$')
-      end
+      def command_show(cmd) debug   cmd.gsub(/^/,'   > ').sub(/>/, '$') end
+      def command_out(msg)  debug   msg.gsub(/^/,'     ') end
+      def command_err(msg)  unknown msg.gsub(/^/,'     ') end
 
       def logged_system(cmd)
-        show_command(cmd)
+        command_show(cmd)
         output = ""
-        outio = YieldIO.new { |msg| output << msg; debug   msg.gsub(/^/,'     ') }
-        errio = YieldIO.new { |msg| output << msg; unknown msg.gsub(/^/,'     ') }
+        outio = YieldIO.new { |msg| output << msg; command_out(msg) }
+        errio = YieldIO.new { |msg| output << msg; command_err(msg) }
         result = spawn_process(cmd, outio, errio)
         CommandResult.new(cmd, result.exitstatus, output)
       end

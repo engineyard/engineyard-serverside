@@ -136,49 +136,10 @@ module EY
 
       private
 
-      # Put the same engineyard-serverside on all the servers (Used to be public but is unused as an actual CLI command now)
-      def propagate(servers, config, shell)
-        gem_filename    = "engineyard-serverside-#{EY::Serverside::VERSION}.gem"
-        local_gem_file  = File.join(Gem.dir, 'cache', gem_filename)
-        remote_gem_file = File.join(Dir.tmpdir, gem_filename)
-        gem_binary      = File.join(Gem.default_bindir, 'gem')
-
-        servers = servers.remote
-
-        return if servers.empty?
-
-        shell.status "Propagating engineyard-serverside #{EY::Serverside::VERSION} to #{servers.size} server#{servers.size == 1 ? '' : 's' }."
-
-        servers.run_on_each do |server|
-          shell.debug "Building propagate commands for #{server.hostname}"
-
-          egrep_escaped_version = EY::Serverside::VERSION.gsub(/\./, '\.')
-          # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
-          # 0.5.11, and mistakenly thinking 0.5.1 is there
-          has_gem_cmd = "#{gem_binary} list engineyard-serverside | grep \"engineyard-serverside\" | egrep -q '#{egrep_escaped_version}[,)]'"
-
-          exists = shell.logged_system(server.command_on_server('sh -l -c', has_gem_cmd))
-          if exists.success?
-            exists # Future expects logged system result object
-          else # doesn't have this exact version
-            shell.status "Installing engineyard-serverside on #{server.hostname}"
-
-            shell.logged_system(Escape.shell_command([
-                  'scp', '-i', config.paths.internal_key.to_s,
-                  "-o", "StrictHostKeyChecking=no",
-                  local_gem_file,
-                 "#{config.user}@#{server.hostname}:#{remote_gem_file}",
-            ]))
-            install_gem_cmd = "#{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'"
-            shell.logged_system(server.command_on_server('sudo sh -l -c', install_gem_cmd))
-          end
-        end
-      end
-
       def init_and_propagate(*args)
         config, shell = init(*args)
         servers = load_servers(config)
-        propagate(servers, config, shell)
+        Propagator.call(servers, config, shell)
         [servers, config, shell]
       end
 
@@ -188,7 +149,7 @@ module EY
           :verbose  => config.verbose,
           :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log")
         )
-        shell.debug "Initializing engineyard-serverside #{EY::Serverside::VERSION}."
+        shell.debug "Initializing #{About.name_with_version}."
         [config, shell]
       end
 

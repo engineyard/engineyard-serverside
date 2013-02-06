@@ -85,6 +85,11 @@ module EY
         threads.map { |t| t.value }
       end
 
+      def select_in_parallel(&block)
+        results = map_in_parallel { |server| block.call(server) ? server : nil }.compact
+        self.class.new results
+      end
+
       # Makes a theard for each server and executes the block,
       # Assumes that the return value of the block is a CommandResult
       # and ensures that all the command results were successful.
