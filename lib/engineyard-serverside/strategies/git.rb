@@ -31,8 +31,8 @@ module EY
         def checkout
           shell.status "Deploying revision #{short_log_message(to_checkout)}"
           in_repository_cache do
-            (run("git checkout -q '#{to_checkout}'") ||
-              run("git reset -q --hard '#{to_checkout}'")) &&
+            (run("git checkout -f '#{to_checkout}'") ||
+              run("git reset --hard '#{to_checkout}'")) &&
               run("git submodule sync") &&
               run("git submodule update --init") &&
               run("git clean -dfq")
@@ -42,7 +42,12 @@ module EY
         def to_checkout
           return @to_checkout if @opts_ref == opts[:ref]
           @opts_ref = opts[:ref]
-          @to_checkout = branch?(@opts_ref) ? "origin/#{@opts_ref}" : @opts_ref
+          clean_local_branch(@opts_ref)
+          @to_checkout = remote_branch?(@opts_ref) ? "origin/#{@opts_ref}" : @opts_ref
+        end
+
+        def clean_local_branch(ref)
+          system("#{git} show-branch #{ref} > /dev/null 2>&1 && #{git} branch -D #{ref} > /dev/null 2>&1")
         end
 
         def gc_repository_cache
@@ -79,7 +84,7 @@ module EY
           "git --git-dir #{repository_cache}/.git --work-tree #{repository_cache}"
         end
 
-        def branch?(ref)
+        def remote_branch?(ref)
           system("#{git} show-branch origin/#{ref} > /dev/null 2>&1")
         end
       end
