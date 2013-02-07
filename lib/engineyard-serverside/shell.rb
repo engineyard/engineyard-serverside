@@ -1,7 +1,8 @@
 require 'logger'
 require 'pathname'
-require 'systemu'
+require 'session'
 require 'engineyard-serverside/shell/formatter'
+require 'engineyard-serverside/shell/extra_logger'
 require 'engineyard-serverside/shell/command_result'
 require 'engineyard-serverside/shell/yieldio'
 
@@ -20,9 +21,10 @@ module EY
 
         log_pathname = Pathname.new(options[:log_path])
         log_pathname.unlink if log_pathname.exist? # start fresh
-        @logger = Logger.new(log_pathname.to_s)
+        @logger = EY::Serverside::Shell::ExtraLogger.new(log_pathname.to_s)
         @logger.level = Logger::DEBUG # Always log to the file at debug, formatter hides debug for non-verbose
-        @logger.formatter = EY::Serverside::Shell::Formatter.new(@stdout, @stderr, start_time, @verbose)
+        @logger.formatter = EY::Serverside::Shell::Formatter.new(start_time)
+        @logger.extra(@stdout, @stderr, @verbose)
       end
 
       def start_time
@@ -69,7 +71,13 @@ module EY
       # This is the meat of process spawning. It's nice to keep it separate even
       # though it's simple because we've had to modify it frequently.
       def spawn_process(cmd, outio, errio)
-        systemu cmd, 'stdout' => outio, 'stderr' => errio
+        Session::new do |sh|
+          sh.execute(cmd) do |out, err|
+            outio << out if out
+            errio << err if err
+          end
+          sh.exit_status
+        end
       end
     end
   end
