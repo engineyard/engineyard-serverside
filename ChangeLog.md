@@ -2,7 +2,6 @@
 
 ## NEXT
 
-  * Always checkout and deploy from detached branches. Never track because it can cause out-of-date checkouts.
   * Change concurrency code to use a simple threaded model.
 
 ## v2.0.4 (2012-12-17)
