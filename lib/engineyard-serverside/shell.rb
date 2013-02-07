@@ -2,6 +2,7 @@ require 'logger'
 require 'pathname'
 require 'session'
 require 'engineyard-serverside/shell/formatter'
+require 'engineyard-serverside/shell/extra_logger'
 require 'engineyard-serverside/shell/command_result'
 require 'engineyard-serverside/shell/yieldio'
 
@@ -20,9 +21,10 @@ module EY
 
         log_pathname = Pathname.new(options[:log_path])
         log_pathname.unlink if log_pathname.exist? # start fresh
-        @logger = Logger.new(log_pathname.to_s)
+        @logger = EY::Serverside::Shell::ExtraLogger.new(log_pathname.to_s)
         @logger.level = Logger::DEBUG # Always log to the file at debug, formatter hides debug for non-verbose
-        @logger.formatter = EY::Serverside::Shell::Formatter.new(@stdout, @stderr, start_time, @verbose)
+        @logger.formatter = EY::Serverside::Shell::Formatter.new(start_time)
+        @logger.extra(@stdout, @stderr, @verbose)
       end
 
       def start_time
