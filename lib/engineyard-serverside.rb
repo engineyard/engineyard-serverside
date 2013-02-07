@@ -17,6 +17,7 @@ require 'escape'
 require 'json'
 
 require 'engineyard-serverside/version'
+require 'engineyard-serverside/about'
 require 'engineyard-serverside/strategies/git'
 require 'engineyard-serverside/task'
 require 'engineyard-serverside/server'
@@ -26,8 +27,8 @@ require 'engineyard-serverside/lockfile_parser'
 require 'engineyard-serverside/cli'
 require 'engineyard-serverside/configuration'
 require 'engineyard-serverside/deprecation'
-require 'engineyard-serverside/future'
 require 'engineyard-serverside/shell'
+require 'engineyard-serverside/propagator'
 
 
 module EY

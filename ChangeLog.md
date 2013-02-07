@@ -3,6 +3,8 @@
 ## NEXT
 
   * Always checkout and deploy from detached branches. Never track because it can cause out-of-date checkouts.
+  * Change concurrency code to use a simple threaded model.
+  * Clean up local branches that might interfere with the git checkout.
 
 ## v2.0.4 (2012-12-17)
 

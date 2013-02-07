@@ -63,27 +63,41 @@ module EY
       end
 
       # Run a command on this set of servers.
-      def run(shell, cmd, &blk)
-        run_on_servers(shell, 'sh -l -c', cmd, &blk)
+      def run(shell, cmd, &block)
+        run_on_each do |server|
+          exec_cmd = server.command_on_server('sh -l -c', cmd, &block)
+          shell.logged_system(exec_cmd)
+        end
       end
 
       # Run a sudo command on this set of servers.
-      def sudo(shell, cmd, &blk)
-        run_on_servers(shell, 'sudo sh -l -c', cmd, &blk)
+      def sudo(shell, cmd, &block)
+        run_on_each do |server|
+          exec_cmd = server.command_on_server('sudo sh -l -c', cmd, &block)
+          shell.logged_system(exec_cmd)
+        end
       end
 
-      private
+      # Makes a thread for each server and executes the block,
+      # returning an array of return values
+      def map_in_parallel(&block)
+        threads = map { |server| Thread.new { block.call(server) } }
+        threads.map { |t| t.value }
+      end
 
-      def run_on_servers(shell, prefix, cmd, &block)
-        commands = map do |server|
-          exec_cmd = server.command_on_server(prefix, cmd, &block)
-          proc { shell.logged_system(exec_cmd) }
-        end
+      def select_in_parallel(&block)
+        results = map_in_parallel { |server| block.call(server) ? server : nil }.compact
+        self.class.new results
+      end
 
-        futures = EY::Serverside::Future.call(commands)
-
-        unless EY::Serverside::Future.success?(futures)
-          failures = futures.select {|f| f.error? }.map {|f| f.inspect}.join("\n")
+      # Makes a theard for each server and executes the block,
+      # Assumes that the return value of the block is a CommandResult
+      # and ensures that all the command results were successful.
+      def run_on_each(&block)
+        results = map_in_parallel(&block)
+        failures = results.reject {|result| result.success? }
+        if failures.any?
+          message = failures.map { |f| f.inspect }.join("\n")
           raise EY::Serverside::RemoteFailure.new(failures)
         end
       end

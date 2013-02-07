@@ -117,7 +117,7 @@ Spec::Runner.configure do |config|
 
   # set up EY::Serverside::Server like we're on a solo
   def test_servers
-    EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo]}])
+    EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => ENV['USER']}])
   end
 
   # When a repo fixture name is specified, the files found in the specified
