@@ -30,9 +30,10 @@ module EY
 
         def checkout
           shell.status "Deploying revision #{short_log_message(to_checkout)}"
+          q = opts[:verbose] ? '' : '-q'
           in_repository_cache do
-            (run("git checkout -f '#{to_checkout}'") ||
-              run("git reset --hard '#{to_checkout}'")) &&
+            (run("git checkout -f #{q} '#{to_checkout}'") ||
+              run("git reset --hard #{q} '#{to_checkout}'")) &&
               run("git submodule sync") &&
               run("git submodule update --init") &&
               run("git clean -dfq")

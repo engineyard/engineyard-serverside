@@ -401,6 +401,7 @@ WRAP
         ENV['GIT_SSH'] = ssh_executable.to_s
         @strategy ||= config.strategy_class.new(
           shell,
+          :verbose          => config.verbose,
           :repository_cache => paths.repository_cache.to_s,
           :app              => config.app,
           :repo             => config[:repo],
