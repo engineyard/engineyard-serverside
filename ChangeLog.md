@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.0.5 (2013-02-12)
+
   * Change concurrency code to use a simple threaded model.
   * Clean up local branches that might interfere with the git checkout.
 
