@@ -283,7 +283,7 @@ chmod 0700 #{path}
       end
 
       def services_command_check
-        "which /usr/local/ey_resin/ruby/bin/ey-services-setup"
+        "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
       end
 
       def services_setup_command
@@ -293,20 +293,24 @@ chmod 0700 #{path}
       def setup_services
         shell.status "Setting up external services."
         previously_configured_services = parse_configured_services
+
         begin
           sudo(services_command_check)
         rescue StandardError => e
           shell.info "Could not setup services. Upgrade your environment to get services configuration."
           return
         end
-        sudo(services_setup_command)
-      rescue StandardError => e
-        unless previously_configured_services.empty?
-          shell.warning <<-WARNING
+
+        begin
+          sudo(services_setup_command)
+        rescue StandardError => e
+          unless previously_configured_services.empty?
+            shell.warning <<-WARNING
 External services configuration not updated. Using previous version.
 Deploy again if your services configuration appears incomplete or out of date.
 #{e}
-          WARNING
+            WARNING
+          end
         end
       end
 
