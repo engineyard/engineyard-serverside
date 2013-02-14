@@ -1,15 +1,7 @@
-def jruby?
-  defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
-end
-
-def macruby?
-  defined?(RUBY_ENGINE) && RUBY_ENGINE == 'macruby'
-end
-
-unless ENV['CI'] || macruby?
+if !ENV['CI'] && defined?(RUBY_ENGINE) && RUBY_ENGINE == 'ruby'
   require 'simplecov'
   SimpleCov.start do
-    add_filter 'spec'
+    add_filter 'vendor'
   end
 end
 
@@ -22,6 +14,14 @@ RSpec.configure do |config|
   end
 end
 
+def macruby?
+  defined?(RUBY_ENGINE) && RUBY_ENGINE == 'macruby'
+end
+
+def jruby?
+  defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
+end
+
 class MockDecoder
   def self.load(string, options={})
     {'abc' => 'def'}
@@ -32,8 +32,14 @@ class MockDecoder
   end
 end
 
-class TimeWithZone
-  def to_json(options={})
-    "\"2005-02-01T15:15:10Z\""
+module MockModuleDecoder
+  extend self
+
+  def load(string, options={})
+    {'abc' => 'def'}
+  end
+
+  def dump(string)
+    '{"abc":"def"}'
   end
 end
