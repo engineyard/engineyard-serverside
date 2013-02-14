@@ -136,7 +136,7 @@ describe "deploy hooks" do
 
     context "the @node ivar" do
       before(:each) do
-        EY::Serverside.dna_json = {
+        EY::Serverside.dna_json = MultiJson.dump({
           'instance_role' => 'solo',
           'applications' => {
             'myapp' => {
@@ -144,7 +144,7 @@ describe "deploy hooks" do
               'branch' => 'master',
             }
           }
-        }.to_json
+        })
       end
 
       it "is available" do

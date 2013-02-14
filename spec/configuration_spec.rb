@@ -11,7 +11,7 @@ describe EY::Serverside::Deploy::Configuration do
         'account_name' => 'acc',
         'migrate' => nil,
         'branch' => 'branch_from_command_line',
-        'config' => {'custom' => 'custom_from_extra_config', 'maintenance_on_migrate' => 'false'}.to_json
+        'config' => MultiJson.dump({'custom' => 'custom_from_extra_config', 'maintenance_on_migrate' => 'false'})
       })
 
       @deploy = FullTestDeploy.new(test_servers, @config, test_shell)

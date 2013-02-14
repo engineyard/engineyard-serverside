@@ -50,7 +50,7 @@ Spec::Runner.configure do |config|
 
   config.before(:all) do
     make_tmpdir
-    EY::Serverside.dna_json = {}.to_json
+    EY::Serverside.dna_json = MultiJson.dump({})
   end
 
   config.after(:all) do

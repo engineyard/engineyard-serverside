@@ -10,10 +10,10 @@ end
 $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/systemu/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
-$LOAD_PATH.unshift File.expand_path('vendor/json_pure/lib', File.dirname(__FILE__))
+$LOAD_PATH.unshift File.expand_path('vendor/multi_json/lib', File.dirname(__FILE__))
 
 require 'escape'
-require 'json'
+require 'multi_json'
 
 require 'engineyard-serverside/version'
 require 'engineyard-serverside/about'
@@ -35,7 +35,7 @@ module EY
     RemoteFailure = Class.new StandardError
 
     def self.node
-      @node ||= deep_indifferentize(JSON.parse(dna_json))
+      @node ||= deep_indifferentize(MultiJson.load(dna_json))
     end
 
     def self.dna_json

@@ -1,4 +1,4 @@
-require 'json'
+require 'multi_json'
 require 'thor'
 require 'pp'
 require 'engineyard-serverside/paths'
@@ -79,7 +79,7 @@ module EY
 
       def initialize(options)
         opts = string_keys(options)
-        config = JSON.parse(opts.delete("config") || "{}")
+        config = MultiJson.load(opts.delete("config") || "{}")
         append_config_source opts # high priority
         append_config_source config # lower priority
       end
@@ -150,7 +150,7 @@ module EY
       end
 
       def to_json
-        configuration.to_json
+        MultiJson.dump(configuration)
       end
 
       def node
