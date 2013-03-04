@@ -227,11 +227,11 @@ module EY
       end
 
       def precompile_assets?
-        precompile_assets == true
+        precompile_assets == true || precompile_assets == "true"
       end
 
       def skip_precompile_assets?
-        precompile_assets == false
+        precompile_assets == false || precompile_assets == "false"
       end
 
       # Assume downtime required if stack is not specified (nil) just in case.
