@@ -1,6 +1,84 @@
 require 'spec_helper'
 
 describe EY::Serverside::Deploy::Configuration do
+  describe "default options" do
+    it "has defaults" do
+      @config = EY::Serverside::Deploy::Configuration.new({
+        'app' => 'app_name',
+        'environment_name' => 'env_name',
+        'account_name' => 'acc',
+        'framework_env' => 'production',
+      })
+      @config.app_name.should == "app_name"
+      @config.environment_name.should == "env_name"
+      @config.account_name.should == "acc"
+      @config.migrate.should == nil
+      @config.migrate?.should == false
+      @config.branch.should == "master"
+      @config.strategy_class.should == EY::Serverside::Strategies::Git
+      @config.maintenance_on_migrate.should == true
+      @config.maintenance_on_restart.should == true
+      @config.required_downtime_stack?.should == true
+      @config.enable_maintenance_page?.should == true
+      @config.disable_maintenance_page?.should == true
+      @config.framework_env.should == "production"
+      @config.precompile_assets.should == nil
+      @config.precompile_assets_inferred?.should == true
+      @config.skip_precompile_assets?.should == false
+      @config.precompile_assets?.should == false
+      @config.asset_roles.should == [:app_master, :app, :solo]
+      @config.user.should == ENV['USER']
+      @config.group.should == ENV['USER']
+      @config.verbose.should == false
+      @config.copy_exclude.should == []
+      @config.ignore_database_adapter_warning.should == false
+      @config.bundle_without.should == "test development"
+    end
+
+    it "raises when required options are not given" do
+      @config = EY::Serverside::Deploy::Configuration.new({})
+      expect { @config.app_name }.to raise_error
+      expect { @config.environment_name }.to raise_error
+      expect { @config.account_name }.to raise_error
+      expect { @config.framework_env }.to raise_error
+    end
+  end
+
+  context "command line options" do
+    before do
+      @config = EY::Serverside::Deploy::Configuration.new({
+        'repository_cache' => @tempdir,
+        'app' => 'app_name',
+        'stack' => 'nginx_passenger',
+        'framework_env' => 'development',
+        'environment_name' => 'env_name',
+        'account_name' => 'acc',
+        'branch' => 'branch_from_command_line',
+        'config' => MultiJson.dump({'custom' => 'custom_from_extra_config', 'maintenance_on_migrate' => 'false', 'precompile_assets' => 'false'})
+      })
+    end
+
+    it "underrides options with config (directly supplied options take precedence over 'config' options)" do
+      @config.maintenance_on_migrate.should == false
+      @config.branch.should == "branch_from_command_line"
+    end
+
+    it "corrects command line supplied precompile_assets string (which relies on having a special not-set value of nil, so can't be a boolean)" do
+      @config.skip_precompile_assets?.should == true
+      @config.precompile_assets?.should == false
+      @config.precompile_assets_inferred?.should == false
+    end
+
+    it "doesn't require downtime on restart for nginx_passenger" do
+      @config.maintenance_on_migrate.should == false
+      @config.maintenance_on_restart.should == false
+    end
+
+    it "doesn't exclude the framework_env from bundle if it would match" do
+      @config.bundle_without.should == "test"
+    end
+  end
+
   describe "ey.yml loading" do
     before(:each) do
       @tempdir = `mktemp -d -t ey_yml_spec.XXXXX`.strip
