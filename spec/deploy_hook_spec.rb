@@ -23,9 +23,16 @@ describe "deploy hooks" do
   context "with failing deploy hook" do
     before(:all) do
       begin
-        deploy_test_application('hook_fails')
-      rescue EY::Serverside::RemoteFailure
+        deploy_test_application('hook_fails', :verbose => false)
+      rescue SystemExit
       end
+    end
+
+    it "prints the failure to the log even when non-verbose" do
+      out = read_output
+      out.should =~ %r|FATAL: Exception raised in deploy hook .*/before_migrate.rb.|
+      out.should =~ %r|RuntimeError: Hook failing in \(eval\)|
+      out.should =~ %r|Please fix this error before retrying.|
     end
 
     it "retains the failed release" do
@@ -83,7 +90,7 @@ describe "deploy hooks" do
       it "runs things with sudo" do
         hook = deploy_hook
         cmd = "sudo sh -l -c 'do it as root'"
-        result = EY::Serverside::Shell::CommandResult.new(cmd, 0, "out\nerr")
+        result = EY::Serverside::Shell::CommandResult.new(cmd, 0, "out\nerr", test_servers.first)
         hook.callback_context.shell.should_receive(:logged_system).with(cmd).and_return(result)
         hook.eval_hook('sudo("do it as root") || raise("failed")')
       end
@@ -91,7 +98,7 @@ describe "deploy hooks" do
       it "raises when the bang method alternative is used" do
         hook = deploy_hook
         cmd = "sudo sh -l -c false"
-        result = EY::Serverside::Shell::CommandResult.new(cmd, 1, "fail")
+        result = EY::Serverside::Shell::CommandResult.new(cmd, 1, "fail", test_servers.first)
         hook.callback_context.shell.should_receive(:logged_system).with(cmd).and_return(result)
         lambda {
           hook.eval_hook('sudo!("false")')

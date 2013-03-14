@@ -80,5 +80,19 @@ describe "Deploying an application that uses Bundler" do
       install_cmd.should match(/export GIT_SSH.*install_bundler/)
     end
   end
+
+  context "with a failing Gemfile" do
+    before(:all) do
+      begin
+        deploy_test_application('bundle_fails', :verbose => false)
+      rescue SystemExit
+      end
+    end
+
+    it "prints the failure to the log" do
+      out = read_output
+      out.should =~ %r|this-gem-does-not-exist-which-makes-bundle-install-fail|
+    end
+  end
 end
 

@@ -1,7 +1,7 @@
 module EY
   module Serverside
     class Shell
-      class CommandResult < Struct.new(:command, :exitstatus, :output)
+      class CommandResult < Struct.new(:command, :exitstatus, :output, :server)
         def success?
           exitstatus.to_i == 0
         end

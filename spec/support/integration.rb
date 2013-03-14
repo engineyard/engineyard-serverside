@@ -4,8 +4,6 @@ class FullTestDeploy < EY::Serverside::Deploy
   def initialize(*)
     super
     @commands = []
-    @gemfile_contents = nil
-    @lockfile_contents = nil
   end
 
   # passwordless sudo is neither guaranteed nor desired
@@ -16,20 +14,6 @@ class FullTestDeploy < EY::Serverside::Deploy
   def run(cmd)
     @commands << cmd
     super
-  end
-
-  def version_specifier
-    # Normally, the deploy task invokes the hook task by executing
-    # the rubygems-generated wrapper (it's what's in $PATH). It
-    # specifies the version to make sure that the pieces don't get
-    # out of sync. However, in test mode, there's no
-    # rubygems-generated wrapper, and so the hook task doesn't get
-    # run because thor thinks we're trying to invoke the _$VERSION_
-    # task instead, which doesn't exist.
-    #
-    # By stripping that out, we can get the hooks to actually run
-    # inside this test.
-    nil
   end
 
   def restart_command

@@ -67,8 +67,8 @@ module EY
 
       def propagate
         shell.status "Propagating #{About.name_with_version} to #{count_servers(servers)}."
-        servers.run_on_each { |server| shell.logged_system(scp_command(server)) }
-        servers.run_on_each { |server| shell.logged_system(server.command_on_server('sudo sh -l -c', install_command)) }
+        servers.run_on_each(shell) { |server| shell.logged_system(scp_command(server)) }
+        servers.run_on_each(shell) { |server| shell.logged_system(server.command_on_server('sudo sh -l -c', install_command)) }
       end
     end
   end

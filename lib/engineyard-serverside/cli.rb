@@ -30,8 +30,9 @@ module EY
 
       desc "deploy", "Deploy code from /data/<app>"
       def deploy(default_task=:deploy)
-        servers, config, shell = init_and_propagate(options, default_task.to_s)
-        EY::Serverside::Deploy.new(servers, config, shell).send(default_task)
+        init_and_propagate(options, default_task.to_s) do |servers, config, shell|
+          EY::Serverside::Deploy.new(servers, config, shell).send(default_task)
+        end
       end
 
       account_app_env_options
@@ -40,8 +41,9 @@ module EY
       verbose_option
       desc "enable_maintenance", "Enable maintenance page (disables web access)"
       def enable_maintenance
-        servers, config, shell = init_and_propagate(options, 'enable_maintenance')
-        EY::Serverside::Maintenance.new(servers, config, shell).manually_enable
+        init_and_propagate(options, 'enable_maintenance') do |servers, config, shell|
+          EY::Serverside::Maintenance.new(servers, config, shell).manually_enable
+        end
       end
 
       account_app_env_options
@@ -50,8 +52,9 @@ module EY
       verbose_option
       desc "disable_maintenance", "Disable maintenance page (enables web access)"
       def disable_maintenance
-        servers, config, shell = init_and_propagate(options, 'disable_maintenance')
-        EY::Serverside::Maintenance.new(servers, config, shell).manually_disable
+        init_and_propagate(options, 'disable_maintenance') do |servers, config, shell|
+          EY::Serverside::Maintenance.new(servers, config, shell).manually_disable
+        end
       end
 
       method_option :release_path,  :type     => :string,
@@ -69,8 +72,9 @@ module EY
       verbose_option
       desc "hook [NAME]", "Run a particular deploy hook"
       def hook(hook_name)
-        config, shell = init(options, "hook-#{hook_name}")
-        EY::Serverside::DeployHook.new(config, shell, hook_name).call
+        init(options, "hook-#{hook_name}") do |config, shell|
+          EY::Serverside::DeployHook.new(config, shell, hook_name).call
+        end
       end
 
       account_app_env_options
@@ -91,22 +95,24 @@ module EY
         # we have to deploy the same SHA there as here
         integrate_options[:branch] = current_app_dir.join('REVISION').read.strip
 
-        servers, config, shell = init_and_propagate(integrate_options, 'integrate')
+        init_and_propagate(integrate_options, 'integrate') do |servers, config, shell|
 
-        # We have to rsync the entire app dir, so we need all the permissions to be correct!
-        shell.logged_system "sudo sh -l -c 'find #{app_dir} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +'"
+          # We have to rsync the entire app dir, so we need all the permissions to be correct!
+          rsync_command = "find #{app_dir} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
+          shell.logged_system "sudo sh -l -c '#{rsync_command}'"
 
-        servers.each do |server|
-          shell.logged_system server.sync_directory_command(app_dir)
-          # we're just about to recreate this, so it has to be gone
-          # first. otherwise, non-idempotent deploy hooks could screw
-          # things up, and since we don't control deploy hooks, we must
-          # assume the worst.
-          shell.logged_system server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
+          servers.each do |server|
+            shell.logged_system server.sync_directory_command(app_dir)
+            # we're just about to recreate this, so it has to be gone
+            # first. otherwise, non-idempotent deploy hooks could screw
+            # things up, and since we don't control deploy hooks, we must
+            # assume the worst.
+            shell.logged_system server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
+          end
+
+          # deploy local-ref to other instances into /data/$app/local-current
+          EY::Serverside::Deploy.new(servers, config, shell).cached_deploy
         end
-
-        # deploy local-ref to other instances into /data/$app/local-current
-        EY::Serverside::Deploy.new(servers, config, shell).cached_deploy
       end
 
       account_app_env_options
@@ -115,8 +121,9 @@ module EY
       verbose_option
       desc "restart", "Restart app servers, conditionally enabling maintenance page"
       def restart
-        servers, config, shell = init_and_propagate(options, 'restart')
-        EY::Serverside::Deploy.new(servers, config, shell).restart_with_maintenance_page
+        init_and_propagate(options, 'restart') do |servers, config, shell|
+          EY::Serverside::Deploy.new(servers, config, shell).restart_with_maintenance_page
+        end
       end
 
       desc "install_bundler [VERSION]", "Make sure VERSION of bundler is installed (in system ruby)"
@@ -137,10 +144,11 @@ module EY
       private
 
       def init_and_propagate(*args)
-        config, shell = init(*args)
-        servers = load_servers(config)
-        Propagator.call(servers, config, shell)
-        [servers, config, shell]
+        init(*args) do |config, shell|
+          servers = load_servers(config)
+          Propagator.call(servers, config, shell)
+          yield servers, config, shell
+        end
       end
 
       def init(options, action)
@@ -150,7 +158,15 @@ module EY
           :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log")
         )
         shell.debug "Initializing #{About.name_with_version}."
-        [config, shell]
+        begin
+          yield config, shell
+        rescue EY::Serverside::RemoteFailure => e
+          shell.exception "#{e.message}"
+          abort
+        rescue Exception => e
+          shell.exception "#{e.backtrace[0]}: #{e.message} (#{e.class})"
+          raise
+        end
       end
 
       def load_servers(config)
@@ -166,6 +182,7 @@ module EY
           }
         }
       end
+
     end
   end
 end

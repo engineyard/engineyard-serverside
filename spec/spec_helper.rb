@@ -14,6 +14,7 @@ end
 
 require 'pp'
 require 'engineyard-serverside'
+require 'engineyard-serverside-adapter'
 require File.expand_path('../support/integration', __FILE__)
 
 FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
@@ -60,7 +61,7 @@ Spec::Runner.configure do |config|
   class VerboseStringIO < StringIO
     def <<(str)
       if ENV['VERBOSE'] || ENV['DEBUG']
-        $stderr << str
+        STDERR << str
       end
       super
     end
@@ -100,10 +101,20 @@ Spec::Runner.configure do |config|
     read_stdout + "\n" + read_stderr
   end
 
-  def test_shell
+  def capture
+    begin
+      $stdout = stdout
+      $stderr = stderr
+      yield
+    ensure
+      $stdout, $stderr = STDOUT, STDERR
+    end
+  end
+
+  def test_shell(verbose=true)
     @test_shell ||= begin
                       @log_path = tmpdir.join("serverside-deploy-#{Time.now.to_i}-#{$$}.log")
-                      EY::Serverside::Shell.new(:verbose => true, :log_path => @log_path, :stdout => stdout, :stderr => stderr)
+                      EY::Serverside::Shell.new(:verbose => verbose, :log_path => @log_path, :stdout => stdout, :stderr => stderr)
                     end
   end
 
@@ -117,28 +128,33 @@ Spec::Runner.configure do |config|
 
   # set up EY::Serverside::Server like we're on a solo
   def test_servers
-    EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => ENV['USER']}])
+    @test_servers ||= EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => ENV['USER']}])
   end
 
   # When a repo fixture name is specified, the files found in the specified
   # spec/fixtures/repos dir are copied into the test github repository.
   def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
-    servers = test_servers
+    options = {
+      "strategy"         => "IntegrationSpec",
+      "deploy_to"        => deploy_dir.to_s,
+      "group"            => GROUP,
+      "stack"            => 'nginx_passenger',
+      "migrate"          => "ruby -e 'puts ENV[\"PATH\"]' > #{deploy_dir}/path-when-migrating",
+      "app"              => 'rails31',
+      "environment_name" => 'env',
+      "account_name"     => 'acc',
+      "framework_env"    => 'staging',
+      "branch"           => 'somebranch',
+      "verbose"          => true,
+      "repo"             => FIXTURES_DIR.join('repos', repo_fixture_name),
+    }.merge(extra_config)
 
-    # run a deploy
-    @config = EY::Serverside::Deploy::Configuration.new({
-      "strategy"      => "IntegrationSpec",
-      "deploy_to"     => deploy_dir.to_s,
-      "group"         => GROUP,
-      "stack"         => 'nginx_passenger',
-      "migrate"       => "ruby -e 'puts ENV[\"PATH\"]' > #{deploy_dir}/path-when-migrating",
-      'app'           => 'rails31',
-      'environment_name' => 'env',
-      'account_name'  => 'acc',
-      'framework_env' => 'staging',
-      'branch'        => 'somebranch',
-      'repo'          => FIXTURES_DIR.join('repos', repo_fixture_name)
-    }.merge(extra_config))
+    # Build a special Configuration object, since specs are very limited right now
+    config = EY::Serverside::Deploy::Configuration.new(options)
+    EY::Serverside::Deploy::Configuration.stub(:new).and_return(config)
+
+    # Stub the shell to play nicely with our outputter
+    #EY::Serverside::Shell.stub(:new).and_return(test_shell(@config.verbose))
 
     # pretend there is a shared bundled_gems directory
     deploy_dir.join('shared', 'bundled_gems').mkpath
@@ -146,10 +162,30 @@ Spec::Runner.configure do |config|
       deploy_dir.join('shared', 'bundled_gems', name).open("w") { |f| f.write("old\n") }
     end
 
+    # Create the command to send to CLI.start, even though most of the options are ignored
+    adapter = EY::Serverside::Adapter.new do |args|
+      args.app              = options['app']
+      args.environment_name = options['environment_name']
+      args.account_name     = options['account_name']
+      args.migrate          = options['migrate']
+      args.ref              = options['branch']
+      args.repo             = options['repo']
+      args.config           = options['config']
+      args.framework_env    = options['framework_env']
+      args.stack            = options['stack']
+      args.verbose          = options['verbose']
+      args.instances        = test_servers.map {|s| {:hostname => s.hostname, :roles => s.roles.to_a, :name => s.name} }
+    end
+
+    @argv = adapter.deploy.commands.last.to_argv[2..-1]
+
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    @deployer = FullTestDeploy.new(servers, @config, test_shell)
+    @deployer = FullTestDeploy.new(test_servers, config, test_shell(config.verbose))
+    EY::Serverside::Deploy.stub(:new).and_return(@deployer)
     yield @deployer if block_given?
-    @deployer.deploy
+    capture do
+      EY::Serverside::CLI.start(@argv)
+    end
   end
 
   def redeploy_test_application(extra_config = {}, &block)
@@ -172,6 +208,8 @@ Spec::Runner.configure do |config|
 
     @deployer = FullTestDeploy.new(test_servers, @config, test_shell)
     yield @deployer if block_given?
-    @deployer.deploy
+    capture do
+      EY::Serverside::CLI.start(@argv)
+    end
   end
 end

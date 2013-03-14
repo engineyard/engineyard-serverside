@@ -12,6 +12,11 @@ module EY
         "#{user}@#{hostname}"
       end
 
+      def inspect
+        name_s = name && ":#{name}"
+        "#{hostname}(#{role}#{name_s})"
+      end
+
       def role
         roles.first
       end

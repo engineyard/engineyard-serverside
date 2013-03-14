@@ -64,17 +64,17 @@ module EY
 
       # Run a command on this set of servers.
       def run(shell, cmd, &block)
-        run_on_each do |server|
+        run_on_each(shell) do |server|
           exec_cmd = server.command_on_server('sh -l -c', cmd, &block)
-          shell.logged_system(exec_cmd)
+          shell.logged_system(exec_cmd, server)
         end
       end
 
       # Run a sudo command on this set of servers.
       def sudo(shell, cmd, &block)
-        run_on_each do |server|
+        run_on_each(shell) do |server|
           exec_cmd = server.command_on_server('sudo sh -l -c', cmd, &block)
-          shell.logged_system(exec_cmd)
+          shell.logged_system(exec_cmd, server)
         end
       end
 
@@ -93,12 +93,24 @@ module EY
       # Makes a theard for each server and executes the block,
       # Assumes that the return value of the block is a CommandResult
       # and ensures that all the command results were successful.
-      def run_on_each(&block)
+      def run_on_each(shell, &block)
         results = map_in_parallel(&block)
         failures = results.reject {|result| result.success? }
+
         if failures.any?
-          message = failures.map { |f| f.inspect }.join("\n")
-          raise EY::Serverside::RemoteFailure.new(failures)
+          commands = failures.map { |f| f.command }.uniq
+          servers = failures.map { |f| f.server }.compact.map { |s| s.inspect }
+          outputs = failures.map { |f| f.output }.uniq
+          message = "The following command#{commands.size == 1 ? '' : 's'} failed"
+          if servers.any?
+            message << " on server#{servers.size == 1 ? '' : 's'} [#{servers.join(', ')}]"
+          end
+          message << "\n\n"
+          commands.each do |cmd|
+            message << "$ #{cmd}\n"
+          end
+          message << "\n" << outputs.join("\n\n") << "\n"
+          raise EY::Serverside::RemoteFailure.new(message)
         end
       end
 

@@ -25,6 +25,10 @@ module EY
         @logger.formatter = EY::Serverside::Shell::Formatter.new(@stdout, @stderr, start_time, @verbose)
       end
 
+      def verbose?
+        @verbose
+      end
+
       def start_time
         @start_time ||= Time.now
       end
@@ -46,6 +50,7 @@ module EY
       def debug(msg)   logger.debug   msg end
       def unknown(msg) logger.unknown msg end
 
+      def exception(msg) logger.unknown "!> ERROR: #{msg}" end
       # a debug outputter that displays a command being run
       # Formatis like this:
       #   $ cmd blah do \
@@ -55,13 +60,13 @@ module EY
       def command_out(msg)  debug   msg.gsub(/^/,'     ') end
       def command_err(msg)  unknown msg.gsub(/^/,'     ') end
 
-      def logged_system(cmd)
+      def logged_system(cmd, server = nil)
         command_show(cmd)
         output = ""
         outio = YieldIO.new { |msg| output << msg; command_out(msg) }
         errio = YieldIO.new { |msg| output << msg; command_err(msg) }
         result = spawn_process(cmd, outio, errio)
-        CommandResult.new(cmd, result.exitstatus, output)
+        CommandResult.new(cmd, result.exitstatus, output, server)
       end
 
       protected
