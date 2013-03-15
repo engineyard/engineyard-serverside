@@ -41,7 +41,6 @@ class FullTestDeploy < EY::Serverside::Deploy
   def framework_env
     config.framework_env
   end
-
 end
 
 class EY::Serverside::Deploy

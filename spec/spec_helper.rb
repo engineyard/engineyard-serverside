@@ -20,6 +20,7 @@ require File.expand_path('../support/integration', __FILE__)
 FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
 TMPDIR = Pathname.new(__FILE__).dirname.parent.join('tmp')
 GROUP = `id -gn`.strip
+INTERNAL_KEY = Pathname.new("~/.ssh/id_rsa").expand_path
 
 module EY
   module Serverside

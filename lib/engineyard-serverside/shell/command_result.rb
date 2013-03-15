@@ -1,17 +1,13 @@
 module EY
   module Serverside
     class Shell
-      class CommandResult < Struct.new(:command, :exitstatus, :output, :server)
-        def success?
-          exitstatus.to_i == 0
-        end
+      class CommandResult < Struct.new(:command, :success, :output, :server)
+        alias success? success
 
         def inspect
           <<-EOM
-$ #{command}
+$ #{success? ? "(success)" : "(failed)"} #{command}
 #{output}
-
-($?: #{exitstatus})
           EOM
         end
       end

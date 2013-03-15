@@ -42,6 +42,18 @@ module EY
         ].join(' && ')
       end
 
+      def scp_command(local_file, remote_file)
+        Escape.shell_command([
+          'scp',
+          '-i', "#{ENV['HOME']}/.ssh/internal",
+          "-o", "StrictHostKeyChecking=no",
+          "-o", "UserKnownHostsFile=#{self.class.known_hosts_file.path}",
+          "-o", "PasswordAuthentication=no",
+          local_file,
+          "#{server.authority}:#{remote_file}",
+        ])
+      end
+
       def command_on_server(prefix, cmd, &block)
         command = block ? block.call(self, cmd.dup) : cmd
         command = "#{prefix} #{Escape.shell_command([command])}"

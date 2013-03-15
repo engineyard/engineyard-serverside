@@ -8,6 +8,7 @@ require 'engineyard-serverside/cli_helpers'
 module EY
   module Serverside
     class CLI < Thor
+
       extend CLIHelpers
 
       method_option :migrate,         :type     => :string,
@@ -99,15 +100,12 @@ module EY
 
           # We have to rsync the entire app dir, so we need all the permissions to be correct!
           chown_command = "find #{app_dir} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
-          shell.logged_system "sudo sh -l -c '#{chown_command}'"
+          shell.logged_system("sudo sh -l -c '#{chown_command}'", servers.detect {|s| s.local?})
 
-          servers.each do |server|
-            shell.logged_system server.sync_directory_command(app_dir)
-            # we're just about to recreate this, so it has to be gone
-            # first. otherwise, non-idempotent deploy hooks could screw
-            # things up, and since we don't control deploy hooks, we must
-            # assume the worst.
-            shell.logged_system server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
+          servers.run_for_each! do |server|
+            sync  = server.sync_directory_command(app_dir)
+            clean = server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
+            "(#{sync}) && (#{clean})"
           end
 
           # deploy local-ref to other instances into /data/$app/local-current

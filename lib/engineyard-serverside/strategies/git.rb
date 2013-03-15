@@ -76,7 +76,7 @@ module EY
 
       private
         def run(cmd)
-          shell.logged_system(cmd).success?
+          EY::Serverside::Spawner.run(cmd, shell, nil).success?
         end
 
         def in_repository_cache

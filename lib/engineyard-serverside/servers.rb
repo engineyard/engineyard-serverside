@@ -1,6 +1,7 @@
 require 'engineyard-serverside/server'
 require 'forwardable'
 require 'set'
+require 'engineyard-serverside/spawner'
 
 module EY
   module Serverside
@@ -16,24 +17,25 @@ module EY
       extend Forwardable
       include Enumerable
       def_delegators :@servers, :each, :size, :empty?
-      def select(*a, &b) self.class.new @servers.select(*a,&b) end
-      def reject(*a, &b) self.class.new @servers.reject(*a,&b) end
+      def select(*a, &b) self.class.new @servers.select(*a,&b), @shell end
+      def reject(*a, &b) self.class.new @servers.reject(*a,&b), @shell end
       def to_a() @servers end
       def ==(other) other.respond_to?(:to_a) && other.to_a == to_a end
 
 
-      def self.from_hashes(server_hashes)
+      def self.from_hashes(server_hashes, shell)
         servers = server_hashes.inject({}) do |memo, server_hash|
           server = Server.from_hash(server_hash)
           raise DuplicateHostname.new(server.hostname) if memo.key?(server.hostname)
           memo[server.hostname] = server
           memo
         end
-        new(servers.values)
+        new(servers.values, shell)
       end
 
-      def initialize(servers)
+      def initialize(servers, shell)
         @servers = servers
+        @shell = shell
         @cache = {}
       end
 
@@ -62,40 +64,47 @@ module EY
         end
       end
 
+      def scp(local_file, remote_file)
+        servers.run_for_each! { |server| server.scp_command(local_file, remote_file) }
+      end
+
+      def run_on_each(cmd, &block)
+        run_for_each do |server|
+          server.command_on_server('sh -l -c', cmd, &block)
+        end
+      end
+
       # Run a command on this set of servers.
-      def run(shell, cmd, &block)
-        run_on_each(shell) do |server|
-          exec_cmd = server.command_on_server('sh -l -c', cmd, &block)
-          shell.logged_system(exec_cmd, server)
+      def run_on_each!(cmd, &block)
+        run_for_each! do |server|
+          server.command_on_server('sh -l -c', cmd, &block)
+        end
+      end
+      alias run run_on_each!
+
+      # Run a sudo command on this set of servers.
+      def sudo_on_each(cmd, &block)
+        run_for_each do |server|
+          server.command_on_server('sudo sh -l -c', cmd, &block)
         end
       end
 
       # Run a sudo command on this set of servers.
-      def sudo(shell, cmd, &block)
-        run_on_each(shell) do |server|
-          exec_cmd = server.command_on_server('sudo sh -l -c', cmd, &block)
-          shell.logged_system(exec_cmd, server)
+      def sudo_on_each!(cmd, &block)
+        run_for_each! do |server|
+          server.command_on_server('sudo sh -l -c', cmd, &block)
         end
       end
+      alias sudo sudo_on_each!
 
-      # Makes a thread for each server and executes the block,
-      # returning an array of return values
-      def map_in_parallel(&block)
-        threads = map { |server| Thread.new { block.call(server) } }
-        threads.map { |t| t.value }
+      def run_for_each(&block)
+        spawner = Spawner.new
+        each { |server| spawner.add(block.call(server), @shell, server) }
+        spawner.run
       end
 
-      def select_in_parallel(&block)
-        results = map_in_parallel { |server| block.call(server) ? server : nil }.compact
-        self.class.new results
-      end
-
-      # Makes a theard for each server and executes the block,
-      # Assumes that the return value of the block is a CommandResult
-      # and ensures that all the command results were successful.
-      def run_on_each(shell, &block)
-        results = map_in_parallel(&block)
-        failures = results.reject {|result| result.success? }
+      def run_for_each!(&block)
+        failures = run_for_each(&block).reject {|result| result.success? }
 
         if failures.any?
           commands = failures.map { |f| f.command }.uniq

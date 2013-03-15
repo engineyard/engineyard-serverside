@@ -106,9 +106,8 @@ module EY
       # task
       def push_code
         shell.status "Pushing code to all servers"
-        servers.remote.run_on_each(shell) do |server|
-          cmd = server.sync_directory_command(paths.repository_cache)
-          shell.logged_system(cmd)
+        servers.remote.run_for_each(shell) do |server|
+          server.sync_directory_command(paths.repository_cache)
         end
       end
 

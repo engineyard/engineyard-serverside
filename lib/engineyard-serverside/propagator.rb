@@ -8,11 +8,12 @@ module EY
         new(*args).call
       end
 
-      attr_reader :config, :shell
+      attr_reader :shell
 
-      def initialize(servers, config, shell, options={})
+      def initialize(servers, internal_key_path, shell, options={})
         @remote_servers = servers.remote
-        @config, @shell = config, shell
+        @internal_key_path = internal_key_path
+        @shell = shell
       end
 
       # servers that need to have the gem installed
@@ -42,7 +43,7 @@ module EY
       def scp_command(server)
         Escape.shell_command([
           'scp',
-          '-i', config.paths.internal_key.to_s,
+          '-i', internal_key_path.to_s,
           "-o", "StrictHostKeyChecking=no",
           About.gem_file,
          "#{server.authority}:#{remote_gem_file}",
@@ -60,15 +61,14 @@ module EY
       def find_servers_missing_gem
         return @remote_servers if @remote_servers.empty?
         shell.status "Verifying #{About.name_with_version} on #{count_servers(@remote_servers)}."
-        @remote_servers.select_in_parallel do |server|
-          !shell.logged_system(server.command_on_server('sh -l -c', check_command)).success?
-        end
+        results = @remote_servers.run_on_each(shell, check_command)
+        Servers.new results.reject { |result| result.success? }.map { |result| result.server }
       end
 
       def propagate
         shell.status "Propagating #{About.name_with_version} to #{count_servers(servers)}."
-        servers.run_on_each(shell) { |server| shell.logged_system(scp_command(server)) }
-        servers.run_on_each(shell) { |server| shell.logged_system(server.command_on_server('sudo sh -l -c', install_command)) }
+        servers.run_for_each!(shell) { |server| scp_command(server) }
+        servers.sudo_on_each(install_command)
       end
     end
   end
