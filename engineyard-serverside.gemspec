@@ -17,8 +17,8 @@ Gem::Specification.new do |s|
   s.default_executable = "engineyard-serverside"
   s.require_path = 'lib'
 
-  s.add_development_dependency('rspec', '1.3.2')
-  s.add_development_dependency('rake', '>=0.9.2.2', '<10.0')
+  s.add_development_dependency('rspec', '~>2.12.0')
+  s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('timecop')
   s.add_development_dependency('simplecov')

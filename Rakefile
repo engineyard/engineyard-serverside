@@ -1,19 +1,22 @@
-require 'spec/rake/spectask'
-Spec::Rake::SpecTask.new(:spec) do |spec|
-  spec.libs << 'lib' << 'spec'
-  spec.spec_files = FileList['spec/**/*_spec.rb']
+require 'rspec/core/rake_task'
+RSpec::Core::RakeTask.new do |t|
+  t.rspec_opts = %w[--color]
+  t.pattern = 'spec/**/*_spec.rb'
 end
-task :default => :spec
 
-Spec::Rake::SpecTask.new(:php) do |spec|
-  spec.libs << 'lib' << 'spec'
-  spec.spec_files = FileList['spec/php_deploy_spec.rb']
+RSpec::Core::RakeTask.new(:php) do |spec|
+  t.libs << 'lib' << 'spec'
+  t.pattern = 'spec/**/*php*_spec.rb'
 end
 
 task :coverage => [:coverage_env, :spec]
+
 task :coverage_env do
   ENV['COVERAGE'] = '1'
 end
+
+task :test => :spec
+task :default => :spec
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'

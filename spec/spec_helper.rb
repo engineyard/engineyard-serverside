@@ -34,7 +34,7 @@ module EY
   end
 end
 
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
   $NPM_INSTALLED = system('which npm 2>&1')
   unless $NPM_INSTALLED
     $stderr.puts "npm not found; skipping Node.js specs."
