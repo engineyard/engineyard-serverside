@@ -1,4 +1,5 @@
 require 'engineyard-serverside/shell/helpers'
+require 'yaml'
 
 module EY
   module Serverside

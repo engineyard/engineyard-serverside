@@ -4,11 +4,14 @@ require 'fileutils'
 require 'multi_json'
 require 'engineyard-serverside/rails_asset_support'
 require 'engineyard-serverside/maintenance'
+require 'engineyard-serverside/dependency_manager'
+require 'engineyard-serverside/dependency_manager/legacy_helpers'
 
 module EY
   module Serverside
     class DeployBase < Task
       include ::EY::Serverside::RailsAssetSupport
+      include ::EY::Serverside::DependencyManager::LegacyHelpers
 
       # default task
       def deploy
@@ -71,52 +74,12 @@ module EY
         strategy.short_log_message(revision)
       end
 
-      def check_for_ey_config
-        if gemfile? && lockfile
-          configured_services = config.configured_services
-          if configured_services && !lockfile.has_ey_config?
-            shell.warning "Gemfile.lock does not contain ey_config. Add gem 'ey_config' to get access through EY::Config."
-          end
-        end
-      end
-
-      # The nodatabase.yml file is dropped by server configuration when there is
-      # no database in the cluster.
-      def has_database?
-        paths.shared_config.join('database.yml').exist? &&
-          !paths.shared_config.join('nodatabase.yml').exist?
-      end
-
       def check_repository
-        if gemfile?
-          shell.status "Gemfile found."
-          if lockfile
-            shell.status "Gemfile.lock found."
-            if !config.ignore_database_adapter_warning? && has_database? && !lockfile.any_database_adapter?
-              shell.warning <<-WARN
-Gemfile.lock does not contain a recognized database adapter.
-A database-adapter gem such as pg, mysql2, mysql, or do_mysql was expected.
-This can prevent applications that use PostgreSQL or MySQL from booting.
+        check_dependencies
+      end
 
-To fix, add any needed adapter to your Gemfile, bundle, commit, and redeploy.
-Applications not using PostgreSQL or MySQL can safely ignore this warning by
-adding ignore_database_adapter_warning: true to the application's ey.yml file
-under this environment's name and adding the file to your repository.
-              WARN
-            end
-          else
-            shell.warning <<-WARN
-Gemfile.lock is missing!
-You can get different versions of gems in production than what you tested with.
-You can get different versions of gems on every deployment even if your Gemfile hasn't changed.
-Deploying will take longer.
-
-To fix this problem, commit your Gemfile.lock to your repository and redeploy.
-            WARN
-          end
-        else
-          shell.status "No Gemfile. Deploying without bundler support."
-        end
+      def check_dependencies
+        dependency_manager.check
       end
 
       def restart_with_maintenance_page
@@ -164,9 +127,8 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} deploy}
       end
 
-      # GIT_SSH needs to be defined in the environment for customers with private bundler repos in their Gemfile.
-      def clean_environment
-        %Q[export GIT_SSH="#{ssh_executable}" && export LANG="en_US.UTF-8" && unset RUBYOPT BUNDLE_PATH BUNDLE_FROZEN BUNDLE_WITHOUT BUNDLE_BIN BUNDLE_GEMFILE]
+      def ensure_git_ssh_wrapper
+        ENV['GIT_SSH'] = ssh_executable.to_s
       end
 
       # create ssh wrapper on all servers
@@ -197,12 +159,12 @@ chmod 0700 #{path}
         SCRIPT
       end
 
-      # task
       def bundle
-        roles :app_master, :app, :solo, :util do
-          check_ruby_bundler
-          check_node_npm
-        end
+        install_dependencies
+      end
+
+      def install_dependencies
+        dependency_manager.install
       end
 
       # task
@@ -298,34 +260,37 @@ Deploy again if your services configuration appears incomplete or out of date.
 
         if services = config.configured_services
           shell.status "Services configured: #{services.join(', ')}"
-          check_for_ey_config
+          dependency_manager.check_ey_config
         end
       end
 
       def setup_sqlite3_if_necessary
-        if gemfile? && lockfile && lockfile.uses_sqlite3?
-          [
-           ["Create databases directory if needed", "mkdir -p #{paths.shared}/databases"],
-           ["Creating SQLite database if needed", "touch #{paths.shared}/databases/#{config.framework_env}.sqlite3"],
-           ["Create config directory if needed", "mkdir -p #{paths.active_release_config}"],
-           ["Generating SQLite config", <<-WRAP],
+        if dependency_manager.uses_sqlite3?
+          shell.status "Setting up SQLite3 Database for compatibility with application's chosen adapter"
+          shell.warning "SQLite3 cannot persist across servers. Please upgrade to a supported database."
+
+          shell.substatus "Create databases directory if needed"
+          run "mkdir -p #{paths.shared}/databases"
+
+          shell.substatus "Create SQLite database if needed"
+          run "touch #{paths.shared}/databases/#{config.framework_env}.sqlite3"
+
+          shell.substatus "Create config directory if needed"
+          run "mkdir -p #{paths.active_release_config}"
+
+          shell.substatus "Generating SQLite config"
+          run <<-WRAP
 cat > #{paths.shared_config}/database.sqlite3.yml<<'YML'
 #{config.framework_env}:
-  adapter: sqlite3
-  database: #{paths.shared}/databases/#{config.framework_env}.sqlite3
-  pool: 5
-  timeout: 5000
+adapter: sqlite3
+database: #{paths.shared}/databases/#{config.framework_env}.sqlite3
+pool: 5
+timeout: 5000
 YML
-WRAP
-           ["Symlink database.yml", "ln -nfs #{paths.shared_config}/database.sqlite3.yml #{paths.active_release_config}/database.yml"],
-          ].each do |what, cmd|
-            shell.status "#{what}"
-            run(cmd)
-          end
+          WRAP
 
-          owner = [config.user, config.group].join(':')
-          shell.status "Setting ownership to #{owner}"
-          sudo "chown -R #{owner} #{paths.active_release}"
+          shell.substatus "Symlink database.yml"
+          run "ln -nfs #{paths.shared_config}/database.sqlite3.yml #{paths.active_release_config}/database.yml"
         end
       end
 
@@ -390,7 +355,7 @@ WRAP
       # Rollback doesn't know about the repository location (nor
       # should it need to), but it would like to use #short_log_message.
       def strategy
-        ENV['GIT_SSH'] = ssh_executable.to_s
+        ensure_git_ssh_wrapper
         @strategy ||= config.strategy_class.new(
           shell,
           :verbose          => config.verbose,
@@ -399,10 +364,6 @@ WRAP
           :repo             => config[:repo],
           :ref              => config[:branch]
         )
-      end
-
-      def gemfile?
-        paths.gemfile.exist?
       end
 
       def base_callback_command_for(what)
@@ -441,10 +402,6 @@ WRAP
         end
       end
 
-      def maintenance
-        @maintenance ||= Maintenance.new(servers, config, shell)
-      end
-
       def with_failed_release_cleanup
         yield
       rescue Exception
@@ -454,69 +411,13 @@ WRAP
         raise
       end
 
-      def bundler_config
-        version = LockfileParser.default_version
-        options = [
-          "--gemfile #{paths.gemfile}",
-          "--path #{paths.bundled_gems}",
-          "--binstubs #{paths.binstubs}",
-          "--without #{config.bundle_without}"
-        ]
-
-        if lockfile
-          version = lockfile.bundler_version
-          options.unshift('--deployment') # deployment mode is not supported without a Gemfile.lock
-        end
-
-        return [version, options.join(' ')]
+      def maintenance
+        @maintenance ||= Maintenance.new(servers, config, shell)
       end
 
-      def lockfile
-        lockfile_path = paths.gemfile_lock
-        if lockfile_path.exist?
-          @lockfile_parser ||= LockfileParser.new(lockfile_path.read)
-        else
-          nil
-        end
-      end
-
-      def check_ruby_bundler
-        if gemfile?
-          shell.status "Bundling gems..."
-
-          clean_bundle_on_system_version_change
-
-          bundler_version, install_switches = bundler_config
-          sudo "#{clean_environment} && #{About.binary} install_bundler #{bundler_version}"
-          run  "#{clean_environment} && cd #{paths.active_release} && ruby -S bundle _#{bundler_version}_ install #{install_switches}"
-
-          write_system_version
-        end
-      end
-
-      def clean_bundle_on_system_version_change
-        # diff exits with 0 for same and 1/2 for different/file not found.
-        check_ruby   = "#{config.ruby_version_command} | diff - #{paths.ruby_version} >/dev/null 2>&1"
-        check_system = "#{config.system_version_command} | diff - #{paths.system_version} >/dev/null 2>&1"
-        say_cleaning = "echo 'New deploy or system version change detected, cleaning bundled gems.'"
-        clean_bundle = "rm -Rf #{paths.bundled_gems}"
-
-        run "#{check_ruby} && #{check_system} || (#{say_cleaning} && #{clean_bundle})"
-      end
-
-      def write_system_version
-        store_ruby_version   = "#{config.ruby_version_command} > #{paths.ruby_version}"
-        store_system_version = "#{config.system_version_command} > #{paths.system_version}"
-
-        run "mkdir -p #{paths.bundled_gems} && chown #{config.user}:#{config.group} #{paths.bundled_gems}"
-        run "#{store_ruby_version} && #{store_system_version}"
-      end
-
-      def check_node_npm
-        if paths.package_json.exist?
-          shell.info "~> package.json detected, installing npm packages"
-          run "cd #{paths.active_release} && npm install"
-        end
+      def dependency_manager
+        ensure_git_ssh_wrapper
+        @dependency_manager ||= DependencyManager.detect(servers, config, shell, self)
       end
     end   # DeployBase
 

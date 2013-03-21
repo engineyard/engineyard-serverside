@@ -6,10 +6,20 @@ module EY
       $stderr.puts "DEPRECATION WARNING: #{msg}\n\t#{caller(2).first}"
     end
 
+    def self.deprecated_task(receiver, old_task, new_task)
+      if receiver.respond_to?(old_task)
+        deprecation_warning("Task ##{old_task} has been renamed to ##{new_task}.")
+      end
+    end
+
     def self.const_missing(const)
-      if const == :LoggedOutput
+      case const
+      when :LoggedOutput
         EY::Serverside.deprecation_warning("EY::Serverside::LoggedOutput has been deprecated. Use EY::Serverside::Shell::Helpers instead.")
         EY::Serverside::Shell::Helpers
+      when :LockfileParser
+        EY::Serverside.deprecation_warning("EY::Serverside::LockfileParser has been deprecated. Use EY::Serverside::DependencyManager::Bundler::Lockfile instead.")
+        EY::Serverside::DependencyManager::Bundler::Lockfile
       else
         super
       end

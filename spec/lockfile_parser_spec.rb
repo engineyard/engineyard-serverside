@@ -6,7 +6,7 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   def get_parser(file)
-    EY::Serverside::LockfileParser.new(load_lockfile(file))
+    EY::Serverside::DependencyManager::Bundler::Lockfile.new(load_lockfile(file))
   end
 
   def get_version(file)
@@ -19,12 +19,12 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   it "has a default version" do
-    EY::Serverside::LockfileParser.default_version.should == "1.1.5"
-    EY::Serverside::LockfileParser::DEFAULT.should == "1.1.5"
+    EY::Serverside::DependencyManager::Bundler.default_version.should == "1.1.5"
+    EY::Serverside::DependencyManager::Bundler::DEFAULT_VERSION.should == "1.1.5"
   end
 
   it "returns the default version for a 1.0 lockfile without a bundler dependency" do
-    get_version('1.0-no-bundler').should == EY::Serverside::LockfileParser::DEFAULT
+    get_version('1.0-no-bundler').should == EY::Serverside::DependencyManager::Bundler.default_version
   end
 
   it "gets the version from a 1.0.0.rc.1 lockfile w/dependency on 1.0.0.rc.1" do
@@ -45,6 +45,16 @@ describe "the bundler version retrieved from the lockfile" do
 
   it "raises an error if it can't parse the file" do
     lambda { get_version('not-a-lockfile') }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
+  end
+
+  context "rails version" do
+    it "retrieves rails version" do
+      get_parser('1.3.1-rails-3.2.13').rails_version.should == "3.2.13"
+    end
+
+    it "finds no rails version" do
+      get_parser('1.0.18-mysql2').rails_version.should == nil
+    end
   end
 
   context "checking for gems in the dependencies" do
@@ -77,7 +87,7 @@ describe "the bundler version retrieved from the lockfile" do
     subject { get_parser('1.0.6-no-bundler') }
 
     it "uses the default version when there is no bundler version" do
-      subject.fetch_version(nil, nil).should == EY::Serverside::LockfileParser::DEFAULT
+      subject.fetch_version(nil, nil).should == EY::Serverside::DependencyManager::Bundler.default_version
     end
 
     it "uses the given version when the qualifier is `='" do
@@ -85,7 +95,7 @@ describe "the bundler version retrieved from the lockfile" do
     end
 
     it "uses the default version when we get a pessimistic qualifier and is lower than the default version" do
-      subject.fetch_version('1.1.1', '~>').should == EY::Serverside::LockfileParser::DEFAULT
+      subject.fetch_version('1.1.1', '~>').should == EY::Serverside::DependencyManager::Bundler.default_version
     end
 
     it "uses the given version when we get a pessimistic qualifier that doesn't match the default version" do
@@ -97,11 +107,11 @@ describe "the bundler version retrieved from the lockfile" do
     end
 
     it "uses the default version when the given version is lower" do
-      subject.fetch_version('1.0.1', '>=').should == EY::Serverside::LockfileParser::DEFAULT
+      subject.fetch_version('1.0.1', '>=').should == EY::Serverside::DependencyManager::Bundler.default_version
     end
 
     it "selects only the first version expression" do
-      scan = subject.scan_bundler 'bundler (>=1.0.1, <2.0.0)'
+      scan = subject.scan_gem('bundler', 'bundler (>=1.0.1, <2.0.0)')
       scan.last.should == '1.0.1'
     end
   end

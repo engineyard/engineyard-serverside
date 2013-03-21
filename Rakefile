@@ -46,6 +46,7 @@ task :install_on, [:environment] do |t, args|
 
   gemname = $1
 
+  require 'yaml'
   # hacky loading with no error checking
   api_token = YAML.load_file("#{ENV['HOME']}/.eyrc")['api_token'] if File.exist?("#{ENV['HOME']}/.eyrc")
   unless api_token

@@ -1,6 +1,7 @@
 require 'multi_json'
 require 'thor'
 require 'pp'
+require 'yaml'
 require 'engineyard-serverside/paths'
 
 module EY
@@ -204,6 +205,17 @@ module EY
       def previous_revision
         prev = paths.previous_revision
         prev && prev.readable? && prev.read.strip
+      end
+
+      # The nodatabase.yml file is dropped by server configuration when there is
+      # no database in the cluster.
+      def has_database?
+        paths.shared_config.join('database.yml').exist? &&
+          !paths.shared_config.join('nodatabase.yml').exist?
+      end
+
+      def check_database_adapter?
+        !ignore_database_adapter_warning? && has_database?
       end
 
       def migrate?

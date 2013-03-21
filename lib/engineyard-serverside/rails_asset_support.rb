@@ -3,7 +3,6 @@ module EY
     module RailsAssetSupport
       def compile_assets
         return unless app_needs_assets?
-        rails_version = bundled_rails_version
         roles config.asset_roles do
 
           if app_assets_unchanged?
@@ -14,6 +13,7 @@ module EY
             shift_existing_assets
           end
 
+          rails_version = dependency_manager.rails_version
           if rails_version
             shell.status "Precompiling assets for rails v#{rails_version}"
           else
@@ -172,19 +172,6 @@ fi;
 
       def link_assets
         run "ln -nfs #{current_assets_path} #{last_assets_path} #{paths.public}"
-      end
-
-      def bundled_rails_version(lockfile_path = paths.gemfile_lock)
-        return unless lockfile_path.exist?
-        lockfile = lockfile_path.read
-        lockfile.each_line do |line|
-          # scan for gemname (version) toplevel deps.
-          # Likely doesn't handle ancient Bundler versions, but
-          # we only call this when something looks like it is Rails 3.
-          next unless line =~ /^\s{4}([-\w_.0-9]+)\s*\((.*)\)/
-          return $2 if $1 == 'rails'
-        end
-        nil
       end
     end
   end
