@@ -106,6 +106,10 @@ class EY::Serverside::Strategies::IntegrationSpec
     shell.status "Garbage collecting cached git repository to reduce disk usage."
   end
 
+  def same?(prev, active, path)
+    prev == active # for our tests, being the same commit is sufficient
+  end
+
   private
 
   def install_git_base

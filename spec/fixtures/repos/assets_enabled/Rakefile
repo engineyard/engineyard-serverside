@@ -1,5 +1,6 @@
 desc 'Precompile yar assetz'
 task 'assets:precompile' do
-  sh 'touch precompiled'
+  sh "touch #{File.expand_path('../public/assets/compiled_asset', __FILE__)}"
+  sh "touch precompiled"
 end
 

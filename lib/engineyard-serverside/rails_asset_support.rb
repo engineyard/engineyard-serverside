@@ -5,8 +5,14 @@ module EY
         return unless app_needs_assets?
         rails_version = bundled_rails_version
         roles config.asset_roles do
-          keep_existing_assets
-          cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake assets:precompile RAILS_GROUPS=assets"
+
+          if app_assets_unchanged?
+            shell.status "Reusing existing assets. (assets appear to be unchanged)"
+            keep_existing_assets
+            return
+          else
+            shift_existing_assets
+          end
 
           if rails_version
             shell.status "Precompiling assets for rails v#{rails_version}"
@@ -14,18 +20,34 @@ module EY
             shell.warning "Precompiling assets even though Rails was not bundled."
           end
 
+          cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake #{config.precompile_assets_task} RAILS_GROUPS=assets"
+
           begin
             run(cmd)
           rescue StandardError => e
+            unshift_existing_assets
             if config.precompile_assets_inferred?
               # If specifically requested, then we want to fail if compilation fails.
               # If we are implicitly precompiling, we want to fail non-destructively
               # because we don't know if the rake task exists or if the user
               # actually intended for assets to be compiled.
-              shell.notice "Asset compilation failure ignored.\nAdd 'precompile_assets: true' to ey.yml to abort deploy on failure."
+              shell.warning <<-WARN
+Asset compilation failure ignored!
+
+ACTION REQUIRED: Edit your ey.yml to avoid problems:
+  precompile_assets: true   # force assets to build, abort deploy on failure.
+  precompile_assets: false  # never build assets.
+              WARN
               return
             else
               raise
+            end
+          else
+            if config.precompile_assets_inferred?
+              shell.warning <<-WARN
+Inferred asset compilation succeeded, but failures will be silently ignored!
+Add 'precompile_assets: true' to ey.yml to abort deploy on failure.
+              WARN
             end
           end
         end
@@ -33,10 +55,10 @@ module EY
 
       def app_needs_assets?
         if config.precompile_assets?
-          shell.status "Attempting Rails asset precompilation. (enabled in config)"
+          shell.status "Precompiling assets. (enabled in config)"
           return true
         elsif config.skip_precompile_assets?
-          shell.status "Skipping asset precompilation. (disabled in ey.yml)"
+          shell.status "Skipping asset precompilation. (disabled in config)"
           return false
         end
 
@@ -46,9 +68,7 @@ module EY
           return false
         end
 
-        if paths.active_release.join('app','assets').exist?
-          shell.status "Attempting Rails asset precompilation. (found directory: 'app/assets')"
-        else
+        if !paths.active_release.join('app','assets').exist?
           shell.status "Skipping asset precompilation. (directory not found: 'app/assets')"
           return false
         end
@@ -70,6 +90,7 @@ module EY
         #  return
         #end
 
+        shell.status "Attempting Rails asset precompilation. (found directory: 'app/assets')"
         true
       end
 
@@ -87,7 +108,7 @@ module EY
       def app_has_asset_task?
         # We just run this locally on the app master; everybody else should
         # have the same code anyway.
-        task_check = "PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake -T assets:precompile |grep 'assets:precompile'"
+        task_check = "PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake -T #{config.precompile_assets_task} | grep '#{config.precompile_assets_task}'"
         cmd = "cd #{paths.active_release} && #{task_check}"
         shell.logged_system("cd #{paths.active_release} && #{task_check}").success?
       end
@@ -96,23 +117,62 @@ module EY
         paths.public_assets.exist?
       end
 
+      def app_assets_unchanged?
+        if assets_failed_path.exist?
+          shell.substatus "Previous assets failed. Precompiling assets even if unchanged."
+          run "rm -f #{assets_failed_path}"
+          false
+        elsif prev = config.previous_revision
+          strategy.same?(prev, config.active_revision, 'app/assets/')
+        else
+          false
+        end
+      end
+
+      def current_assets_path
+        paths.shared_assets
+      end
+
+      def last_assets_path
+        paths.shared.join('last_assets')
+      end
+
+      def assets_failed_path
+        paths.shared.join('assets_failed')
+      end
+
+      # link current assets and last assets into public
+      def keep_existing_assets
+        run "mkdir -p #{current_assets_path} #{last_assets_path}"
+        link_assets
+      end
+
+      # If there are current shared assets, move them under a 'last_assets' directory.
+      #
       # To support operations like Unicorn's hot reload, it is useful to have
       # the prior release's assets as well. Otherwise, while a deploy is running,
       # clients may request stale assets that you just deleted.
       # Making use of this requires a properly-configured front-end HTTP server.
-      def keep_existing_assets
-        current = paths.shared_assets
-        last_asset_path = paths.shared.join('last_assets')
-        # If there are current shared assets, move them under a 'last_assets' directory.
-        run <<-COMMAND
-if [ -d #{current} ]; then
-  rm -rf #{last_asset_path} && mkdir #{last_asset_path} && mv #{current} #{last_asset_path} && mkdir -p #{current};
+      def shift_existing_assets
+        run <<-COMMAND.chomp
+if [ -d #{current_assets_path} ]; then
+  rm -rf #{last_assets_path} && mkdir -p #{last_assets_path} && mv #{current_assets_path} #{last_assets_path} && mkdir -p #{current_assets_path};
 else
-  mkdir -p #{current} #{last_asset_path};
+  mkdir -p #{current_assets_path} #{last_assets_path};
 fi;
-ln -nfs #{current} #{last_asset_path} #{paths.public}
         COMMAND
-       end
+        link_assets
+      end
+
+      # Restore share/last_assets to shared/assets and relink them to the app public
+      def unshift_existing_assets
+        run "touch #{assets_failed_path} && rm -rf #{current_assets_path} && mv #{last_assets_path} #{current_assets_path} && mkdir -p #{last_assets_path}"
+        link_assets
+      end
+
+      def link_assets
+        run "ln -nfs #{current_assets_path} #{last_assets_path} #{paths.public}"
+      end
 
       def bundled_rails_version(lockfile_path = paths.gemfile_lock)
         return unless lockfile_path.exist?

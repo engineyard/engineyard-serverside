@@ -57,6 +57,7 @@ module EY
       def_option :repo,              nil
       def_option :migrate,           nil
       def_option :precompile_assets, nil
+      def_option :precompile_assets_task, 'assets:precompile'
       def_option :stack,             nil
       def_option :strategy,          'Git'
       def_option :branch,            'master'
@@ -197,6 +198,11 @@ module EY
         paths.latest_revision.read.strip
       end
       alias revision latest_revision
+
+      def previous_revision
+        prev = paths.previous_revision
+        prev && prev.readable? && prev.read.strip
+      end
 
       def migrate?
         !!migration_command

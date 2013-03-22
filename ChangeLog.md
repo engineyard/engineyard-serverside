@@ -2,7 +2,8 @@
 
 ## NEXT
 
-  *
+  * Supports new ey.yml option `precompile_assets_task` which overrides the default `assets:precompile`
+  * Don't precompile assets when git-diff shows no changes to app/assets
 
 ## v2.0.6 (2013-04-08)
 

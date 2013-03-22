@@ -127,6 +127,11 @@ module EY
         end
       end
 
+      def previous_revision
+        rel = previous_release(active_release)
+        rel && rel.join('REVISION')
+      end
+
       # deploy_root/releases/<latest timestamp>
       def latest_release
         all_releases.last

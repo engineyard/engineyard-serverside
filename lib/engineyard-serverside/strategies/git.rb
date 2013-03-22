@@ -64,6 +64,15 @@ module EY
           `#{git} log --pretty=oneline --abbrev-commit -n 1 '#{rev}'`.strip
         end
 
+        # git diff --exit-code returns
+        #   0 when nothing has changed
+        #   1 when there are changes
+        #
+        # Thes method returns true when nothing has changed, fales otherwise
+        def same?(previous_revision, active_revision, path = nil)
+          run("#{git} diff '#{previous_revision}'..'#{active_revision}' --exit-code --name-only -- #{path} >/dev/null 2>&1")
+        end
+
       private
         def run(cmd)
           shell.logged_system(cmd).success?

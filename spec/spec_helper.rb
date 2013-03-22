@@ -152,8 +152,25 @@ Spec::Runner.configure do |config|
     @deployer.deploy
   end
 
-  def redeploy_test_application(&block)
+  def redeploy_test_application(extra_config = {}, &block)
     raise "Please deploy_test_application first" unless @deployer
+
+    @last_config = @config
+    @config = EY::Serverside::Deploy::Configuration.new({
+      "strategy"         => @last_config.strategy,
+      "deploy_to"        => @last_config.deploy_to,
+      "group"            => @last_config.group,
+      "stack"            => @last_config.stack,
+      "migrate"          => @last_config.migrate,
+      'app'              => @last_config.app,
+      'environment_name' => @last_config.environment_name,
+      'account_name'     => @last_config.account_name,
+      'framework_env'    => @last_config.framework_env,
+      'branch'           => @last_config.branch,
+      'repo'             => @last_config.repo,
+    }.merge(extra_config))
+
+    @deployer = FullTestDeploy.new(test_servers, @config, test_shell)
     yield @deployer if block_given?
     @deployer.deploy
   end

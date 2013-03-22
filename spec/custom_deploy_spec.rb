@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe "the EY::Serverside::Deploy API" do
   it "calls tasks in the right order" do
-    class TestDeploy < EY::Serverside::Deploy
+    class TestDeploy < FullTestDeploy
       # This happens before require_custom_tasks, so it's not
       # overrideable. That's why it's not in @call_order.
       def update_repository_cache() end
