@@ -18,6 +18,12 @@ describe "the EY::Serverside::Deploy API" do
         @call_order = []
       end
 
+      def run(*)
+      end
+
+      def sudo(*)
+      end
+
       def push_code()                @call_order << 'push_code'                end
       def copy_repository_cache()    @call_order << 'copy_repository_cache'    end
       def create_revision_file()     @call_order << 'create_revision_file'     end
@@ -39,7 +45,7 @@ describe "the EY::Serverside::Deploy API" do
       'framework_env' => 'staging',
     })
 
-    td = TestDeploy.new(test_servers, config, test_shell)
+    td = TestDeploy.realnew(test_servers, config, test_shell)
     td.deploy
 
     ############################# IMPORTANT ####################################
@@ -70,14 +76,10 @@ describe "the EY::Serverside::Deploy API" do
   end
 
   describe "task overrides" do
-    class TestQuietDeploy < EY::Serverside::Deploy
-      def puts(*_) 'quiet' end
-    end
-
     before(:each) do
       @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
       @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir)
-      @deploy = TestQuietDeploy.new(test_servers, @config, test_shell)
+      @deploy = FullTestDeploy.realnew(test_servers, @config, test_shell)
     end
 
     def write_eydeploy(relative_path, contents = "def got_new_methods() 'from the file on disk' end")
@@ -105,11 +107,11 @@ describe "the EY::Serverside::Deploy API" do
     it "lets you super up from any defined methods" do
       write_eydeploy 'eydeploy.rb', "def value() super << ' + derived' end"
 
-      class TestDeploySuper < TestQuietDeploy
+      class TestDeploySuper < FullTestDeploy
         def value() 'base' end
       end
 
-      deploy = TestDeploySuper.new(test_servers, @config, test_shell)
+      deploy = TestDeploySuper.realnew(test_servers, @config, test_shell)
       deploy.require_custom_tasks
       deploy.value.should == "base + derived"
     end

@@ -6,11 +6,10 @@ describe "Deploying an application with sqlite3 as the only DB adapter in the Ge
     @shared_path   = nil
     @framework_env = nil
 
-    deploy_test_application('sqlite3') do |deployer|
-      @shared_path   = deployer.config.paths.shared
-      @release_path  = deployer.config.paths.active_release
-      @framework_env = deployer.framework_env
-    end
+    deploy_test_application('sqlite3')
+    @shared_path   = @deployer.config.paths.shared
+    @release_path  = @deployer.config.paths.active_release
+    @framework_env = @deployer.framework_env
   end
 
   it 'should symlink database.sqlite3.yml' do

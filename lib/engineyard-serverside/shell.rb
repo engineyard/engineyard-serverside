@@ -50,7 +50,7 @@ module EY
       def debug(msg)   logger.debug   msg end
       def unknown(msg) logger.unknown msg end
 
-      def exception(msg) logger.unknown "!> ERROR: #{msg}" end
+      def exception(msg) error msg end
       # a debug outputter that displays a command being run
       # Formatis like this:
       #   $ cmd blah do \

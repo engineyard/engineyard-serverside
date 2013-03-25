@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-class TestRestartDeploy < EY::Serverside::Deploy
+class TestRestartDeploy < FullTestDeploy
   attr_reader :call_order
   def initialize(*a)
     super
@@ -21,7 +21,7 @@ describe "EY::Serverside::Deploy#restart_with_maintenance_page" do
 
   it "puts up the maintenance page if necessary, restarts, and takes down the maintenance page" do
     config = EY::Serverside::Deploy::Configuration.new('deploy_to' => deploy_dir, 'app' => 'app_name')
-    deployer = TestRestartWithMaintenancePage.new(test_servers, config, test_shell)
+    deployer = TestRestartWithMaintenancePage.realnew(test_servers, config, test_shell)
     deployer.restart_with_maintenance_page
     deployer.call_order.should == %w(
       require_custom_tasks
@@ -36,7 +36,7 @@ describe "glassfish stack" do
 
   it "requires a maintenance page" do
     config = EY::Serverside::Deploy::Configuration.new('deploy_to' => deploy_dir, 'app' => 'app_name', 'stack' => 'glassfish')
-    deployer = TestRestartDeploy.new(test_servers, config, test_shell)
+    deployer = TestRestartDeploy.realnew(test_servers, config, test_shell)
     deployer.restart_with_maintenance_page
     deployer.call_order.should include('enable_maintenance_page')
   end

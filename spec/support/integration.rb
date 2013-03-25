@@ -1,6 +1,15 @@
 class FullTestDeploy < EY::Serverside::Deploy
   attr_reader :commands
 
+  class << self
+    attr_accessor :on_create_callback
+  end
+
+  def self.realnew(servers, config, shell)
+    on_create_callback.call(config) if on_create_callback # holy hax batman, this is insanity
+    super
+  end
+
   def initialize(*)
     super
     @commands = []
@@ -24,15 +33,7 @@ class FullTestDeploy < EY::Serverside::Deploy
   # deploy does not
   def bundle
     my_env = ENV.to_hash
-
-    if defined?(Bundler)
-      Bundler.with_clean_env do
-        result = super
-      end
-    else
-      result = super
-    end
-
+    result = super
     ENV.replace(my_env)
     result
   end
@@ -41,20 +42,16 @@ class FullTestDeploy < EY::Serverside::Deploy
     config.framework_env
   end
 
-  def services_command_check
-    @mock_services_command_check || "which echo"
-  end
+end
 
-  def mock_services_command_check!(value)
-    @mock_services_command_check = value
+class EY::Serverside::Deploy
+  class << self
+    alias_method :realnew, :new
+    attr_reader :config, :deployer
   end
-
-  def services_setup_command
-    @mock_services_setup_command || "echo 'services setup command'"
-  end
-
-  def mock_services_setup!(value)
-    @mock_services_setup_command = value
+  def self.new(servers, cfg, shell)
+    @config = cfg
+    @deployer = FullTestDeploy.realnew(servers, cfg, shell)
   end
 end
 

@@ -70,6 +70,7 @@ module EY
       def_path :enabled_maintenance_page, [:shared_system,  'maintenance.html']
       def_path :shared_assets,            [:shared,         'assets']
       def_path :bundled_gems,             [:shared,         'bundled_gems']
+      def_path :shared_services_yml,      [:shared_config,  'ey_services_config_deploy.yml']
       def_path :ruby_version,             [:bundled_gems,   'RUBY_VERSION']
       def_path :system_version,           [:bundled_gems,   'SYSTEM_VERSION']
       def_path :latest_revision,          [:latest_release, 'REVISION']

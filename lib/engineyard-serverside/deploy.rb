@@ -31,7 +31,6 @@ module EY
           create_revision_file
           run_with_callbacks(:bundle)
           setup_services
-          check_for_ey_config
           symlink_configs
           setup_sqlite3_if_necessary
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
@@ -72,19 +71,11 @@ module EY
         strategy.short_log_message(revision)
       end
 
-      def parse_configured_services
-        result = YAML.load_file "#{paths.shared_config}/ey_services_config_deploy.yml"
-        return {} unless result.is_a?(Hash)
-        result
-      rescue
-        {}
-      end
-
       def check_for_ey_config
         if gemfile? && lockfile
-          configured_services = parse_configured_services
-          if !configured_services.empty? && !lockfile.has_ey_config?
-            shell.warning "Gemfile.lock does not contain ey_config. Add it to get EY::Config access to: #{configured_services.keys.join(', ')}."
+          configured_services = config.configured_services
+          if configured_services && !lockfile.has_ey_config?
+            shell.warning "Gemfile.lock does not contain ey_config. Add gem 'ey_config' to get access through EY::Config."
           end
         end
       end
@@ -282,35 +273,32 @@ chmod 0700 #{path}
         run create_revision_file_command
       end
 
-      def services_command_check
-        "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
-      end
-
-      def services_setup_command
-        "/usr/local/ey_resin/ruby/bin/ey-services-setup #{config.app}"
-      end
-
       def setup_services
         shell.status "Setting up external services."
-        previously_configured_services = parse_configured_services
+        previously_configured_services = config.configured_services
 
         begin
-          sudo(services_command_check)
-        rescue StandardError => e
+          sudo(config.services_check_command)
+        rescue EY::Serverside::RemoteFailure
           shell.info "Could not setup services. Upgrade your environment to get services configuration."
           return
         end
 
         begin
-          sudo(services_setup_command)
-        rescue StandardError => e
-          unless previously_configured_services.empty?
+          sudo(config.services_setup_command)
+        rescue EY::Serverside::RemoteFailure => e
+          if previously_configured_services
             shell.warning <<-WARNING
 External services configuration not updated. Using previous version.
 Deploy again if your services configuration appears incomplete or out of date.
 #{e}
             WARNING
           end
+        end
+
+        if services = config.configured_services
+          shell.status "Services configured: #{services.join(', ')}"
+          check_for_ey_config
         end
       end
 

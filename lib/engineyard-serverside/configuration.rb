@@ -68,6 +68,8 @@ module EY
       def_option(:bundle_without)    { (%w[test development] - [framework_env]).join(' ') }
       def_option(:user)              { ENV['USER'] }
       def_option(:group)             { user }
+      def_option :services_check_command, "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
+      def_option(:services_setup_command) { "/usr/local/ey_resin/ruby/bin/ey-services-setup #{app}" }
 
       def_boolean_option :verbose,                         false
       def_boolean_option :ignore_database_adapter_warning, false
@@ -255,6 +257,12 @@ module EY
         enable_maintenance_page?
       end
 
+      def configured_services
+        services = YAML.load_file(paths.shared_services_yml.to_s)
+        services.respond_to?(:keys) && !services.empty? ? services.keys : nil
+      rescue
+        nil
+      end
     end
   end
 end

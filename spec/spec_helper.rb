@@ -28,15 +28,6 @@ module EY
       @node = nil
     end
 
-    class Future
-      def inspect
-        <<-EOM
-#{self.class.name} result below: (run with DEBUG=1 to see the full log)
-#{result.inspect}
-        EOM
-      end
-    end
-
     class Strategies::Git
       def short_log_message(_) "" end
     end
@@ -149,13 +140,6 @@ Spec::Runner.configure do |config|
       "repo"             => FIXTURES_DIR.join('repos', repo_fixture_name),
     }.merge(extra_config)
 
-    # Build a special Configuration object, since specs are very limited right now
-    config = EY::Serverside::Deploy::Configuration.new(options)
-    EY::Serverside::Deploy::Configuration.stub(:new).and_return(config)
-
-    # Stub the shell to play nicely with our outputter
-    #EY::Serverside::Shell.stub(:new).and_return(test_shell(@config.verbose))
-
     # pretend there is a shared bundled_gems directory
     deploy_dir.join('shared', 'bundled_gems').mkpath
     %w(RUBY_VERSION SYSTEM_VERSION).each do |name|
@@ -163,53 +147,59 @@ Spec::Runner.configure do |config|
     end
 
     # Create the command to send to CLI.start, even though most of the options are ignored
-    adapter = EY::Serverside::Adapter.new do |args|
+    @adapter = EY::Serverside::Adapter.new do |args|
       args.app              = options['app']
       args.environment_name = options['environment_name']
       args.account_name     = options['account_name']
       args.migrate          = options['migrate']
       args.ref              = options['branch']
       args.repo             = options['repo']
-      args.config           = options['config']
+      args.config           = {
+        "services_check_command" => "which echo",
+        "services_setup_command" => "echo 'services setup command'",
+        "strategy" => options["strategy"],
+        "deploy_to" => options["deploy_to"],
+        "group" => options["group"]
+      }.merge(options['config'] || {})
       args.framework_env    = options['framework_env']
       args.stack            = options['stack']
       args.verbose          = options['verbose']
       args.instances        = test_servers.map {|s| {:hostname => s.hostname, :roles => s.roles.to_a, :name => s.name} }
     end
 
-    @argv = adapter.deploy.commands.last.to_argv[2..-1]
+    @argv = @adapter.deploy.commands.last.to_argv[2..-1]
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-    @deployer = FullTestDeploy.new(test_servers, config, test_shell(config.verbose))
-    EY::Serverside::Deploy.stub(:new).and_return(@deployer)
-    yield @deployer if block_given?
+    FullTestDeploy.on_create_callback = block
     capture do
       EY::Serverside::CLI.start(@argv)
     end
+  ensure
+    @deployer = EY::Serverside::Deploy.deployer
+    @config = EY::Serverside::Deploy.config
   end
 
   def redeploy_test_application(extra_config = {}, &block)
-    raise "Please deploy_test_application first" unless @deployer
+    raise "Please deploy_test_application first" unless @argv
 
-    @last_config = @config
-    @config = EY::Serverside::Deploy::Configuration.new({
-      "strategy"         => @last_config.strategy,
-      "deploy_to"        => @last_config.deploy_to,
-      "group"            => @last_config.group,
-      "stack"            => @last_config.stack,
-      "migrate"          => @last_config.migrate,
-      'app'              => @last_config.app,
-      'environment_name' => @last_config.environment_name,
-      'account_name'     => @last_config.account_name,
-      'framework_env'    => @last_config.framework_env,
-      'branch'           => @last_config.branch,
-      'repo'             => @last_config.repo,
-    }.merge(extra_config))
+    @action = @adapter.deploy do |args|
+      extra_config.each do |key,val|
+        case key
+        when 'branch' then args.ref    = val
+        when 'config' then args.config = args.config.merge(val || {})
+        else               args.send("#{key}=", val)
+        end
+      end
+    end
 
-    @deployer = FullTestDeploy.new(test_servers, @config, test_shell)
-    yield @deployer if block_given?
+    @argv = @action.commands.last.to_argv[2..-1]
+
+    FullTestDeploy.on_create_callback = block
     capture do
       EY::Serverside::CLI.start(@argv)
     end
+  ensure
+    @deployer = EY::Serverside::Deploy.deployer
+    @config = EY::Serverside::Deploy.config
   end
 end

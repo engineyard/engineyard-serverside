@@ -24,7 +24,7 @@ describe "deploy hooks" do
     before(:all) do
       begin
         deploy_test_application('hook_fails', :verbose => false)
-      rescue SystemExit
+      rescue EY::Serverside::RemoteFailure
       end
     end
 

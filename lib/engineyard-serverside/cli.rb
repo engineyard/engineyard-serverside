@@ -162,7 +162,7 @@ module EY
           yield config, shell
         rescue EY::Serverside::RemoteFailure => e
           shell.exception "#{e.message}"
-          abort
+          raise
         rescue Exception => e
           shell.exception "#{e.backtrace[0]}: #{e.message} (#{e.class})"
           raise

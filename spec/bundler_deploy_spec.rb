@@ -85,7 +85,7 @@ describe "Deploying an application that uses Bundler" do
     before(:all) do
       begin
         deploy_test_application('bundle_fails', :verbose => false)
-      rescue SystemExit
+      rescue EY::Serverside::RemoteFailure
       end
     end
 
