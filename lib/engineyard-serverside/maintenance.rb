@@ -68,7 +68,7 @@ module EY
       end
 
       def run(cmd)
-        @servers.roles(:app_master, :app, :solo).run(shell, cmd)
+        @servers.roles(:app_master, :app, :solo).run(cmd)
       end
 
       def paths

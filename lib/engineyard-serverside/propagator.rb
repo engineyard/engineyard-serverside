@@ -43,7 +43,7 @@ module EY
       def scp_command(server)
         Escape.shell_command([
           'scp',
-          '-i', internal_key_path.to_s,
+          '-i', @internal_key_path.to_s,
           "-o", "StrictHostKeyChecking=no",
           About.gem_file,
          "#{server.authority}:#{remote_gem_file}",
@@ -61,13 +61,13 @@ module EY
       def find_servers_missing_gem
         return @remote_servers if @remote_servers.empty?
         shell.status "Verifying #{About.name_with_version} on #{count_servers(@remote_servers)}."
-        results = @remote_servers.run_on_each(shell, check_command)
-        Servers.new results.reject { |result| result.success? }.map { |result| result.server }
+        results = @remote_servers.run_on_each(check_command)
+        Servers.new results.reject { |result| result.success? }.map { |result| result.server }, shell
       end
 
       def propagate
         shell.status "Propagating #{About.name_with_version} to #{count_servers(servers)}."
-        servers.run_for_each!(shell) { |server| scp_command(server) }
+        servers.run_for_each! { |server| scp_command(server) }
         servers.sudo_on_each(install_command)
       end
     end

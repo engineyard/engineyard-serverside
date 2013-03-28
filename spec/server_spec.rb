@@ -2,11 +2,11 @@ require 'spec_helper'
 
 describe EY::Serverside::Server do
   it "starts off empty" do
-    EY::Serverside::Servers.new([]).should be_empty
+    EY::Serverside::Servers.new([], test_shell).should be_empty
   end
 
   it "loads from hashes" do
-    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}])
+    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}], test_shell)
     servers.size.should == 1
   end
 
@@ -15,12 +15,12 @@ describe EY::Serverside::Server do
       EY::Serverside::Servers.from_hashes([
         {:hostname => 'otherhost', :roles => [:fire]},
         {:hostname => 'otherhost', :roles => [:water]},
-      ])
+      ], test_shell)
     end.should raise_error(EY::Serverside::Servers::DuplicateHostname)
   end
 
   it "makes sure your roles are symbols at creation time" do
-    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}])
+    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}], test_shell)
     servers.each { |server| server.roles.should == Set[:fire, :water] }
   end
 
@@ -30,7 +30,7 @@ describe EY::Serverside::Server do
         {:hostname => 'localhost', :roles => [:ice, :cold]},
         {:hostname => 'firewater', :roles => [:fire, :water]},
         {:hostname => 'icewater',  :roles => [:ice, :water]},
-      ])
+      ], test_shell)
     end
 
     it "#roles works with strings or symbols" do

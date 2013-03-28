@@ -7,7 +7,8 @@ describe EY::Serverside::Propagator do
       [
         {:user => user, :hostname => 'localhost', :roles => %w[solo]},
         {:user => user, :hostname => '127.0.0.1', :roles => %w[util], :name => 'myutil'},
-      ]
+      ],
+      test_shell
     )
   end
 
@@ -24,7 +25,7 @@ describe EY::Serverside::Propagator do
   end
 
   def stub_command(command, success, output="STUB OUTPUT")
-    servers.should_receive(:run_each).once.ordered.with do |shell, block|
+    servers.should_receive(:run_on_each).once.ordered.with do |shell, block|
       test_shell.command_show(command)
       EY::Serverside::Spawner::Result.new(command, success, output)
     end

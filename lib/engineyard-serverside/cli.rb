@@ -128,7 +128,7 @@ module EY
 
       def init_and_propagate(*args)
         init(*args) do |config, shell|
-          servers = load_servers(config)
+          servers = load_servers(config, shell)
           Propagator.call(servers, config, shell)
           yield servers, config, shell
         end
@@ -152,8 +152,8 @@ module EY
         end
       end
 
-      def load_servers(config)
-        EY::Serverside::Servers.from_hashes(assemble_instance_hashes(config))
+      def load_servers(config, shell)
+        EY::Serverside::Servers.from_hashes(assemble_instance_hashes(config), shell)
       end
 
       def assemble_instance_hashes(config)

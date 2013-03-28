@@ -77,11 +77,11 @@ Please consider:
       end
 
       def run(cmd, &block)
-        servers.roles(@roles).run(shell, cmd, &block)
+        servers.roles(@roles).run(cmd, &block)
       end
 
       def sudo(cmd, &block)
-        servers.roles(@roles).sudo(shell, cmd, &block)
+        servers.roles(@roles).sudo(cmd, &block)
       end
 
     end
