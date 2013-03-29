@@ -94,8 +94,8 @@ Spec::Runner.configure do |config|
 
   def capture
     begin
-      $stdout = stdout
-      $stderr = stderr
+      $stdout = @stdout = VerboseStringIO.new
+      $stderr = @stderr = VerboseStringIO.new
       yield
     ensure
       $stdout, $stderr = STDOUT, STDERR

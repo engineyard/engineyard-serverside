@@ -57,7 +57,7 @@ module EY
 
       def_option :repo,              nil
       def_option :migrate,           nil
-      def_option :precompile_assets, nil
+      def_option :precompile_assets, 'detect'
       def_option :precompile_assets_task, 'assets:precompile'
       def_option :stack,             nil
       def_option :strategy,          'Git'
@@ -73,6 +73,7 @@ module EY
       def_option(:services_setup_command) { "/usr/local/ey_resin/ruby/bin/ey-services-setup #{app}" }
 
       def_boolean_option :verbose,                         false
+      def_boolean_option :precompile_unchanged_assets,     false
       def_boolean_option :ignore_database_adapter_warning, false
       def_boolean_option :maintenance_on_migrate,          true
       def_boolean_option(:maintenance_on_restart)          { required_downtime_stack? }
@@ -243,7 +244,7 @@ module EY
       end
 
       def precompile_assets_inferred?
-        !precompile_assets? && !skip_precompile_assets?
+        precompile_assets.nil? || precompile_assets == "detect"
       end
 
       def precompile_assets?

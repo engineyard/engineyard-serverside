@@ -14,6 +14,12 @@ describe "Deploying a Rails 3.1 application" do
       deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
       deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
       read_output.should include("Reusing existing assets. (assets appear to be unchanged)")
+
+      redeploy_test_application('config' => {'precompile_unchanged_assets' => 'true'})
+      deploy_dir.join('current', 'precompiled').should exist # doesn't run the task
+      deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
+      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
+      read_output.should_not include("Reusing existing assets. (assets appear to be unchanged)")
     end
 
     it "precompile assets again when redeploying a ref with changes" do

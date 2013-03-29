@@ -122,6 +122,9 @@ Add 'precompile_assets: true' to ey.yml to abort deploy on failure.
           shell.substatus "Previous assets failed. Precompiling assets even if unchanged."
           run "rm -f #{assets_failed_path}"
           false
+        elsif config.precompile_unchanged_assets?
+          shell.substatus "Precompiling assets even if unchanged. (precompile_unchanged_assets: true)"
+          false
         elsif prev = config.previous_revision
           strategy.same?(prev, config.active_revision, 'app/assets/')
         else

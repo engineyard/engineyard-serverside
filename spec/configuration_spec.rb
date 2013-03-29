@@ -22,7 +22,7 @@ describe EY::Serverside::Deploy::Configuration do
       @config.enable_maintenance_page?.should == true
       @config.disable_maintenance_page?.should == true
       @config.framework_env.should == "production"
-      @config.precompile_assets.should == nil
+      @config.precompile_assets.should == "detect"
       @config.precompile_assets_inferred?.should == true
       @config.skip_precompile_assets?.should == false
       @config.precompile_assets?.should == false
