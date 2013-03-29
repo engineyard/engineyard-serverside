@@ -81,10 +81,10 @@ Please consider:
       def session
         @session ||= Capissh.new(
           :level => 3,
-          :pre_exec_callback => lambda { |command, server|
+          :placeholder_callback => lambda { |command, server|
             command.gsub(/\$EY_SS_ROLES\$/, Escape.shell_command([server.server.roles.to_a.join(' ')]))
             command.gsub(/\$EY_SS_NAME\$/, Escape.shell_command([server.server.name.to_s]))
-            shell.cmd_show(command)
+            shell.command_show(command)
             command
           }
         )

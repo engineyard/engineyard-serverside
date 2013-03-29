@@ -135,15 +135,15 @@ module EY
       # Run a command on this set of servers.
       def run(session, shell, cmd, &blk)
         session.run @servers, cmd, :shell => 'sh -l', &shell.command_output_callback
-      rescue Capissh::RemoteError => e
-        raise EY::Serverside::RemoteFailure.new(e.to_s)
+      #rescue Capissh::RemoteError => e
+      #  raise EY::Serverside::RemoteFailure.new(e.to_s)
       end
 
       # Run a sudo command on this set of servers.
       def sudo(session, shell, cmd, &blk)
-        session.sudo @servers, cmd, :shell => 'sh -l'#, &shell.command_output_callback
-      rescue Capissh::RemoteError => e
-        raise EY::Serverside::RemoteFailure.new(e.to_s)
+        session.sudo @servers, cmd, :shell => 'sh -l', &shell.command_output_callback
+      #rescue Capissh::RemoteError => e
+      #  raise EY::Serverside::RemoteFailure.new(e.to_s)
       end
     end
   end
