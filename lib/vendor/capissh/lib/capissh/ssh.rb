@@ -37,6 +37,13 @@ module Capissh
       end
     end
 
+    def self.gateway(gateway, options={})
+      connection_strategy(gateway, options) do |host, user, connection_options|
+        connection = Net::SSH::Gateway.new(host, user, connection_options)
+        Server.apply_to(connection, gateway)
+      end
+    end
+
     # Abstracts the logic for establishing an SSH connection (which includes
     # testing for connection failures and retrying with a password, and so forth,
     # mostly made complicated because of the fact that some of these variables
@@ -52,22 +59,30 @@ module Capissh
       # construct the hash of ssh options that should be passed more-or-less
       # directly to Net::SSH. This will be the general ssh options, merged with
       # the server-specific ssh-options.
-      ssh_options = (options[:ssh_options] || {}).merge(server.options[:ssh_options] || {})
+      input_ssh_options = (options[:ssh_options] || {}).merge(server.options[:ssh_options] || {})
 
       # load any SSH configuration files that were specified in the SSH options. This
       # will load from ~/.ssh/config and /etc/ssh_config by default (see Net::SSH
       # for details). Merge the explicitly given ssh_options over the top of the info
       # from the config file.
-      ssh_options = Net::SSH.configuration_for(server.host, ssh_options.fetch(:config, true)).merge(ssh_options)
+      ssh_options = Net::SSH.configuration_for(server.host, input_ssh_options.fetch(:config, true)).merge(input_ssh_options)
 
       # Once we've loaded the config, we don't need Net::SSH to do it again.
       ssh_options[:config] = false
 
       ssh_options[:verbose] = :debug if options[:verbose] && options[:verbose] > 0
 
-      user = server.user || options[:user] || ssh_options[:username] ||
-             ssh_options[:user] || ServerDefinition.default_user
-      port = server.port || options[:port] || ssh_options[:port]
+      user =
+        server.user ||
+        options[:user] ||
+        ssh_options[:username] ||
+        ssh_options[:user] ||
+        ServerDefinition.default_user
+
+      port =
+        server.port ||
+        options[:port] ||
+        ssh_options[:port]
 
       # the .ssh/config file might have changed the host-name on us
       host = ssh_options.fetch(:host_name, server.host)

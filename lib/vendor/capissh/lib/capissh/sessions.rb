@@ -1,5 +1,7 @@
+require 'forwardable'
+
 module Capissh
-  module Processable
+  class Sessions
     module SessionAssociation
       def self.on(exception, session)
         unless exception.respond_to?(:session)
@@ -13,13 +15,26 @@ module Capissh
       attr_accessor :session
     end
 
+    extend Forwardable
+
+    attr_reader :sessions
+    def_delegators :sessions, :each, :map, :size, :detect, :all?
+
+    def initialize(sessions)
+      @sessions = sessions
+    end
+
+    def ==(other)
+      sessions == other.sessions
+    end
+
     # perform ssh session looping with reading/writing until the block returns false
     def process_iteration(wait=nil, &block)
       ensure_each_session { |session| session.preprocess }
 
       return false if block && !block.call(self)
 
-      readers = sessions.map { |session| session.listeners.keys }.flatten.reject { |io| io.closed? }
+      readers = @sessions.map { |session| session.listeners.keys }.flatten.reject { |io| io.closed? }
       writers = readers.select { |io| io.respond_to?(:pending_write?) && io.pending_write? }
 
       if readers.any? || writers.any?
@@ -39,7 +54,7 @@ module Capissh
     def ensure_each_session
       errors = []
 
-      sessions.each do |session|
+      @sessions.each do |session|
         begin
           yield session
         rescue Exception => error
@@ -48,7 +63,6 @@ module Capissh
       end
 
       raise errors.first if errors.any?
-      sessions
     end
   end
 end

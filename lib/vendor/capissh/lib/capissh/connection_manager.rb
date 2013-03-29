@@ -1,11 +1,13 @@
 require 'enumerator'
+require 'net/ssh/gateway'
 require 'capissh/ssh'
 require 'capissh/errors'
 require 'capissh/server_definition'
 require 'capissh/logger'
+require 'capissh/sessions'
 
 module Capissh
-  class Connections
+  class ConnectionManager
     class DefaultConnectionFactory
       def initialize(options)
         @options = options
@@ -18,53 +20,57 @@ module Capissh
 
     class GatewayConnectionFactory
       def initialize(gateway, options)
-        require 'net/ssh/gateway' # loaded synchronously, but still this is sort of nasty
         @options = options
         Thread.abort_on_exception = true
         @gateways = {}
+        @default_gateway = nil
         if gateway.is_a?(Hash)
           @options[:logger].debug "Creating multiple gateways using #{gateway.inspect}" if @options[:logger]
           gateway.each do |gw, hosts|
             gateway_connection = add_gateway(gw)
-            [*hosts].each do |host|
-              @gateways[:default] ||= gateway_connection
+            Array(hosts).each do |host|
+              # Why is the default only set if there's at least one host?
+              # It seems odd enough to be intentional, since it could easily be set outside of the loop.
+              @default_gateway ||= gateway_connection
               @gateways[host] = gateway_connection
             end
           end
         else
-          @options[:logger].debug "Creating gateway using #{[*gateway].join(', ')}" if @options[:logger]
-          @gateways[:default] = add_gateway(gateway)
+          @options[:logger].debug "Creating gateway using #{Array(gateway).join(', ')}" if @options[:logger]
+          @default_gateway = add_gateway(gateway)
         end
       end
 
       def add_gateway(gateway)
-        gateways = [*gateway].collect { |g| ServerDefinition.new(g) }
-        tunnel = SSH.connection_strategy(gateways[0], @options) do |host, user, connect_options|
-          Net::SSH::Gateway.new(host, user, connect_options)
-        end
-        (gateways[1..-1]).inject(tunnel) do |tunnel, destination|
+        gateways = ServerDefinition.wrap_list(gateway)
+
+        tunnel = SSH.gateway(gateways.shift, @options)
+
+        gateways.inject(tunnel) do |tunnel, destination|
           @options[:logger].debug "Creating tunnel to #{destination}" if @options[:logger]
-          local_host = ServerDefinition.new("127.0.0.1", :user => destination.user, :port => tunnel.open(destination.host, (destination.port || 22)))
-          SSH.connection_strategy(local_host, @options) do |host, user, connect_options|
-            Net::SSH::Gateway.new(host, user, connect_options)
-          end
+          local = local_host(destination, tunnel)
+          SSH.gateway(local, @options)
         end
       end
 
       def connect_to(server)
         @options[:logger].debug "establishing connection to `#{server}' via gateway" if @options[:logger]
-        local_host = ServerDefinition.new("127.0.0.1", :user => server.user, :port => gateway_for(server).open(server.host, server.port || 22))
-        session = SSH.connect(local_host, @options)
+        local = local_host(server, gateway_for(server))
+        session = SSH.connect(local, @options)
         session.xserver = server
         session
       end
 
+      def local_host(destination, tunnel)
+        ServerDefinition.new("127.0.0.1", :user => destination.user, :port => tunnel.open(destination.host, destination.connect_to_port))
+      end
+
       def gateway_for(server)
-        @gateways[server.host] || @gateways[:default]
+        @gateways[server.host] || @default_gateway
       end
     end
 
-    # Instantiates a new connections manager object.
+    # Instantiates a new ConnectionManager object.
     # +options+ must be a hash containing any of the following keys:
     #
     # * +gateway+: (optional), ssh gateway
@@ -86,14 +92,6 @@ module Capissh
     end
 
     attr_reader :logger
-
-    # FIXME Remove this method. This method should be where it belongs.
-    # self methods need to be dealt with. They shouldn't be accessed directly.
-    #def run(servers, cmd, options={})
-    #  self.execute_on_servers(servers, options) do |sessions| # FIXME: execute_on_servers shouldn't be accessed directly (replace self with object)
-    #    Command.process(cmd, sessions, options.merge(:logger => logger))
-    #  end
-    #end
 
     # A hash of the SSH sessions that are currently open and available.
     # Because sessions are constructed lazily, this will only contain
@@ -155,8 +153,6 @@ module Capissh
         error.hosts = failed_servers.map { |h| h[:server] }.each {|server| failed!(server) }
         raise error
       end
-
-      servers_array.map {|server| sessions[server] }
     end
 
     # Destroys sessions for each server in the list.
@@ -177,35 +173,37 @@ module Capissh
     #
     # The additional options below will also be used as follows:
     #
-    # * +on_no_matching_servers+: (optional), set to :continue to return
+    # * +continue_on_no_matching_servers+: (optional), set to :continue to return
     #   instead of raising when no servers are found
-    # * +once+: (optional), if truthy, runs the command on only one server
     # * +max_hosts+: (optional), integer to batch commands in chunks of hosts
-    # * +continue_on_error+: (optionsal), continue on connection errors
+    # * +continue_on_error+: (optional), continue on connection errors
     #
     def execute_on_servers(servers, options={}, &block)
       raise ArgumentError, "expected a block" unless block_given?
 
-      servers = ServerDefinition.wrap_list(*servers)
+      connect_to_servers = ServerDefinition.wrap_list(*servers)
 
-      if servers.empty?
-        raise Capissh::NoMatchingServersError, "no servers found to match #{options.inspect}" if options[:on_no_matching_servers] != :continue
+      if options[:continue_on_error]
+        connect_to_servers.delete_if { |s| has_failed?(s) }
+      end
+
+      if connect_to_servers.empty?
+        raise Capissh::NoMatchingServersError, "no servers found to match #{options.inspect}" unless options[:continue_on_no_matching_servers]
         return
       end
 
-      servers = [servers.first] if options[:once]
-      logger.trace "servers: #{servers.map { |s| s.host }.inspect}"
+      logger.trace "servers: #{connect_to_servers.map { |s| s.host }.inspect}"
 
-      max_hosts = (options[:max_hosts] || servers.size).to_i
-      is_subset = max_hosts < servers.size
+      max_hosts = (options[:max_hosts] || connect_to_servers.size).to_i
+      is_subset = max_hosts < connect_to_servers.size
 
       if max_hosts <= 0
-        raise Capissh::NoMatchingServersError, "max_hosts is invalid for #{options.inspect}" if options[:on_no_matching_servers] != :continue
+        raise Capissh::NoMatchingServersError, "max_hosts is invalid for #{options.inspect}" unless options[:continue_on_no_matching_servers]
         return
       end
 
       # establish connections to those servers in groups of max_hosts, as necessary
-      servers.each_slice(max_hosts) do |servers_slice|
+      connect_to_servers.each_slice(max_hosts) do |servers_slice|
         begin
           establish_connections_to(servers_slice)
         rescue ConnectionError => error
@@ -217,7 +215,7 @@ module Capissh
         end
 
         begin
-          yield servers_slice.map { |server| sessions[server] }
+          yield Sessions.new(servers_slice.map { |server| sessions[server] })
         rescue RemoteError => error
           raise error unless options[:continue_on_error]
           error.hosts.each { |h| failed!(h) }

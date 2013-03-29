@@ -95,6 +95,10 @@ module Capissh
       @hash ||= [host, user, port].hash
     end
 
+    def connect_to_port
+      port || 22
+    end
+
     def to_s
       @to_s ||= begin
         s = host

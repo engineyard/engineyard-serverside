@@ -1,5 +1,5 @@
 module Capissh
-  class Logger #:nodoc:
+  class Logger
     attr_accessor :level, :device, :disable_formatters
 
     IMPORTANT = 0
@@ -51,7 +51,7 @@ module Capissh
     ]
 
     class << self
-      def add_formatter(options) #:nodoc:
+      def add_formatter(options)
         @formatters.push(options)
         @sorted_formatters = nil
       end
