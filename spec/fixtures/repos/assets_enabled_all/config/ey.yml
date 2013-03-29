@@ -2,3 +2,4 @@ environments:
   env:
     precompile_assets: true
     asset_roles: :all
+    ignore_database_adapter_warning: true
