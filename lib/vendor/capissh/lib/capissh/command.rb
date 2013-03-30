@@ -94,6 +94,7 @@ module Capissh
             channel[:server] = server
             channel[:options] = options
             channel[:logger] = logger
+            command.force_encoding('BINARY') if command.respond_to?(:force_encoding)
             channel[:command] = command
             channel[:io_callback] = io_callback
 

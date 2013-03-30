@@ -168,7 +168,7 @@ module Capissh
     # in the output.) If you set :sudo_prompt to an empty string, Capissh
     # will not send a preferred prompt.
     def sudo(servers, command, options={}, &block)
-      run(servers, "#{sudo_command(options)} #{command}", options, &block)
+      run(servers, "#{command}", options.merge(:shell => "#{sudo_command(options)} sh -l"), &block)
     end
 
     # Returns the command string used by capissh to invoke a comamnd via
