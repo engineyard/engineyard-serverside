@@ -66,7 +66,8 @@ module EY
       def_option :current_name,      nil
       def_option :asset_roles,       [:app_master, :app, :solo]
       def_option :copy_exclude,      []
-      def_option(:bundle_without)    { (%w[test development] - [framework_env]).join(' ') }
+      def_option :bundle_options,    nil
+      def_option(:bundle_without)    { %w[test development] - [framework_env] }
       def_option(:user)              { ENV['USER'] }
       def_option(:group)             { user }
       def_option :services_check_command, "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
@@ -241,6 +242,13 @@ module EY
 
       def set_framework_envs
         framework_env_names.each { |e| ENV[e] = environment }
+      end
+
+      def extra_bundle_install_options
+        opts = []
+        opts += ["--without", bundle_without] if bundle_without
+        opts += [bundle_options] if bundle_options
+        opts.flatten
       end
 
       def precompile_assets_inferred?

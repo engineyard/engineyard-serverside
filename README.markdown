@@ -22,7 +22,8 @@ The ey.yml file allows options to be saved for each environment to which an appl
     ---
     environments:
       env_production:
-        bundle_without: test development mygroup  # exclude groups on bundle install
+        bundle_without: test development mygroup  # exclude groups on bundle install (leave blank to remove --without)
+        bundle_options: --local                   # add extra options to the bundle install command line (does not override bundle_without)
         copy_exclude:                             # don't rsync the following dirs
         - .git
         maintenance_on_restart: false             # show maintenance page during app restart (default: false except for glassfish and mongrel)
@@ -36,7 +37,6 @@ The ey.yml file allows options to be saved for each environment to which an appl
         - :app_master
         - :util
         ignore_database_adapter_warning: true     # hide database adapter warning if you don't use MySQL or PostgreSQL (default: false)
-
 
 These options in ey.yml will only work if the file is committed to your application repository. Make sure to commit this file.
 

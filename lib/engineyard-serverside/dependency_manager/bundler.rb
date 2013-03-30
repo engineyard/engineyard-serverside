@@ -114,7 +114,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
             "--binstubs", "#{paths.binstubs}",
           ]
           options << "--deployment" if lockfile # deployment mode is not supported without a Gemfile.lock
-          options += ["--without", config.bundle_without]
+          options += config.extra_bundle_install_options
           options
         end
 

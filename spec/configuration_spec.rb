@@ -32,7 +32,8 @@ describe EY::Serverside::Deploy::Configuration do
       @config.verbose.should == false
       @config.copy_exclude.should == []
       @config.ignore_database_adapter_warning.should == false
-      @config.bundle_without.should == "test development"
+      @config.bundle_without.should == %w[test development]
+      @config.extra_bundle_install_options.should == %w[--without test development]
     end
 
     it "raises when required options are not given" do
@@ -74,8 +75,8 @@ describe EY::Serverside::Deploy::Configuration do
       @config.maintenance_on_restart.should == false
     end
 
-    it "doesn't exclude the framework_env from bundle if it would match" do
-      @config.bundle_without.should == "test"
+    it "doesn't bundle --without the framework_env" do
+      @config.bundle_without.should == %w[test]
     end
   end
 

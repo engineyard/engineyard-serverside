@@ -6,8 +6,8 @@
   * Supports new ey.yml option `precompile_unchanged_assets: true` compiles assets even if no changes would be detected.
   * Don't precompile assets when git-diff shows no changes to app/assets
   * Refactor dependency management (bundler, npm, none) to allow more flexibility (may break existing eydeploy.rb files)
-  * Supports new ey.yml option `bundle_options: --without anything --local` can be used to specify additional bundler options
-    * `bundle_options` completely overrides `bundle_without` (`--without` will not be sent unless you add it to `bundle_options`)
+  * Supports new ey.yml option `bundle_options:` which can be used to specify additional bundle install command line options.
+  * Supports setting the ey.yml option `bundle_without` to nil to remove `--without` from the bundle install command.
 
 ## v2.0.6 (2013-04-08)
 
