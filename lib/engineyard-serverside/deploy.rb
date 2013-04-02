@@ -325,12 +325,24 @@ YML
       # task
       def symlink
         shell.status "Symlinking code."
-        run "rm -f #{paths.current} && ln -nfs #{paths.active_release} #{paths.current} && find #{paths.current} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
+        perms = "find #{paths.current} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
+        run "#{move_symlink(paths.active_release, paths.current, "deploying")} && #{perms}"
         @symlink_changed = true
       rescue Exception
-        sudo "rm -f #{paths.current} && ln -nfs #{paths.previous_release(paths.active_release)} #{paths.current} && chown -R #{config.user}:#{config.group} #{paths.current}"
+        sudo "#{move_symlink(paths.previous_release(paths.active_release), paths.current, "reverting")} && #{perms}"
         @symlink_changed = false
         raise
+      end
+
+      # Move a symlink as atomically as we can.
+      #
+      # mv -T renames 'next' to 'current' instead of moving 'next' to current/next'
+      # mv -T isn't available on OS X and maybe elsewhere, so fallback to rm && ln
+      def move_symlink(source, link, name)
+        next_link = link.dirname.join(name)
+        mv_t  = "ln -nfs #{source} #{next_link} && mv -T #{next_link} #{link}"
+        rm_ln = "rm -rf #{next_link} #{link} && ln -nfs #{source} #{link}"
+        "((#{mv_t}) || (#{rm_ln}))"
       end
 
       def callback(what)

@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Fixes a race condition during deploy where `current` symlink was not moved atomically.
   * Supports new ey.yml option `precompile_assets_task` which overrides the default `assets:precompile`
   * Supports new ey.yml option `precompile_unchanged_assets: true` compiles assets even if no changes would be detected.
   * Don't precompile assets when git-diff shows no changes to app/assets
