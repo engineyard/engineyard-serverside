@@ -2,134 +2,165 @@ module EY
   module Serverside
     module RailsAssetSupport
       def compile_assets
-        return unless app_needs_assets?
         roles config.asset_roles do
+          assets_needed = app_needs_assets?
+          useable_last_assets = check_last_assets
+          !assets_needed || (useable_last_assets && reuse_last_assets) || compile_fresh_assets
+        end
+      end
 
-          if app_assets_unchanged?
-            shell.status "Reusing existing assets. (assets appear to be unchanged)"
-            keep_existing_assets
-            return
-          else
-            shift_existing_assets
-          end
-
-          rails_version = dependency_manager.rails_version
-          if rails_version
-            shell.status "Precompiling assets for rails v#{rails_version}"
-          else
+      def compile_fresh_assets
+        if config.precompile_unchanged_assets?
+          shell.status "Precompiling assets without change detection. (precompile_unchanged_assets: true)"
+        elsif config.precompile_assets?
+          shell.status "Precompiling assets. (precompile_assets: true)"
+        else
+          shell.status "Precompiling assets. ('#{app_assets}' exists, 'public/assets' not found, not disabled in config.)"
+          if !dependency_manager.rails_version
             shell.warning "Precompiling assets even though Rails was not bundled."
           end
+        end
 
-          cmd = "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake #{config.precompile_assets_task} RAILS_GROUPS=assets"
+        handle_errors do
+          manage_asset_links do
+            run "cd #{paths.active_release} && PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake #{config.precompile_assets_task} RAILS_GROUPS=assets"
+          end
+        end
+      end
 
+      def manage_asset_links
+        shift_existing_assets
+        begin
+          yield
+        rescue
+          unshift_existing_assets
+          raise
+        end
+      end
+
+      def handle_errors
+        if !config.precompile_assets_inferred?
+          yield
+        else
           begin
-            run(cmd)
-          rescue StandardError => e
-            unshift_existing_assets
-            if config.precompile_assets_inferred?
-              # If specifically requested, then we want to fail if compilation fails.
-              # If we are implicitly precompiling, we want to fail non-destructively
-              # because we don't know if the rake task exists or if the user
-              # actually intended for assets to be compiled.
+            yield
+          rescue EY::Serverside::RemoteFailure => e
+            # If we are implicitly precompiling, we want to fail non-destructively
+            # because we don't know if the rake task exists or if the user
+            # actually intended for assets to be compiled.
+            #
+            if e.to_s =~ /Don't know how to build task '#{config.precompile_assets_task}'/
               shell.warning <<-WARN
-Asset compilation failure ignored!
+Asset precompilation detected but compilation failure ignored!
+Rake task '#{config.precompile_assets_task}' was not found.
 
-ACTION REQUIRED: Edit your ey.yml to avoid problems:
-  precompile_assets: true   # force assets to build, abort deploy on failure.
-  precompile_assets: false  # never build assets.
+ACTION REQUIRED: Add precompile_assets option to ey.yml.
+  precompile_assets: false # disable assets to avoid this error.
               WARN
-              return
             else
+              shell.error <<-WARN
+Asset precompilation detected but compilation failed!
+
+ACTION REQUIRED: Add precompile_assets option to ey.yml.
+  precompile_assets: true  # precompile assets when #{app_assets} changes.
+  precompile_assets: false # disable asset compilation.
+              WARN
               raise
             end
           else
-            if config.precompile_assets_inferred?
-              shell.warning <<-WARN
-Inferred asset compilation succeeded, but failures will be silently ignored!
-Add 'precompile_assets: true' to ey.yml to abort deploy on failure.
-              WARN
-            end
+            shell.warning <<-WARN
+Inferred asset compilation succeeded, but failures may be silently ignored!
+
+ACTION REQUIRED: Add precompile_assets option to ey.yml.
+  precompile_assets: true  # precompile assets when #{app_assets} changes.
+            WARN
           end
         end
       end
 
       def app_needs_assets?
         if config.precompile_assets?
-          shell.status "Precompiling assets. (enabled in config)"
-          return true
+          true
         elsif config.skip_precompile_assets?
-          shell.status "Skipping asset precompilation. (disabled in config)"
-          return false
+          shell.status "Skipping asset precompilation. (precompile_assets: false)"
+          false
+        elsif !application_rb_path.readable? || !app_assets_path.directory?
+          # Not a Rails app. Ignore assets completely.
+          false
+        elsif app_disables_assets?
+          shell.status "Skipping asset precompilation. ('config/application.rb' disables assets.)"
+          false
+        elsif app_builds_own_assets?
+          shell.status "Skipping asset precompilation. ('public/assets' directory already exists.)"
+          false
+        else
+          true
         end
-
-        app_rb_path = paths.active_release_config.join('application.rb')
-        unless app_rb_path.readable? # Not a Rails app in the first place.
-          shell.status "Skipping asset precompilation. (not a Rails application)"
-          return false
-        end
-
-        if !paths.active_release.join('app','assets').exist?
-          shell.status "Skipping asset precompilation. (directory not found: 'app/assets')"
-          return false
-        end
-
-        if paths.public_assets.exist?
-          shell.status "Skipping asset compilation. Already compiled. (found directory: 'public/assets')"
-          return false
-        end
-
-        if app_disables_assets?(app_rb_path)
-          shell.status "Skipping asset compilation. (application.rb has disabled asset compilation)"
-          return false
-        end
-
-        # This check is very expensive, and has been deemed not worth the time.
-        # Leaving this here in case someone comes up with a faster way.
-        #unless app_has_asset_task?
-        #  shell.status "No 'assets:precompile' Rake task found. Skipping."
-        #  return
-        #end
-
-        shell.status "Attempting Rails asset precompilation. (found directory: 'app/assets')"
-        true
       end
 
-      def app_disables_assets?(path)
-        disabled = nil
-        File.open(path) do |fd|
-          pattern = /^[^#].*config\.assets\.enabled\s+=\s+(false|nil)/
-          contents = fd.read
-          disabled = contents.match(pattern)
+      def check_last_assets
+        if assets_failed_path.exist?
+          run "rm -f #{assets_failed_path}"
+          false
+        else
+          true
         end
-        disabled
       end
 
-      # Runs 'rake -T' to see if there is an assets:precompile task.
-      def app_has_asset_task?
-        # We just run this locally on the app master; everybody else should
-        # have the same code anyway.
-        task_check = "PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake -T #{config.precompile_assets_task} | grep '#{config.precompile_assets_task}'"
-        cmd = "cd #{paths.active_release} && #{task_check}"
-        shell.logged_system("cd #{paths.active_release} && #{task_check}").success?
+      # Returns true if reusing assets, false otherwise
+      def reuse_last_assets
+        return false if config.precompile_unchanged_assets?
+
+        prev = config.previous_revision
+        act = config.active_revision
+        if prev && strategy.same?(prev, act, app_assets)
+          # Reuse assets if they did not fail previously and the app/assets
+          # directory has not had changes since last successful deploy.
+          shell.status "Reusing existing assets. ('#{app_assets}' unchanged from #{prev[0,7]}..#{act[0,7]})"
+          keep_existing_assets
+          true
+        else
+          false
+        end
+      end
+
+      def app_disables_assets?
+        application_rb_path.open do |fd|
+          fd.grep(/^[^#]*config\.assets\.enabled\s*=\s*(false|nil)/).any?
+        end
       end
 
       def app_builds_own_assets?
         paths.public_assets.exist?
       end
 
-      def app_assets_unchanged?
-        if assets_failed_path.exist?
-          shell.substatus "Previous assets failed. Precompiling assets even if unchanged."
-          run "rm -f #{assets_failed_path}"
-          false
-        elsif config.precompile_unchanged_assets?
-          shell.substatus "Precompiling assets even if unchanged. (precompile_unchanged_assets: true)"
-          false
-        elsif prev = config.previous_revision
-          strategy.same?(prev, config.active_revision, 'app/assets/')
-        else
-          false
-        end
+      # This check is very expensive, and has been deemed not worth the time.
+      # Leaving this here in case someone comes up with a faster way.
+      #
+      #   unless app_has_asset_task?
+      #     shell.status "No 'assets:precompile' Rake task found. Skipping."
+      #     return
+      #   end
+      #
+      # Runs 'rake -T' to see if there is an assets:precompile task.
+      def app_has_asset_task?
+        # We just run this locally on the app master; everybody else should
+        # have the same code anyway.
+        task_check = "PATH=#{paths.binstubs}:$PATH #{config.framework_envs} rake -T #{config.precompile_assets_task} | grep '#{config.precompile_assets_task}'"
+        cmd = "cd #{paths.active_release} && #{task_check}"
+        shell.logged_system(cmd).success?
+      end
+
+      def application_rb_path
+        paths.active_release.join('config','application.rb')
+      end
+
+      def app_assets
+        File.join('app','assets')
+      end
+
+      def app_assets_path
+        paths.active_release.join(app_assets)
       end
 
       def current_assets_path

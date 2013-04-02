@@ -7,19 +7,19 @@ describe "Deploying a Rails 3.1 application" do
       deploy_dir.join('current', 'precompiled').should exist
       deploy_dir.join('current', 'public', 'assets').should exist
       deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should include("Attempting Rails asset precompilation. (found directory: 'app/assets')")
+      read_output.should include("Precompiling assets. ('app/assets' exists, 'public/assets' not found, not disabled in config.)")
 
       redeploy_test_application
       deploy_dir.join('current', 'precompiled').should_not exist # doesn't run the task
       deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
       deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should include("Reusing existing assets. (assets appear to be unchanged)")
+      read_output.should =~ %r#Reusing existing assets\. \('app/assets' unchanged from \w{7}..\w{7}\)#
 
       redeploy_test_application('config' => {'precompile_unchanged_assets' => 'true'})
       deploy_dir.join('current', 'precompiled').should exist # doesn't run the task
       deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
       deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should_not include("Reusing existing assets. (assets appear to be unchanged)")
+      read_output.should_not include("Reusing existing assets")
     end
 
     it "precompile assets again when redeploying a ref with changes" do
@@ -27,7 +27,7 @@ describe "Deploying a Rails 3.1 application" do
       deploy_dir.join('current', 'precompiled').should exist
       deploy_dir.join('current', 'public', 'assets').should exist
       deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should include("Attempting Rails asset precompilation. (found directory: 'app/assets')")
+      read_output.should include("Precompiling assets. ('app/assets' exists, 'public/assets' not found, not disabled in config.)")
 
       # changing the ref stands in for actually having assets change (see Strategies::IntegrationSpec#same?)
       redeploy_test_application('branch' => 'somenewref')
@@ -45,7 +45,7 @@ describe "Deploying a Rails 3.1 application" do
 
     it "precompiles assets" do
       deploy_dir.join('current', 'precompiled').should exist
-      read_output.should include("Precompiling assets. (enabled in config)")
+      read_output.should include("Precompiling assets. (precompile_assets: true)")
     end
   end
 
@@ -56,7 +56,7 @@ describe "Deploying a Rails 3.1 application" do
 
     it "precompiles assets" do
       deploy_dir.join('current', 'precompiled').should_not exist
-      read_output.should include("Precompiling assets. (enabled in config)")
+      read_output.should include("Precompiling assets. (precompile_assets: true)")
     end
   end
 
@@ -67,18 +67,18 @@ describe "Deploying a Rails 3.1 application" do
 
     it "precompiles assets" do
       deploy_dir.join('current', 'precompiled').should exist
-      read_output.should include("Precompiling assets. (enabled in config)")
+      read_output.should include("Precompiling assets. (precompile_assets: true)")
     end
   end
 
-  context "with asset support disabled in its config" do
+  context "with asset support disabled in config/application.rb" do
     before(:all) do
       deploy_test_application('assets_disabled')
     end
 
     it "does not precompile assets" do
       deploy_dir.join('current', 'precompiled').should_not exist
-      read_output.should include("Skipping asset compilation. (application.rb has disabled asset compilation)")
+      read_output.should include("Skipping asset precompilation. ('config/application.rb' disables assets.)")
     end
   end
 
@@ -89,7 +89,7 @@ describe "Deploying a Rails 3.1 application" do
 
     it "does not precompile assets" do
       deploy_dir.join('current', 'precompiled').should_not exist
-      read_output.should include("Skipping asset precompilation. (disabled in config)")
+      read_output.should include("Skipping asset precompilation. (precompile_assets: false)")
     end
   end
 
@@ -103,7 +103,7 @@ describe "Deploying a Rails 3.1 application" do
       deploy_dir.join('current', 'precompiled').should_not exist
       deploy_dir.join('current', 'public', 'assets').should be_directory
       deploy_dir.join('current', 'public', 'assets').should_not be_symlink
-      read_output.should include("Skipping asset compilation. Already compiled. (found directory: 'public/assets')")
+      read_output.should include("Skipping asset precompilation. ('public/assets' directory already exists.)")
     end
   end
 end
