@@ -225,10 +225,10 @@ chmod 0700 #{path}
       def copy_repository_cache
         shell.status "Copying to #{paths.active_release}"
         exclusions = Array(config.copy_exclude).map { |e| %|--exclude="#{e}"| }.join(' ')
-        run("mkdir -p #{paths.active_release} #{paths.releases_failed} #{paths.shared_config} && rsync -aq #{exclusions} #{paths.repository_cache}/ #{paths.active_release}")
+        run("mkdir -p #{paths.active_release} #{paths.shared_config} && rsync -aq #{exclusions} #{paths.repository_cache}/ #{paths.active_release}")
 
         shell.status "Ensuring proper ownership."
-        sudo("chown -R #{config.user}:#{config.group} #{paths.active_release} #{paths.releases_failed}")
+        ensure_ownership(paths.active_release)
       end
 
       def create_revision_file
@@ -322,13 +322,18 @@ YML
       # task
       def symlink
         shell.status "Symlinking code."
-        perms = "find #{paths.current} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
-        run "#{move_symlink(paths.active_release, paths.current, "deploying")} && #{perms}"
+        run move_symlink(paths.active_release, paths.current, "deploying")
+        ensure_ownership(paths.current)
         @symlink_changed = true
       rescue Exception
-        sudo "#{move_symlink(paths.previous_release(paths.active_release), paths.current, "reverting")} && #{perms}"
+        sudo move_symlink(paths.previous_release(paths.active_release), paths.current, "reverting")
+        ensure_ownership(paths.current)
         @symlink_changed = false
         raise
+      end
+
+      def ensure_ownership(*targets)
+        sudo "find #{targets.join(' ')} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
       end
 
       # Move a symlink as atomically as we can.
@@ -415,7 +420,9 @@ YML
         yield
       rescue Exception
         shell.status "Release #{paths.active_release} failed, saving release to #{paths.releases_failed}."
-        sudo "mv #{paths.active_release} #{paths.releases_failed}"
+        run "mkdir -p #{paths.releases_failed}"
+        ensure_ownership(paths.active_release, paths.releases_failed)
+        run "mv #{paths.active_release} #{paths.releases_failed}"
         clean_release_directory(paths.releases_failed)
         raise
       end
