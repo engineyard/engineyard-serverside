@@ -300,9 +300,6 @@ YML
           shell.substatus what
           run(cmd)
         end
-        owner = [config.user, config.group].join(':')
-        shell.status "Setting ownership to #{owner}"
-        sudo "chown -R #{owner} #{paths.active_release}"
       end
 
       def symlink_tasks
