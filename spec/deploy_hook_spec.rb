@@ -31,7 +31,7 @@ describe "deploy hooks" do
     it "prints the failure to the log even when non-verbose" do
       out = read_output
       out.should =~ %r|FATAL: Exception raised in deploy hook .*/before_migrate.rb.|
-      out.should =~ %r|RuntimeError: Hook failing in \(eval\)|
+      out.should =~ %r|RuntimeError:.*Hook failing in \(eval\)|
       out.should =~ %r|Please fix this error before retrying.|
     end
 
