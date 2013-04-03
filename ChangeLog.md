@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Bumps default bundler version to latest 1.3.4
   * Fixes a race condition during deploy where `current` symlink was not moved atomically.
   * Supports new ey.yml option `precompile_assets_task` which overrides the default `assets:precompile`
   * Supports new ey.yml option `precompile_unchanged_assets: true` compiles assets even if no changes would be detected.

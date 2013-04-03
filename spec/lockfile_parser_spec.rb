@@ -19,8 +19,8 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   it "has a default version" do
-    EY::Serverside::DependencyManager::Bundler.default_version.should == "1.1.5"
-    EY::Serverside::DependencyManager::Bundler::DEFAULT_VERSION.should == "1.1.5"
+    EY::Serverside::DependencyManager::Bundler.default_version.should_not be_nil
+    EY::Serverside::DependencyManager::Bundler::DEFAULT_VERSION.should_not be_nil
   end
 
   it "returns the default version for a 1.0 lockfile without a bundler dependency" do
@@ -90,24 +90,28 @@ describe "the bundler version retrieved from the lockfile" do
       subject.fetch_version(nil, nil).should == EY::Serverside::DependencyManager::Bundler.default_version
     end
 
+    it "uses the given version when there is no operator" do
+      subject.fetch_version(nil, '1.0.1').should == '1.0.1'
+    end
+
     it "uses the given version when the qualifier is `='" do
-      subject.fetch_version('1.0.1', '=').should == '1.0.1'
+      subject.fetch_version('=', '1.0.1').should == '1.0.1'
     end
 
     it "uses the default version when we get a pessimistic qualifier and is lower than the default version" do
-      subject.fetch_version('1.1.1', '~>').should == EY::Serverside::DependencyManager::Bundler.default_version
+      subject.fetch_version('~>', '1.3.1').should == EY::Serverside::DependencyManager::Bundler.default_version
     end
 
     it "uses the given version when we get a pessimistic qualifier that doesn't match the default version" do
-      subject.fetch_version('1.0.0', '~>').should == '1.0.0'
+      subject.fetch_version('~>', '1.0.0').should == '1.0.0'
     end
 
     it "uses the given version when it's geater of equal than the default version" do
-      subject.fetch_version('1.2.0', '>=').should == '1.2.0'
+      subject.fetch_version('>=', '1.100.0').should == '1.100.0'
     end
 
     it "uses the default version when the given version is lower" do
-      subject.fetch_version('1.0.1', '>=').should == EY::Serverside::DependencyManager::Bundler.default_version
+      subject.fetch_version('>=', '1.0.1').should == EY::Serverside::DependencyManager::Bundler.default_version
     end
 
     it "selects only the first version expression" do

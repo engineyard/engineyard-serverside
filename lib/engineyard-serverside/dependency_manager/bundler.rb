@@ -2,7 +2,7 @@ module EY
   module Serverside
     module DependencyManager
       class Bundler < Base
-        DEFAULT_VERSION = "1.1.5"
+        DEFAULT_VERSION = "1.3.4"
 
         def self.default_version
           DEFAULT_VERSION
@@ -214,24 +214,13 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
             result = scan_gem('bundler', section)
             bundler_version = result ? result.last : nil
             version_qualifier = result ? result.first : nil
-            @bundler_version = fetch_version(bundler_version, version_qualifier)
+            @bundler_version = fetch_version(version_qualifier, bundler_version)
           end
 
-          def fetch_version(bundler_version, version_qualifier)
-            return bundler_version || @default unless version_qualifier
-
-            case version_qualifier
-            when '='
-              bundler_version
-            when '>='
-              Gem::Version.new(bundler_version) > @default_gem_version ? bundler_version : @default
-            when '~>'
-              bundler_gem_version = Gem::Version.new(bundler_version)
-              recommendation = bundler_gem_version.spermy_recommendation.gsub(/~>\s*(.+)$/, '\1.')
-              recommends_default = @default.index(recommendation) == 0
-              default_newer_than_requested = @default_gem_version > bundler_gem_version
-              (recommends_default && default_newer_than_requested) ? @default : bundler_version
-            end
+          def fetch_version(operator, version)
+            return version || @default unless operator && version
+            req = Gem::Requirement.new(["#{operator} #{version}"])
+            req.satisfied_by?(@default_gem_version) ? @default : version
           end
 
           def scan_gem(gem, dep_section)
