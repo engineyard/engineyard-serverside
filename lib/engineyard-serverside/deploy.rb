@@ -2,7 +2,7 @@
 require 'base64'
 require 'fileutils'
 require 'multi_json'
-require 'engineyard-serverside/rails_asset_support'
+require 'engineyard-serverside/rails_assets'
 require 'engineyard-serverside/maintenance'
 require 'engineyard-serverside/dependency_manager'
 require 'engineyard-serverside/dependency_manager/legacy_helpers'
@@ -10,7 +10,6 @@ require 'engineyard-serverside/dependency_manager/legacy_helpers'
 module EY
   module Serverside
     class DeployBase < Task
-      include ::EY::Serverside::RailsAssetSupport
       include ::EY::Serverside::DependencyManager::LegacyHelpers
 
       # default task
@@ -170,7 +169,6 @@ chmod 0700 #{path}
       # task
       def cleanup_old_releases
         clean_release_directory(paths.releases)
-        clean_release_directory(paths.releases_failed)
       end
 
       # Remove all but the most-recent +count+ releases from the specified
@@ -342,7 +340,7 @@ YML
       # mv -T isn't available on OS X and maybe elsewhere, so fallback to rm && ln
       def move_symlink(source, link, name)
         next_link = link.dirname.join(name)
-        mv_t  = "ln -nfs #{source} #{next_link} && mv -T #{next_link} #{link}"
+        mv_t  = "ln -nfs #{source} #{next_link} && mv -T #{next_link} #{link} >/dev/null 2>&1"
         rm_ln = "rm -rf #{next_link} #{link} && ln -nfs #{source} #{link}"
         "((#{mv_t}) || (#{rm_ln}))"
       end
@@ -379,6 +377,7 @@ YML
           :ref              => config[:branch]
         )
       end
+      public :strategy
 
       def base_callback_command_for(what)
         cmd =  [About.binary, 'hook', what.to_s]
@@ -418,13 +417,13 @@ YML
 
       def with_failed_release_cleanup
         yield
-      rescue Exception
+      rescue Exception => e
         shell.status "Release #{paths.active_release} failed, saving release to #{paths.releases_failed}."
         run "mkdir -p #{paths.releases_failed}"
         ensure_ownership(paths.active_release, paths.releases_failed)
         run "mv #{paths.active_release} #{paths.releases_failed}"
         clean_release_directory(paths.releases_failed)
-        raise
+        raise e
       end
 
       def maintenance
@@ -434,6 +433,11 @@ YML
       def dependency_manager
         ensure_git_ssh_wrapper
         @dependency_manager ||= DependencyManager.detect(servers, config, shell, self)
+      end
+      public :dependency_manager # FIXME
+
+      def compile_assets
+        RailsAssets.detect_and_compile(config, shell, self)
       end
     end   # DeployBase
 

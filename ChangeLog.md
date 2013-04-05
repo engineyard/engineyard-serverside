@@ -10,6 +10,9 @@
   * Refactor dependency management (bundler, npm, none) to allow more flexibility (may break existing eydeploy.rb files)
   * Supports new ey.yml option `bundle_options:` which can be used to specify additional bundle install command line options.
   * Supports setting the ey.yml option `bundle_without` to nil to remove `--without` from the bundle install command.
+  * Supports new ey.yml option `asset_dependencies` which is a list of relative paths to search for asset changes each deploy.
+  * Supports new ey.yml option `asset_strategy` which can be one of ['shared', 'private', 'cleaning', 'shifting'].
+    * The default asset strategy is 'shifting' which is the same behavior as previous versions.
 
 ## v2.0.6 (2013-04-08)
 
