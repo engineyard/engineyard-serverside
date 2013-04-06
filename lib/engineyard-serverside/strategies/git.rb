@@ -1,3 +1,5 @@
+require 'pathname'
+
 module EY
   module Serverside
     module Strategies
@@ -16,15 +18,14 @@ module EY
         end
 
         def usable_repository?
-          File.directory?(repository_cache) && `#{git} remote -v | grep origin`[remote_uri]
+          repository_cache.directory? && `#{git} remote -v | grep origin`[remote_uri]
         end
 
         def fetch
           if usable_repository?
             run("#{git} fetch -q origin 2>&1")
           else
-            FileUtils.rm_rf(repository_cache)
-            run("git clone -q #{remote_uri} #{repository_cache} 2>&1")
+            run("rm -rf #{repository_cache} && git clone -q #{remote_uri} #{repository_cache} 2>&1")
           end
         end
 
@@ -69,8 +70,8 @@ module EY
         #   1 when there are changes
         #
         # Thes method returns true when nothing has changed, fales otherwise
-        def same?(previous_revision, active_revision, path = nil)
-          run("#{git} diff '#{previous_revision}'..'#{active_revision}' --exit-code --name-only -- #{path} >/dev/null 2>&1")
+        def same?(previous_revision, active_revision, paths = nil)
+          run("#{git} diff '#{previous_revision}'..'#{active_revision}' --exit-code --name-only -- #{Array(paths).join(' ')} >/dev/null 2>&1")
         end
 
       private
@@ -87,7 +88,7 @@ module EY
         end
 
         def repository_cache
-          opts[:repository_cache]
+          Pathname.new(opts[:repository_cache])
         end
 
         def git

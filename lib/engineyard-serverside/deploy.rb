@@ -1,6 +1,5 @@
 # stolen wholesale from capistrano, thanks Jamis!
 require 'base64'
-require 'fileutils'
 require 'multi_json'
 require 'engineyard-serverside/rails_assets'
 require 'engineyard-serverside/maintenance'
