@@ -12,7 +12,7 @@ PATH
       ruby-hmac
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     builder (2.1.2)
     excon (0.2.3)
