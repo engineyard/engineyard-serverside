@@ -1,4 +1,4 @@
-# stolen wholesale from capistrano, thanks Jamis!
+# Inspired by capistrano, thanks Jamis!
 require 'base64'
 require 'multi_json'
 require 'engineyard-serverside/rails_assets'
