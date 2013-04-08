@@ -6,7 +6,8 @@
 
 ## v2.0.6 (2013-04-08)
 
-  *
+  * Fix for command line config option `--config precompile_assets:true/false` which was being interpreted as a string.
+  * Don't exclude the `RAILS_ENV` Gemfile group from bundle install. (i.e. don't do `--without development` in `development` mode)
 
 ## v2.0.5 (2013-02-12)
 
