@@ -4,6 +4,10 @@
 
   *
 
+## v2.0.6 (2013-04-08)
+
+  *
+
 ## v2.0.5 (2013-02-12)
 
   * Change concurrency code to use a simple threaded model.
