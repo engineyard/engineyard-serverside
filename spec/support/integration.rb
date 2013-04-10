@@ -55,13 +55,9 @@ class EY::Serverside::Strategies::IntegrationSpec
   attr_reader :shell, :source_repo, :repository_cache
 
   def initialize(shell, opts)
-    unless opts[:repository_cache] && opts[:repo]
-      raise ArgumentError, "Option :repository_cache and :repo are required"
-    end
-
     @shell = shell
     @ref = opts[:ref]
-    @source_repo = Pathname.new(opts[:repo])
+    @source_repo = Pathname.new(opts[:remote_uri])
     @repository_cache = Pathname.new(opts[:repository_cache])
   end
 
@@ -101,7 +97,7 @@ class EY::Serverside::Strategies::IntegrationSpec
       shell.substatus "Test helpers copying repo fixture from #{source_repo}/ to #{repository_cache}"
       # This uses a ruby method instead of shelling out because I was having
       # trouble getting cp -R to behave consistently between distros.
-      FileUtils.cp_r Dir.glob("#{source_repo}/*"), repository_cache
+      system "rsync -aq #{source_repo}/ #{repository_cache}"
     else
       raise "Mock repo #{source_repo.inspect} does not exist. Path should be absolute. e.g. FIXTURES_DIR.join('repos','example')"
     end
