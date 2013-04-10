@@ -15,7 +15,6 @@ describe EY::Serverside::Deploy::Configuration do
       @config.migrate.should == nil
       @config.migrate?.should == false
       @config.branch.should == "master"
-      @config.strategy_class.should == EY::Serverside::Strategies::Git
       @config.maintenance_on_migrate.should == true
       @config.maintenance_on_restart.should == true
       @config.required_downtime_stack?.should == true
@@ -40,6 +39,33 @@ describe EY::Serverside::Deploy::Configuration do
       expect { @config.environment_name }.to raise_error
       expect { @config.account_name }.to raise_error
       expect { @config.framework_env }.to raise_error
+    end
+  end
+
+  context "strategies" do
+    let(:options) {
+      { "app" => "serverside" }
+    }
+    it "defaults to git" do
+      @config = EY::Serverside::Deploy::Configuration.new(
+        options.merge({ 'repo' => 'git@github.com:engineyard/todo.git'})
+      )
+      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::Git)
+    end
+
+    it "infers a git strategy" do
+      @config = EY::Serverside::Deploy::Configuration.new(
+        options.merge({ 'git' => 'git@github.com:engineyard/todo.git' })
+      )
+      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::Git)
+    end
+
+    it "infers a archive strategy" do
+      @config = EY::Serverside::Deploy::Configuration.new(
+        options.merge({'archive' => 'https://github.com/engineyard/todo/archive/master.zip'})
+      )
+
+      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::Archive)
     end
   end
 

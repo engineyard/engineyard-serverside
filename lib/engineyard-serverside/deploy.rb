@@ -66,11 +66,15 @@ module EY
       end
 
       def create_revision_file_command
-        strategy.create_revision_file_command(paths.active_release)
+        strategy.create_revision_file_command(paths.active_revision)
       end
 
       def short_log_message(revision)
         strategy.short_log_message(revision)
+      end
+
+      def unchanged_diff_between_revisions?(previous_revision, active_revision, asset_dependencies)
+        strategy.same?(previous_revision, active_revision, asset_dependencies)
       end
 
       def check_repository
@@ -204,10 +208,14 @@ chmod 0700 #{path}
       def rollback
         if config.rollback_paths!
           begin
-            shell.status "Rolling back to previous release: #{short_log_message(config.active_revision)}"
-            abort_on_bad_paths_in_release_directory
             rolled_back_release = paths.latest_release
-
+            if config.active_revision.exist?
+              revision = config.active_revision.read
+              shell.status "Rolling back to previous release: #{short_log_message(revision)}"
+            else
+              shell.status "Rolling back to previous release."
+            end
+            abort_on_bad_paths_in_release_directory
             run_with_callbacks(:symlink)
             sudo "rm -rf #{rolled_back_release}"
             bundle
@@ -378,8 +386,6 @@ YML
         end
       end
 
-      protected
-
       # Use [] to access attributes instead of calling methods so
       # that we get nils instead of NoMethodError.
       #
@@ -387,16 +393,10 @@ YML
       # should it need to), but it would like to use #short_log_message.
       def strategy
         ensure_git_ssh_wrapper
-        @strategy ||= config.strategy_class.new(
-          shell,
-          :verbose          => config.verbose,
-          :repository_cache => paths.repository_cache.to_s,
-          :app              => config.app,
-          :repo             => config[:repo],
-          :ref              => config[:branch]
-        )
+        @strategy ||= config.source_cache_strategy(shell)
       end
-      public :strategy
+
+      protected
 
       def base_callback_command_for(what)
         cmd =  [About.binary, 'hook', what.to_s]

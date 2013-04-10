@@ -51,18 +51,12 @@ class EY::Serverside::Deploy
   end
 end
 
-class EY::Serverside::Strategies::IntegrationSpec
-  attr_reader :shell, :source_repo, :repository_cache
+class EY::Serverside::Strategy::IntegrationSpec < EY::Serverside::Strategy
+  attr_reader :source_repo
 
-  def initialize(shell, opts)
-    unless opts[:repository_cache] && opts[:repo]
-      raise ArgumentError, "Option :repository_cache and :repo are required"
-    end
-
-    @shell = shell
-    @ref = opts[:ref]
-    @source_repo = Pathname.new(opts[:repo])
-    @repository_cache = Pathname.new(opts[:repository_cache])
+  def initialize(*a)
+    super
+    @source_repo = Pathname.new(uri)
   end
 
   def update_repository_cache
@@ -71,8 +65,8 @@ class EY::Serverside::Strategies::IntegrationSpec
     copy_fixture_repo_files
   end
 
-  def create_revision_file_command(dir)
-    "echo '#{@ref}' > #{dir}/REVISION"
+  def create_revision_file_command(revision_path)
+    "echo '#{@ref}' > #{revision_path}"
   end
 
   def short_log_message(revision)
@@ -101,7 +95,7 @@ class EY::Serverside::Strategies::IntegrationSpec
       shell.substatus "Test helpers copying repo fixture from #{source_repo}/ to #{repository_cache}"
       # This uses a ruby method instead of shelling out because I was having
       # trouble getting cp -R to behave consistently between distros.
-      FileUtils.cp_r Dir.glob("#{source_repo}/*"), repository_cache
+      system "rsync -aq #{source_repo}/ #{repository_cache}"
     else
       raise "Mock repo #{source_repo.inspect} does not exist. Path should be absolute. e.g. FIXTURES_DIR.join('repos','example')"
     end
