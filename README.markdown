@@ -20,23 +20,31 @@ The ey.yml file allows options to be saved for each environment to which an appl
 
     $ cat config/ey.yml
     ---
+    # 'defaults' applies to all environments running this application.
+    defaults:
+      bundle_without: test development mygroup  # exclude groups on bundle install (leave blank to remove --without)
+      bundle_options: --local                   # add extra options to the bundle install command line (does not override bundle_without)
+      copy_exclude:                             # don't rsync the following dirs
+      - .git
+      maintenance_on_restart: false             # show maintenance page during app restart (default: false except for glassfish and mongrel)
+      maintenance_on_migrate: false             # show maintenance page during migrations (default: true)
+      precompile_assets: true                   # enables rails assets precompilation (default: inferred using app/assets and config/application.rb)
+      precomplie_assets_task: assets:precompile # override the assets:precompile rake task
+      precompile_unchanged_assets: true         # precompiles assets even if no changes would be detected (does not check for changes at all).
+      assets_strategy: shifting                 # choose an alternet asset management strategy (shifting, cleaning, private, shared)
+      asset_roles: :all                         # specify on which roles to compile assets (default: [:app, :app_master, :solo] - must be an Array)
+      asset_roles:                              # (Array input for multiple roles) - Use hook deploy/before_compile_assets.rb for finer grained control.
+      - :app
+      - :app_master
+      - :util
+      ignore_database_adapter_warning: true     # hide database adapter warning if you don't use MySQL or PostgreSQL (default: false)
+
+    # Environment specific options apply only to a singe environment and override settings in defaults.
     environments:
       env_production:
-        bundle_without: test development mygroup  # exclude groups on bundle install (leave blank to remove --without)
-        bundle_options: --local                   # add extra options to the bundle install command line (does not override bundle_without)
-        copy_exclude:                             # don't rsync the following dirs
-        - .git
-        maintenance_on_restart: false             # show maintenance page during app restart (default: false except for glassfish and mongrel)
-        maintenance_on_migrate: false             # show maintenance page during migrations (default: true)
-        precompile_assets: true                   # enables rails assets precompilation (default: inferred using app/assets and config/application.rb)
-        precomplie_assets_task: assets:precompile:primary # override the assets:precompile rake task
-        precompile_unchanged_assets: true         # precompiles assets even if no changes would be detected (does not check for changes at all).
-        asset_roles: :all                         # specify on which roles to compile assets (default: [:app, :app_master, :solo] - must be an Array)
-        asset_roles:                              # (Array input for multiple roles) - Use hook deploy/before_compile_assets.rb for finer grained control.
-        - :app
-        - :app_master
-        - :util
-        ignore_database_adapter_warning: true     # hide database adapter warning if you don't use MySQL or PostgreSQL (default: false)
+        precompile_unchanged_assets: true       # precompiles assets even if no changes would be detected (does not check for changes at all).
+        assets_strategy: shifting               # choose an alternet asset management strategy (shifting, cleaning, private, shared)
+        asset_roles: :all                       # specify on which roles to compile assets (default: [:app, :app_master, :solo] - must be an Array)
 
 These options in ey.yml will only work if the file is committed to your application repository. Make sure to commit this file.
 

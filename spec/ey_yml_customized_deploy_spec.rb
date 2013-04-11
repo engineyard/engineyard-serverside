@@ -32,7 +32,7 @@ describe "Deploying an app with ey.yml" do
       deploy_dir.join('current', 'REVISION').read.should == "somebranch\n"
     end
 
-    it "loads bundle_without from the config, which overrides the default" do
+    it "loads bundle_without from the config, which overrides the default (and 'defaults:' in ey.yml)" do
       cmd = @deployer.commands.grep(/bundle _\S*_ install/).first
       cmd.should include('--without only test')
     end

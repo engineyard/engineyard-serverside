@@ -114,6 +114,8 @@ module EY
       end
 
       def load_ey_yml_data(data, shell)
+        loaded = false
+
         environments = data['environments']
         if environments && environments[environment_name]
           shell.substatus "ey.yml configuration loaded for environment #{environment_name.inspect}."
@@ -121,7 +123,19 @@ module EY
           env_data = string_keys(environments[environment_name])
           shell.debug "#{environment_name}:\n#{env_data.pretty_inspect}"
 
-          append_config_source(string_keys(env_data)) # insert at lowest priority so as not to disturb important config
+          append_config_source(env_data) # insert at higher priority than defaults
+          loaded = true
+        end
+
+        defaults = data['defaults']
+        if defaults
+          shell.substatus "ey.yml configuration loaded."
+          append_config_source(string_keys(defaults)) # insert at lowest priority so as not to disturb important config
+          shell.debug "defaults:\n#{defaults.pretty_inspect}"
+          loaded = true
+        end
+
+        if loaded
           true
         else
           shell.info "No matching ey.yml configuration found for environment #{environment_name.inspect}."

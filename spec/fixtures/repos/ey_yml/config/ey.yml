@@ -1,13 +1,17 @@
+defaults:
+  copy_exclude:
+  - .git
+  - README
+  migrate: true
+  migration_command: 'uh oh'
+  bundle_without: only test development
+  maintenance_on_migrate: false
+  maintenance_on_restart: false
 environments:
   env:
-    copy_exclude:
-    - .git
-    - README
-    migrate: true
-    migration_command: 'uh oh'
     branch: branch_from_ey_yml
     custom: custom_from_ey_yml
     bundle_without: only test
-    maintenance_on_migrate: false
-    maintenance_on_restart: false
     ignore_database_adapter_warning: true
+  env_other:
+    bundle_without: only development
