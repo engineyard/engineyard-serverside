@@ -17,6 +17,14 @@ module EY
           (all[name.to_s] || Shifting).new(*args)
         end
 
+
+        # Precompile assets fresh every time. Shared assets are not symlinked
+        # and assets stay with the release that compiled them. The assets of
+        # the previous deploy are symlinked as into the current deploy to
+        # prevent errors during deploy.
+        #
+        # When no assets changes are detected, the deploy uses rsync to copy
+        # the previous release's assets into the current assets directory.
         class Private
           attr_reader :paths, :runner
 
@@ -51,6 +59,13 @@ module EY
           end
         end
 
+        # Basic shared assets.
+        # Precompiled assets go into a single shared assets directory. The
+        # assets directory is never cleaned, so a deploy hook should be used
+        # to clean assets appropriately.
+        #
+        # When no assets changes are detected, shared directory is only
+        # symlinked and precompile task is not run.
         class Shared
           attr_reader :paths, :runner
           def initialize(paths, runner)
@@ -78,6 +93,14 @@ module EY
           end
         end
 
+        # Precompiled assets are shared across all deploys like Shared.
+        # Before compiling the active deploying assets, all assets that are not
+        # referenced by the manifest.yml from the previous deploy are removed.
+        # After cleaning, the new assets are compiled over the top. The result
+        # is an assets dir that contains the last assets and the current assets.
+        #
+        # When no assets changes are detected, shared directory is only
+        # symlinked and cleaning and precompile tasks are not run.
         class Cleaning < Shared
           def prepare
             reuse
@@ -116,6 +139,13 @@ module EY
           end
         end
 
+        # The default behavior and the one used since the beginning of asset
+        # support in engineyard-serverside. Assets are compiled into a fresh
+        # shared directory. Previous shared assets are shifted to a last_assets
+        # directory to prevent errors during deploy.
+        #
+        # When no assets changes are detected, the two shared directories are
+        # symlinked into the active release without any changes.
         class Shifting < Shared
           # link shared/assets and shared/last_assets into public
           def reuse
