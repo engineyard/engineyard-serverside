@@ -4,15 +4,17 @@
 
   * Bumps default bundler version to latest 1.3.4
   * Fixes a race condition during deploy where `current` symlink was not moved atomically.
-  * Supports new ey.yml option `precompile_assets_task` which overrides the default `assets:precompile`
-  * Supports new ey.yml option `precompile_unchanged_assets: true` compiles assets even if no changes would be detected.
-  * Don't precompile assets when git-diff shows no changes to app/assets
-  * Refactor dependency management (bundler, npm, none) to allow more flexibility (may break existing eydeploy.rb files)
-  * Supports new ey.yml option `bundle_options:` which can be used to specify additional bundle install command line options.
-  * Supports setting the ey.yml option `bundle_without` to nil to remove `--without` from the bundle install command.
+  * Don't precompile assets when git-diff shows no changes to `asset_dependencies`
   * Supports new ey.yml option `asset_dependencies` which is a list of relative paths to search for asset changes each deploy.
-  * Supports new ey.yml option `asset_strategy` which can be one of ['shared', 'private', 'cleaning', 'shifting'].
-    * The default asset strategy is 'shifting' which is the same behavior as previous versions.
+    * The default `asset_dependencies` are: app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb
+  * Supports new ey.yml option `precompile_unchanged_assets: true` compiles assets even if no changes would be detected.
+  * Supports new ey.yml option `precompile_assets_task: taskname` which overrides the default `assets:precompile`
+  * Supports new ey.yml option `asset_strategy` which supports: `shared`, `private`, `cleaning`, or `shifting`.
+    * The default asset strategy is `shifting` which is the same behavior as previous versions.
+    * See `README.markdown` or `lib/engineyard-serverside/rails_assets/strategy.rb` for full explanation.
+  * Supports new ey.yml option `bundle_options` which can be used to specify additional bundle install command line options.
+  * Supports setting of ey.yml option `bundle_without` to nil to remove `--without` from the bundle install command.
+  * Refactor dependency management (bundler, npm, none) to allow more flexibility (may break existing eydeploy.rb files)
 
 ## v2.0.6 (2013-04-08)
 

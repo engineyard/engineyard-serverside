@@ -31,6 +31,7 @@ The ey.yml file allows options to be saved for each environment to which an appl
       precompile_assets: true                   # enables rails assets precompilation (default: inferred using app/assets and config/application.rb)
       precomplie_assets_task: assets:precompile # override the assets:precompile rake task
       precompile_unchanged_assets: true         # precompiles assets even if no changes would be detected (does not check for changes at all).
+      asset_dependencies: app/assets            # a list of relative paths to search for asset changes during each deploy.
       assets_strategy: shifting                 # choose an alternet asset management strategy (shifting, cleaning, private, shared)
       asset_roles: :all                         # specify on which roles to compile assets (default: [:app, :app_master, :solo] - must be an Array)
       asset_roles:                              # (Array input for multiple roles) - Use hook deploy/before_compile_assets.rb for finer grained control.
@@ -39,7 +40,7 @@ The ey.yml file allows options to be saved for each environment to which an appl
       - :util
       ignore_database_adapter_warning: true     # hide database adapter warning if you don't use MySQL or PostgreSQL (default: false)
 
-    # Environment specific options apply only to a singe environment and override settings in defaults.
+    # Environment specific options apply only to a single environment and override settings in defaults.
     environments:
       env_production:
         precompile_unchanged_assets: true       # precompiles assets even if no changes would be detected (does not check for changes at all).
@@ -47,6 +48,24 @@ The ey.yml file allows options to be saved for each environment to which an appl
         asset_roles: :all                       # specify on which roles to compile assets (default: [:app, :app_master, :solo] - must be an Array)
 
 These options in ey.yml will only work if the file is committed to your application repository. Make sure to commit this file.
+
+### Assets
+
+If `precompile_assets` is not set, asset compilation will be detected and failures may be ignored. Set `precompile_assets` to true or false to ensure proper behavior. When precopmile_assets is true, `git diff` will be used to detect changes to the path names specified in `asset_dependencies` since the revision of the last successful release. When `precompile_unchanged_assets` is true, assets will always be compiled and the `git diff` detection will not run.
+
+#### Strategies
+
+A number of asset persistence strategies are supported by default, as described below.
+
+`private` - Precompile assets fresh every time. Shared assets are not symlinked and assets stay with the release that compiled them. The assets of the previous deploy are symlinked as into the current deploy to prevent errors during deploy. When no assets changes are detected, the deploy uses rsync to copy the previous release's assets into the current assets directory.
+
+`shared` - Basic shared assets. Precompiled assets go into a single shared assets directory. The assets directory is never cleaned, so a deploy hook should be used to clean assets appropriately. When no assets changes are detected, shared directory is only symlinked and precompile task is not run.
+
+`cleaning` - Precompiled assets are shared across all deploys. Before compiling the active deploying assets, all assets not referenced by the manifest.yml from the previous deploy are removed. After cleaning, the new assets are compiled over the top. The result is an assets dir that contains the last assets and the current assets. When no assets changes are detected, shared directory is only symlinked and cleaning and precompile tasks are not run.
+
+`shifting` - The default behavior and the one used since the beginning of asset support in engineyard-serverside. Assets are compiled into a fresh shared directory. Previous shared assets are shifted to a last_assets directory to prevent errors during deploy. When no assets changes are detected, the two shared direcotries are symlinked again without change.
+
+
 
 ### Running the spec suite (ruby 1.8.7+)
 
