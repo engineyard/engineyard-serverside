@@ -96,15 +96,19 @@ module EY
 
             Dir.chdir(shared_assets_path)
 
-            all_assets_on_disk = Dir.glob(shared_assets_path.join('**','*.*').to_s) - [manifest_path.basename.to_s]
+            all_assets_on_disk = Dir.glob(shared_assets_path.join('**','*.*').to_s) - [manifest_path.to_s]
+            $stderr.puts "all_assets_on_disk #{all_assets_on_disk.inspect}"
             assets_on_disk     = all_assets_on_disk.reject {|a| a =~ /\.gz$/}
+            $stderr.puts "assets_on_disk #{assets_on_disk.inspect}"
             assets_in_manifest = YAML.load_file(manifest_path.to_s).values
+            $stderr.puts "assets_in_manifest #{assets_in_manifest.inspect}"
 
+            remove_assets = []
             (assets_on_disk - assets_in_manifest).each do |asset|
-              cmd = "rm -f #{asset}"
-              cmd += " #{asset}.gz" if all_assets_on_disk.include?("#{asset}.gz")
-              run(cmd)
+              remove_assets << "'#{asset}'"
+              remove_assets << "'#{asset}.gz'" if all_assets_on_disk.include?("#{asset}.gz")
             end
+            run("rm -rf #{remove_assets.join(' ')}")
           end
 
           def manifest_path
