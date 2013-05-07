@@ -70,6 +70,18 @@ task :install_on, [:environment] do |t, args|
   end
 end
 
+desc "Build the gem + install it on the given hostname: rake install_on_host[deploy@127.0.0.1]"
+task :install_on_host, :host do |t, args|
+  unless `gem build engineyard-serverside.gemspec 2>&1` =~ /File: (engineyard-serverside-.*\.gem)/
+    abort "Failed to build gem; aborting!"
+  end
+
+  gemname = $1
+
+  system("scp -o CheckHostIP=no -o StrictHostKeyChecking=no #{gemname} #{args[:host]}: ")
+  system("ssh -o CheckHostIP=no -o StrictHostKeyChecking=no #{args[:host]} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gemname} --no-rdoc --no-ri'")
+end
+
 def bump
   new_version = if EY::Serverside::VERSION =~ /\.pre$/
                   EY::Serverside::VERSION.gsub(/\.pre$/, '')
