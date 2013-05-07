@@ -44,7 +44,7 @@ module EY
 
       def command_on_server(prefix, cmd, &block)
         command = block ? block.call(self, cmd.dup) : cmd
-        command = "#{prefix} #{Escape.shell_command([command])}"
+        command = "#{prefix} <<CMD\n#{cmd}\nCMD"
         local? ? command : remote_command(command)
       end
 
