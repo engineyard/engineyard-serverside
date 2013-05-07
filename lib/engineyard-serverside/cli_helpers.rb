@@ -30,6 +30,8 @@ module EY
       def config_option
         method_option :config,           :type     => :string,
                                          :desc     => "Additional configuration"
+        method_option :deploy_user,      :type     => :string,
+                                         :desc     => "Deploy user if different than current"
       end
 
       def instances_options
