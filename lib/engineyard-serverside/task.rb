@@ -71,11 +71,11 @@ module EY
       end
 
       def run(cmd, &block)
-        servers.roles(@roles).run(shell, cmd, &block)
+        servers.roles(@roles).run(shell, cmd, config.deploy_user, &block)
       end
 
       def sudo(cmd, &block)
-        servers.roles(@roles).sudo(shell, cmd, &block)
+        servers.roles(@roles).run(shell, cmd, 'root', &block)
       end
 
     end

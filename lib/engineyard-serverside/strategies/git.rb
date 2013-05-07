@@ -76,7 +76,7 @@ module EY
 
       private
         def run(cmd)
-          shell.logged_system(cmd).success?
+          shell.logged_system("sudo -u deploy sh -l <<CMD\n#{cmd}\nCMD").success?
         end
 
         def in_repository_cache

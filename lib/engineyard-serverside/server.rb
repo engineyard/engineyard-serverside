@@ -37,8 +37,8 @@ module EY
       def sync_directory_command(directory)
         return nil if local?
         [
-          remote_command("mkdir -p #{directory}"),
-          Escape.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
+          remote_command("sudo -u deploy mkdir -p #{directory}"),
+          Escape.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "deploy@#{hostname}:#{directory}"])
         ].join(' && ')
       end
 

@@ -62,18 +62,14 @@ module EY
         end
       end
 
-      # Run a command on this set of servers.
-      def run(shell, cmd, &block)
-        run_on_each(shell) do |server|
-          exec_cmd = server.command_on_server('sh -l -c', cmd, &block)
-          shell.logged_system(exec_cmd, server)
-        end
-      end
-
       # Run a sudo command on this set of servers.
-      def sudo(shell, cmd, &block)
+      def run(shell, cmd, user=nil, &block)
         run_on_each(shell) do |server|
-          exec_cmd = server.command_on_server('sudo sh -l -c', cmd, &block)
+          if user
+            exec_cmd = server.command_on_server("sudo -u #{user} sh -l", cmd, &block)
+          else
+            exec_cmd = server.command_on_server('sh -l', cmd, &block)
+          end
           shell.logged_system(exec_cmd, server)
         end
       end
