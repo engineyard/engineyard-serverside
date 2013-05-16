@@ -16,6 +16,10 @@
   * Supports setting of ey.yml option `bundle_without` to nil to remove `--without` from the bundle install command.
   * Refactor dependency management (bundler, npm, none) to allow more flexibility (may break existing eydeploy.rb files)
 
+## v2.0.7 (2013-05-16)
+
+  * Fix encoding errors in logs when non-ascii characters are displayed.
+
 ## v2.0.6 (2013-04-08)
 
   * Fix for command line config option `--config precompile_assets:true/false` which was being interpreted as a string.

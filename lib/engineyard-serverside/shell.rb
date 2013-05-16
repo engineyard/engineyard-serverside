@@ -35,6 +35,9 @@ module EY
 
       # a nice info outputter that prepends spermy operators for some reason.
       def status(msg)
+        if msg.respond_to?(:force_encoding)
+          msg.force_encoding("UTF-8")
+        end
         info msg.gsub(/^/, '~> ')
       end
 

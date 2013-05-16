@@ -3,6 +3,14 @@ require 'tempfile'
 require 'timecop'
 
 describe EY::Serverside::Shell do
+  if "".respond_to?(:force_encoding)
+    it "status works for ut8" do
+      output = StringIO.new
+      shell = EY::Serverside::Shell.new(:verbose => true, :stdout => @output, :stderr => @output, :log_path => tmpdir.join("engineyard-serverside-#{Time.now.to_i}-#{$$}.log"), :start_time => Time.local(2008, 9, 1, 12, 10, 25))
+      shell.status("\u2603".force_encoding("binary"))
+    end
+  end
+
   it "has a timestamp before each line" do
     time1 = Time.local(2008, 9, 1, 12, 0, 0)
     time2 = Time.local(2008, 9, 1, 12, 3, 5)
