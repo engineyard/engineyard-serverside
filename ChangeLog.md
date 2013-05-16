@@ -4,6 +4,10 @@
 
   *
 
+## v2.0.7 (2013-05-16)
+
+  *
+
 ## v2.0.6 (2013-04-08)
 
   * Fix for command line config option `--config precompile_assets:true/false` which was being interpreted as a string.
