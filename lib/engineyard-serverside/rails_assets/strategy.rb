@@ -34,10 +34,10 @@ module EY
           end
 
           def reuse
-            run("mkdir -p #{paths.public_assets} && rsync -aq #{previous_assets_path}/ #{paths.public_assets}")
+            run "mkdir -p #{paths.public_assets} && rsync -aq #{previous_assets_path}/ #{paths.public_assets}"
           end
 
-          # ?ink the previous assets into the new public/last_assets/assets
+          # link the previous assets into the new public/last_assets/assets
           # to prevent missing assets during deploy.
           #
           # This results in the directory structure:
@@ -51,7 +51,7 @@ module EY
           protected
 
           def run(cmd)
-            runner.run(cmd)
+            runner.run cmd
           end
 
           def previous_assets_path
