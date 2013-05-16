@@ -6,7 +6,7 @@
 
 ## v2.0.7 (2013-05-16)
 
-  *
+  * Fix encoding errors in logs when non-ascii characters are displayed.
 
 ## v2.0.6 (2013-04-08)
 
