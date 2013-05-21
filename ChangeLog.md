@@ -15,6 +15,8 @@
   * Supports new ey.yml option `bundle_options` which can be used to specify additional bundle install command line options.
   * Supports setting of ey.yml option `bundle_without` to nil to remove `--without` from the bundle install command.
   * Refactor dependency management (bundler, npm, none) to allow more flexibility (may break existing eydeploy.rb files)
+  * Supports new ey.yml option `eydeploy_rb: false` which enables or disables eydeploy.rb file loading. (defaults to enabled)
+  * Changes the order of eydeploy.rb loading to happen after ey.yml is parsed during deploy.
 
 ## v2.0.7 (2013-05-16)
 

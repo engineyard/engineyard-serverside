@@ -24,6 +24,8 @@ module EY
       end
 
       def require_custom_tasks
+        return unless config.eydeploy_rb?
+
         deploy_file = ["config/eydeploy.rb", "eydeploy.rb"].map do |short_file|
           paths.repository_cache.join(short_file)
         end.detect do |file|
@@ -31,12 +33,16 @@ module EY
         end
 
         if deploy_file
-          shell.status "Loading deployment task overrides from #{deploy_file}"
+          shell.notice <<-NOTICE
+NOTICE: Loading deployment task overrides from #{deploy_file}
+Please consider:
+* eydeploy.rb files can drastically alter the behavior of deployments.
+* Internal deployment code may change under this file without warning.
+          NOTICE
           begin
             instance_eval(deploy_file.read)
           rescue Exception => e
-            shell.fatal "Exception while loading #{deploy_file}"
-            shell.fatal [e.to_s, e.backtrace].join("\n")
+            shell.fatal ["Exception while loading #{deploy_file}", e.to_s, e.backtrace].join("\n")
             raise
           end
         end

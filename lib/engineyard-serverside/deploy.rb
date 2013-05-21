@@ -20,8 +20,8 @@ module EY
 
       def cached_deploy
         shell.status "Deploying app from cached copy at #{Time.now.asctime}"
-        require_custom_tasks
         load_ey_yml
+        require_custom_tasks
         push_code
 
         shell.status "Starting full deploy"
@@ -81,8 +81,8 @@ module EY
       end
 
       def restart_with_maintenance_page
-        require_custom_tasks
         load_ey_yml
+        require_custom_tasks
         enable_maintenance_page
         restart
         disable_maintenance_page

@@ -77,51 +77,65 @@ describe "the EY::Serverside::Deploy API" do
 
   describe "task overrides" do
     before(:each) do
-      @tempdir = `mktemp -d -t custom_deploy_spec.XXXXX`.strip
-      @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir)
-      @deploy = FullTestDeploy.realnew(test_servers, @config, test_shell)
+      @tempdir = Pathname.new(`mktemp -d -t custom_deploy_spec.XXXXX`.strip)
     end
 
     def write_eydeploy(relative_path, contents = "def got_new_methods() 'from the file on disk' end")
-      FileUtils.mkdir_p(File.join(
-          @tempdir,
-          File.dirname(relative_path)))
+      path = @tempdir.join(relative_path)
+      path.dirname.mkpath
+      path.open('w') { |f| f << contents }
+    end
 
-      File.open(File.join(@tempdir, relative_path), 'w') do |f|
-        f.write contents
+    describe "eydeploy_rb disabled" do
+      before do
+        @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir.to_s, 'eydeploy_rb' => 'false')
+        @deploy = FullTestDeploy.realnew(test_servers, @config, test_shell)
+      end
+
+      it "doesn't load eydeploy_rb file" do
+        write_eydeploy 'eydeploy.rb'
+        @deploy.require_custom_tasks
+        @deploy.should_not respond_to(:got_new_methods)
       end
     end
 
-    it "requires 'eydeploy.rb' and adds any defined methods to the deploy" do
-      write_eydeploy 'eydeploy.rb'
-      @deploy.require_custom_tasks
-      @deploy.got_new_methods.should == 'from the file on disk'
-    end
-
-    it "falls back to 'config/eydeploy.rb'" do
-      write_eydeploy 'config/eydeploy.rb'
-      @deploy.require_custom_tasks
-      @deploy.got_new_methods.should == 'from the file on disk'
-    end
-
-    it "lets you super up from any defined methods" do
-      write_eydeploy 'eydeploy.rb', "def value() super << ' + derived' end"
-
-      class TestDeploySuper < FullTestDeploy
-        def value() 'base' end
+    describe "eydeploy_rb detect or enabled" do
+      before do
+        @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir.to_s, 'eydeploy_rb' => 'true')
+        @deploy = FullTestDeploy.realnew(test_servers, @config, test_shell)
       end
 
-      deploy = TestDeploySuper.realnew(test_servers, @config, test_shell)
-      deploy.require_custom_tasks
-      deploy.value.should == "base + derived"
-    end
+      it "requires 'eydeploy.rb' and adds any defined methods to the deploy" do
+        write_eydeploy 'eydeploy.rb'
+        @deploy.require_custom_tasks
+        @deploy.got_new_methods.should == 'from the file on disk'
+      end
 
-    it "records exceptions raised from the instance eval in the log" do
-      write_eydeploy 'eydeploy.rb', "raise 'Imma blow up'"
-      lambda { @deploy.require_custom_tasks }.should raise_error
-      log = @log_path.read
-      log.should =~ /Exception while loading .*eydeploy\.rb/
-      log.should include('Imma blow up')
+      it "falls back to 'config/eydeploy.rb'" do
+        write_eydeploy 'config/eydeploy.rb'
+        @deploy.require_custom_tasks
+        @deploy.got_new_methods.should == 'from the file on disk'
+      end
+
+      it "lets you super up from any defined methods" do
+        write_eydeploy 'eydeploy.rb', "def value() super << ' + derived' end"
+
+        class TestDeploySuper < FullTestDeploy
+          def value() 'base' end
+        end
+
+        deploy = TestDeploySuper.realnew(test_servers, @config, test_shell)
+        deploy.require_custom_tasks
+        deploy.value.should == "base + derived"
+      end
+
+      it "records exceptions raised from the instance eval in the log" do
+        write_eydeploy 'eydeploy.rb', "raise 'Imma blow up'"
+        lambda { @deploy.require_custom_tasks }.should raise_error
+        log = @log_path.read
+        log.should =~ /Exception while loading .*eydeploy\.rb/
+        log.should include('Imma blow up')
+      end
     end
   end
 end
