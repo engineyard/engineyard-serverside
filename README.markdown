@@ -114,9 +114,9 @@ Bundler will take care of installing and running proper (older versions) of gems
 Bundler doesn't work on ruby 1.8.6-p287, which is what `ey_resin` provided
 to older instances. To test engineyard-serverside under the same ruby, run:
 
-  gem build engineyard-serverside.gemspec
-  gem install --local --development --conservative ./engineyard-serverside-<VERSION>.gem
-  rake
+    gem build engineyard-serverside.gemspec
+    gem install --local --development --conservative ./engineyard-serverside-<VERSION>.gem
+    rake
 
 Due to the nature of --development, that gem install command can take a VERY
 long time. If you get tired of waiting, you can manually install the indicated
@@ -132,7 +132,7 @@ failing commands.
 To release the engineyard-serverside gem, use the command below and then follow
 the instructions it outputs.
 
-  bundle exec rake release
+    bundle exec rake release
 
 This will remove the .pre from the current version, then bump the patch level
 and add .pre after. A git tag for the version will also be added.
@@ -141,3 +141,24 @@ New versions of engineyard-serverside will not be used by Cloud or the
 engineyard gem until upgraded gems have been pushed. Refer to the
 [engineyard gem](https://github.com/engineyard/engineyard) release
 instructions for more details.
+
+### Testing manually on a server
+
+The following 2 commands will install the current working copy on an instance:
+
+    bundle exec rake install_on[account/envname]
+    ey deploy --serverside-version VERSION -e envname -a appname -r branch-to-checkout --no-migrate -v
+
+If you don't have an environment running on Engine Yard Cloud, you'll need to do
+a bit of hacking of both commands. You can look at the Rakefile to see how
+install_on works. It is simple to adapt it to installing on specified servers.
+
+Next you'll have to run the deploy command manually on the instance. The easiest
+way to do that is to take an existing serverside command and modify it. An
+engineyard-serverside command can be extracted from a verbose log for another
+application's deploy, and then modified. The command looks like this:
+
+    bash -lc '/usr/local/ey_resin/ruby/bin/engineyard-serverside _2.1.0.rc1_ deploy --account-name account --app appname --config '\''{"input_ref":"testing","deployed_by":"Märtîn ☃ Èmdé"}'\'' --environment-name envname --framework-env production --instance-names ec2-255-255-255-255.compute-1.amazonaws.com:util --instance-roles ec2-255-255-255-255.compute-1.amazonaws.com:util localhost:solo --instances ec2-255-255-255-255.compute-1.amazonaws.com localhost --no-migrate --ref 5a6de57ca3ce3c51df18cfff0cbea87f2f07872a --repo git://github.com/engineyard/todo.git --stack nginx_passenger3 --verbose'
+
+Run that from any primary web server instance and be sure to use "localhost"
+for the instance you're running on instead of its public address.
