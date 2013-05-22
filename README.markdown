@@ -1,4 +1,5 @@
 # engineyard-serverside
+[![Build Status](https://travis-ci.org/engineyard/engineyard-serverside.png)](https://travis-ci.org/engineyard/engineyard-serverside)
 
 engineyard-serverside is the serverside component of the Engine Yard Cloud CLI.
 This gem is invoked either by the Cloud dashboard or by the
