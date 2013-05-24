@@ -82,6 +82,8 @@ module EY
       def_path :public_assets,            [:public, 'assets']
       def_path :public_system,            [:public, 'system']
       def_path :package_json,             [:active_release, 'package.json']
+      def_path :composer_json,            [:active_release, 'composer.json']
+      def_path :composer_lock,            [:active_release, 'composer.lock']
       def_path :active_release_config,    [:active_release, 'config']
       def_path :active_log,               [:active_release, 'log']
 

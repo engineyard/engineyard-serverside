@@ -1,0 +1,21 @@
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/zendframework/ZendDeveloperTools"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/dshafik/roleuserbridge"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "zendframework/zendframework": "2.1.*",
+        "bjyoungblood/bjy-authorize": "1.2.*",
+        "zf-commons/zfc-user": "0.1.*",
+        "zendframework/zend-developer-tools": "dev-master",
+        "bjyoungblood/bjy-profiler": "dev-master",
+        "darkmatus/roleuserbridge": "dev-master"
+    }
+}

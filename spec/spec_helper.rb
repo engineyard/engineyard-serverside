@@ -40,6 +40,13 @@ Spec::Runner.configure do |config|
     $stderr.puts "npm not found; skipping Node.js specs."
   end
 
+  $COMPOSER_INSTALLED = system('command -v composer > /dev/null')
+  if $COMPOSER_INSTALLED
+    $stderr.puts "composer found; skipping tests that expect it to be missing."
+  else
+    $stderr.puts "composer not found; skipping tests that expect it to be available."
+  end
+
   config.before(:all) do
     make_tmpdir
     EY::Serverside.dna_json = MultiJson.dump({})
