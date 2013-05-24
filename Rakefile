@@ -5,6 +5,11 @@ Spec::Rake::SpecTask.new(:spec) do |spec|
 end
 task :default => :spec
 
+Spec::Rake::SpecTask.new(:php) do |spec|
+  spec.libs << 'lib' << 'spec'
+  spec.spec_files = FileList['spec/php_deploy_spec.rb']
+end
+
 task :coverage => [:coverage_env, :spec]
 task :coverage_env do
   ENV['COVERAGE'] = '1'
