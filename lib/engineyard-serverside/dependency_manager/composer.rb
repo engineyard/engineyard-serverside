@@ -8,8 +8,10 @@ module EY
 
         def install
           if composer_available?
+            shell.status "Checking for composer updates..."
+            composer_selfupdate
             shell.status "Installing composer packages (composer.#{lock_or_json} detected)"
-            run "composer install --no-interaction --working-dir #{paths.active_release}"
+            composer_install
           else
             shell.warning "composer.#{lock_or_json} detected but composer not available."
           end
@@ -25,6 +27,14 @@ module EY
 
         def composer_json?
           paths.composer_json.exist?
+        end
+
+        def composer_install
+            run "composer install --no-interaction --working-dir #{paths.active_release}"
+        end
+
+        def composer_selfupdate
+            run "composer self-update"
         end
 
         def composer_available?
