@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.1.0 (2013-05-28)
+
   * Bumps default bundler version to latest 1.3.4
   * Fixes a race condition during deploy where `current` symlink was not moved atomically.
   * Don't precompile assets when git-diff shows no changes to `asset_dependencies`
