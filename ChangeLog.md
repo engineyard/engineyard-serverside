@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.1.1 (2013-05-30)
+
   * Fixes a problem where Set#first was called in a ruby version that doesn't support it.
 
 ## v2.1.0 (2013-05-28)
