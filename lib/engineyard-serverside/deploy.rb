@@ -51,7 +51,8 @@ module EY
         gc_repository_cache
         shell.status "Finished deploy at #{Time.now.asctime}"
       rescue Exception => e
-        shell.status "Finished failing to deploy at #{Time.now.asctime} - Exception #{e.inspect} #{e.backtrace}"
+        shell.status "Finished failing to deploy at #{Time.now.asctime}"
+        shell.error "Exception during deploy: #{e.inspect}\n#{e.backtrace}"
         puts_deploy_failure
         raise
       end
