@@ -246,7 +246,7 @@ module EY
       end
 
       def current_role
-        current_roles.first
+        current_roles.to_a.first
       end
 
       def framework_env_names

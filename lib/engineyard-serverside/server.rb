@@ -18,7 +18,7 @@ module EY
       end
 
       def role
-        roles.first
+        roles.to_a.first
       end
 
       def matches_roles?(set)
