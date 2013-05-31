@@ -29,4 +29,10 @@ describe "Deploying an application with sqlite3 as the only DB adapter in the Ge
     @shared_path.join('databases', "#{@framework_env}.sqlite3").should exist
   end
 
+  it 'should contain valid yaml config' do
+    config = YAML.load_file(@release_path.join('config', 'database.yml'))
+    config[@framework_env]['adapter'].should == 'sqlite3'
+    config[@framework_env]['database'].should == @shared_path.join('databases', "#{@framework_env}.sqlite3").expand_path.to_s
+  end
+
 end
