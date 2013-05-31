@@ -280,10 +280,10 @@ Deploy again if your services configuration appears incomplete or out of date.
           run <<-WRAP
 cat > #{paths.shared_config}/database.sqlite3.yml<<'YML'
 #{config.framework_env}:
-adapter: sqlite3
-database: #{paths.shared}/databases/#{config.framework_env}.sqlite3
-pool: 5
-timeout: 5000
+  adapter: sqlite3
+  database: #{paths.shared}/databases/#{config.framework_env}.sqlite3
+  pool: 5
+  timeout: 5000
 YML
           WRAP
 
