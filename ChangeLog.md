@@ -4,6 +4,10 @@
 
   *
 
+## v2.1.2 (2013-05-31)
+
+  *
+
 ## v2.1.1 (2013-05-30)
 
   * Fixes a problem where Set#first was called in a ruby version that doesn't support it.
