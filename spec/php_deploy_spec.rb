@@ -13,6 +13,16 @@ describe "Deploying an application that uses PHP and Composer" do
         install_cmd = @deployer.commands.grep(/composer install/).first
         install_cmd.should_not be_nil
       end
+
+      it "runs 'composer self-update' before 'composer install'" do
+        update_cmd = nil
+        @deployer.commands.each do |cmd|
+          update_cmd ||= /composer self-update/.match(cmd)
+          if /composer install/.match(cmd)
+            update_cmd.should_not be nil
+          end
+        end
+      end
     end
 
     context "WITHOUT a composer.lock but with composer.json" do
@@ -23,6 +33,16 @@ describe "Deploying an application that uses PHP and Composer" do
       it "runs 'composer install'" do
         install_cmd = @deployer.commands.grep(/composer install/).first
         install_cmd.should_not be_nil
+      end
+
+      it "runs 'composer self-update' before 'composer install'" do
+        update_cmd = nil
+        @deployer.commands.each do |cmd|
+          update_cmd ||= /composer self-update/.match(cmd)
+          if /composer install/.match(cmd)
+            update_cmd.should_not be nil
+          end
+        end
       end
 
     end
