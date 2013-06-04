@@ -2,11 +2,12 @@
 
 ## NEXT
 
-  *
+  * Ensure LANG is set when gem install is run.
 
 ## v2.1.2 (2013-05-31)
 
-  *
+  * Fix rails database.yml for sqlite-only deployments
+  * Auto-update composer before installing (php)
 
 ## v2.1.1 (2013-05-30)
 
