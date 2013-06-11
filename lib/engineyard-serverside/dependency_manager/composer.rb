@@ -13,7 +13,7 @@ module EY
             shell.status "Installing composer packages (composer.#{lock_or_json} detected)"
             composer_install
           else
-            raise EY::Serverside::RemoteFailure.new("Composer not available!")
+            raise EY::Serverside::RemoteFailure.new("composer.#{lock_or_json} detected but composer not available!")
           end
         end
 
