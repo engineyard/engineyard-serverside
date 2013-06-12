@@ -3,28 +3,30 @@ module EY
     module DependencyManager
       class Composer < Base
         def detected?
-           composer_lock? || composer_json?
+          composer_lock? || composer_json?
         end
 
-        def install
-          if composer_available?
-            if composer_json? and not composer_lock?
-              shell.warning <<-WARN
+        def check
+          unless composer_available?
+            raise EY::Serverside::RemoteFailure.new("composer.#{lock_or_json} detected but composer not available!")
+          end
+
+          if composer_json? && !composer_lock?
+            shell.warning <<-WARN
 composer.json found but composer.lock missing!
 This may result in different versions of packages
 being installed than what you tested with.
 
-To fix this problem, commit your composer.lock to
-the repository and redeploy.
-              WARN
-            end
-            shell.status "Checking for composer updates..."
-            composer_selfupdate
-            shell.status "Installing composer packages (composer.#{lock_or_json} detected)"
-            composer_install
-          else
-            raise EY::Serverside::RemoteFailure.new("composer.#{lock_or_json} detected but composer not available!")
+To fix this problem, commit your composer.lock to the repository and redeploy.
+            WARN
           end
+        end
+
+        def install
+          shell.status "Checking for composer updates..."
+          composer_selfupdate
+          shell.status "Installing composer packages (composer.#{lock_or_json} detected)"
+          composer_install
         end
 
         def lock_or_json
