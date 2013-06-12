@@ -30,6 +30,11 @@ describe "Deploying an application that uses PHP and Composer" do
         deploy_test_application('php_no_composer_lock')
       end
 
+      it "outputs a warning about deploying without a .lock" do
+        warning_out = read_output.should include("WARNING: composer.json found but composer.lock missing!")
+        warning_out.should_not be_nil
+      end
+
       it "runs 'composer install'" do
         install_cmd = @deployer.commands.grep(/composer install/).first
         install_cmd.should_not be_nil

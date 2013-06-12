@@ -8,6 +8,16 @@ module EY
 
         def install
           if composer_available?
+            if composer_json? and not composer_lock?
+              shell.warning <<-WARN
+composer.json found but composer.lock missing!
+This may result in different versions of packages
+being installed than what you tested with.
+
+To fix this problem, commit your composer.lock to
+the repository and redeploy.
+              WARN
+            end
             shell.status "Checking for composer updates..."
             composer_selfupdate
             shell.status "Installing composer packages (composer.#{lock_or_json} detected)"
