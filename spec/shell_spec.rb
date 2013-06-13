@@ -3,10 +3,11 @@ require 'tempfile'
 require 'timecop'
 
 describe EY::Serverside::Shell do
+  let(:output) { StringIO.new }
+
   if "".respond_to?(:force_encoding)
     it "status works for ut8" do
-      output = StringIO.new
-      shell = EY::Serverside::Shell.new(:verbose => true, :stdout => @output, :stderr => @output, :log_path => tmpdir.join("engineyard-serverside-#{Time.now.to_i}-#{$$}.log"), :start_time => Time.local(2008, 9, 1, 12, 10, 25))
+      shell = EY::Serverside::Shell.new(:verbose => true, :stdout => output, :stderr => output, :log_path => tmpdir.join("engineyard-serverside-#{Time.now.to_i}-#{$$}.log"), :start_time => Time.local(2008, 9, 1, 12, 10, 25))
       shell.status("\u2603".force_encoding("binary"))
     end
   end
@@ -16,8 +17,7 @@ describe EY::Serverside::Shell do
     time2 = Time.local(2008, 9, 1, 12, 3, 5)
     time3 = Time.local(2008, 9, 1, 12, 10, 25)
 
-    @output = StringIO.new
-    @shell = EY::Serverside::Shell.new(:verbose => true, :stdout => @output, :stderr => @output, :log_path => tmpdir.join("engineyard-serverside-#{Time.now.to_i}-#{$$}.log"), :start_time => time1)
+    @shell = EY::Serverside::Shell.new(:verbose => true, :stdout => output, :stderr => output, :log_path => tmpdir.join("engineyard-serverside-#{Time.now.to_i}-#{$$}.log"), :start_time => time1)
 
     Timecop.freeze(time1) do
       @shell.debug('debug')
@@ -36,8 +36,8 @@ describe EY::Serverside::Shell do
     tstp_2 = "+ 3m 05s "
     tstp_3 = "+10m 25s "
     notstp = "         "
-    @output.rewind
-    @output.read.should == <<-OUTPUT
+    output.rewind
+    output.read.should == <<-OUTPUT
 #{notstp} debug
 
 \e[1m\e[33m#{tstp_1} !> notice
