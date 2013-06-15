@@ -121,6 +121,46 @@ RSpec.configure do |config|
     be_exist
   end
 
+  def mock_bundler(failure = false, &block)
+    contents ||= <<-SCRIPT
+#!#{`which ruby`}
+puts "Bundling gems"
+#{failure && 'echo "bundle install failure" 1>&2; exit 1'}
+    SCRIPT
+
+    bindir = tmpdir.join("ey_test_cmds_#{Time.now.tv_sec}#{Time.now.tv_usec}_#{$$}")
+    bindir.mkpath
+    bindir.join('bundle').open('w') do |f|
+      f.write(contents)
+      f.chmod(0755)
+    end
+
+    with_env('PATH' => "#{bindir}:#{ENV['PATH']}", &block)
+  end
+
+  def with_env(new_env_vars)
+    raise ArgumentError, "with_env takes a block" unless block_given?
+
+    old_env_vars = {}
+    new_env_vars.each do |k, v|
+      if ENV.has_key?(k)
+        old_env_vars[k] = ENV[k]
+      end
+      ENV[k] = v if v
+    end
+
+    yield
+  ensure
+    new_env_vars.keys.each do |k|
+      if old_env_vars.has_key?(k)
+        ENV[k] = old_env_vars[k]
+      else
+        ENV.delete(k)
+      end
+    end
+  end
+
+
   def deploy_dir
     @deploy_dir ||= tmpdir.join("serverside-deploy-#{Time.now.to_i}-#{$$}")
   end
@@ -179,8 +219,10 @@ RSpec.configure do |config|
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     FullTestDeploy.on_create_callback = block
-    capture do
-      EY::Serverside::CLI.start(@argv)
+    mock_bundler(options['bundle_install_fails']) do
+      capture do
+        EY::Serverside::CLI.start(@argv)
+      end
     end
   ensure
     @deployer = EY::Serverside::Deploy.deployer
@@ -189,6 +231,7 @@ RSpec.configure do |config|
 
   def redeploy_test_application(extra_config = {}, &block)
     raise "Please deploy_test_application first" unless @argv
+    bundle_install_fails = extra_config.delete('bundle_install_fails')
 
     @action = @adapter.deploy do |args|
       extra_config.each do |key,val|
@@ -203,8 +246,10 @@ RSpec.configure do |config|
     @argv = @action.commands.last.to_argv[2..-1]
 
     FullTestDeploy.on_create_callback = block
-    capture do
-      EY::Serverside::CLI.start(@argv)
+    mock_bundler(bundle_install_fails) do
+      capture do
+        EY::Serverside::CLI.start(@argv)
+      end
     end
   ensure
     @deployer = EY::Serverside::Deploy.deployer

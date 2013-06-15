@@ -38,7 +38,9 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "generates bundler binstubs" do
-      deploy_dir.join('current', 'ey_bundler_binstubs', 'rake').should exist
+      pending "doesn't work with mocked bundler" do
+        deploy_dir.join('current', 'ey_bundler_binstubs', 'rake').should exist
+      end
     end
   end
 
@@ -72,14 +74,14 @@ describe "Deploying an application that uses Bundler" do
   context "with a failing Gemfile" do
     before(:all) do
       begin
-        deploy_test_application('bundle_fails', :verbose => false)
+        deploy_test_application('bundle_fails', 'bundle_install_fails' => true, 'verbose' => false)
       rescue EY::Serverside::RemoteFailure
       end
     end
 
     it "prints the failure to the log" do
       out = read_output
-      out.should =~ %r|this-gem-does-not-exist-which-makes-bundle-install-fail|
+      out.should =~ %r|bundle install failure|
       deploy_dir.join('current', 'after_bundle.ran' ).should_not exist
     end
   end
