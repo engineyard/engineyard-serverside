@@ -33,6 +33,10 @@ module EY
             @runner = runner
           end
 
+          def reusable?
+            previous_assets_path.directory? && previous_assets_path.entries.any?
+          end
+
           def reuse
             run "mkdir -p #{paths.public_assets} && rsync -aq #{previous_assets_path}/ #{paths.public_assets}"
           end
@@ -71,6 +75,10 @@ module EY
           def initialize(paths, runner)
             @paths = paths
             @runner = runner
+          end
+
+          def reusable?
+            shared_assets_path.directory? && shared_assets_path.entries.any?
           end
 
           def reuse

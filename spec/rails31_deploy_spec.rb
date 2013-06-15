@@ -43,6 +43,21 @@ describe "Deploying a Rails 3.1 application" do
       deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
       read_output.should_not =~ %r#Reusing existing assets#
     end
+
+    it "precompile assets when redeploying the same ref, but assets were turned off the first time" do
+      deploy_test_application('assets_enabled_in_ey_yml', 'config' => {'precompile_assets' => 'false'})
+      deploy_dir.join('current', 'precompiled').should_not exist
+      deploy_dir.join('current', 'public', 'assets').should_not exist
+      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should_not exist
+      read_output.should_not include("Precompiling assets. (precompile_assets: true)")
+
+      # assets will show as unchanged, but it should compile them fresh anyway.
+      redeploy_test_application('config' => {'precompile_assets' => 'true'})
+      deploy_dir.join('current', 'precompiled').should exist # it does runs the task
+      deploy_dir.join('current', 'public', 'assets').should exist
+      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
+      read_output.should_not =~ %r#Reusing existing assets#
+    end
   end
 
   context "with asset compilation enabled in ey.yml, despite not otherwise being enabled" do

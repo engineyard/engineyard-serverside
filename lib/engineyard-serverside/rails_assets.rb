@@ -71,7 +71,8 @@ module EY
       # silentely failed assets. Only reusing when assets are enabled
       # ensures that existing assets were successful.
       def reuse_assets?
-        previous_revision &&
+        asset_strategy.reusable? &&
+          previous_revision &&
           active_revision &&
           runner.strategy.same?(previous_revision, active_revision, asset_dependencies)
       end
