@@ -4,6 +4,10 @@
 
   *
 
+## v2.1.4 (2013-06-17)
+
+  *
+
 ## v2.1.3 (2013-06-05)
 
   * Ensure LANG is set when gem install is run.
