@@ -2,11 +2,12 @@
 
 ## NEXT
 
-  *
+  * Add config/application.rb to the `asset_dependencies` to trigger asset precompilation.
 
 ## v2.1.4 (2013-06-17)
 
-  *
+  * Don't reuse assets when there are no assets to reuse
+  * Better composer support.
 
 ## v2.1.3 (2013-06-05)
 
