@@ -121,20 +121,40 @@ RSpec.configure do |config|
     be_exist
   end
 
-  def mock_bundler(failure = false, &block)
-    contents ||= <<-SCRIPT
-#!#{`which ruby`}
-puts "Bundling gems"
-#{failure && 'echo "bundle install failure" 1>&2; exit 1'}
-    SCRIPT
+  def bindir
+    @bindir ||= begin
+                  dir = tmpdir.join("ey_test_cmds_#{Time.now.tv_sec}#{Time.now.tv_usec}_#{$$}")
+                  dir.mkpath
+                  dir
+                end
+  end
 
-    bindir = tmpdir.join("ey_test_cmds_#{Time.now.tv_sec}#{Time.now.tv_usec}_#{$$}")
-    bindir.mkpath
-    bindir.join('bundle').open('w') do |f|
-      f.write(contents)
+  def mock_command(cmd, contents, &block)
+    bindir.join(cmd).open('w') do |f|
+      f.write contents
       f.chmod(0755)
     end
+    with_mocked_commands(&block) if block_given?
+  end
 
+  def mock_bundler(failure = false, &block)
+    mock_command('bundle', <<-SCRIPT, &block)
+#!#{`which ruby`}
+puts "Bundling gems"
+$stdout.flush
+#{failure && '$stderr.puts "bundle install failure"; exit 1'}
+    SCRIPT
+  end
+
+  def mock_sudo(&block)
+    mock_command('sudo', <<-SCRIPT, &block)
+#!/bin/bash
+echo "$@"
+exec "$@"
+    SCRIPT
+  end
+
+  def with_mocked_commands(&block)
     with_env('PATH' => "#{bindir}:#{ENV['PATH']}", &block)
   end
 

@@ -64,46 +64,9 @@ module EY
       def command_err(msg)  unknown msg.gsub(/^/,'     ') end
 
       def logged_system(cmd, server = nil)
-        command_show(cmd)
-        output = ""
-        outio = YieldIO.new { |msg| output << msg; command_out(msg) }
-        errio = YieldIO.new { |msg| output << msg; command_err(msg) }
-        result = spawn_process(cmd, outio, errio)
-        CommandResult.new(cmd, result.success?, output, server)
+        EY::Serverside::Spawner.run(cmd, self, server)
       end
 
-      protected
-
-      # This is the meat of process spawning. It's nice to keep it separate even
-      # though it's simple because we've had to modify it frequently.
-      def spawn_process(cmd, outio, errio)
-        stdin, stdout, stderr, waitthr = Open3.popen3(cmd)
-        stdin.close
-
-        ios = {stdout => outio, stderr => errio}
-        catch(:eof) do
-          while rv = IO.select([stdout, stderr], [], [stdout, stderr])
-            ra, _, ea = *rv
-            ra.each do |readable|
-              begin
-                io = ios[readable]
-                throw :eof unless io
-                io << readable.readpartial(4096)
-              rescue EOFError, Errno::EIO
-                readable.close
-                throw :eof
-              end
-            end
-
-            throw :eof if ea.any?
-          end
-        end
-
-        waitthr ? waitthr.value : $?
-      ensure
-        stdout.close rescue true
-        stderr.close rescue true
-      end
     end
   end
 end

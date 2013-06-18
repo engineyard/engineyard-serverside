@@ -89,20 +89,18 @@ describe "deploy hooks" do
 
       it "runs things with sudo" do
         hook = deploy_hook
-        cmd = "sudo sh -l -c 'do it as root'"
-        result = EY::Serverside::Shell::CommandResult.new(cmd, 0, "out\nerr", test_servers.first)
-        hook.callback_context.shell.should_receive(:logged_system).with(cmd).and_return(result)
-        hook.eval_hook('sudo("do it as root") || raise("failed")')
+        mock_sudo do
+          hook.eval_hook('sudo("true") || raise("failed")')
+        end
       end
 
       it "raises when the bang method alternative is used" do
         hook = deploy_hook
-        cmd = "sudo sh -l -c false"
-        result = EY::Serverside::Shell::CommandResult.new(cmd, 1, "fail", test_servers.first)
-        hook.callback_context.shell.should_receive(:logged_system).with(cmd).and_return(result)
-        lambda {
-          hook.eval_hook('sudo!("false")')
-        }.should raise_error(RuntimeError)
+        mock_sudo do
+          lambda {
+            hook.eval_hook('sudo!("false")')
+          }.should raise_error(RuntimeError)
+        end
         out = read_output
         out.should =~ %r|FATAL: Exception raised in deploy hook /data/app_name/releases/\d+/deploy/fake_test_hook.rb.|
         out.should =~ %r|RuntimeError: .*sudo!.*Command failed. false|
