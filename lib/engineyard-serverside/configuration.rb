@@ -60,7 +60,7 @@ module EY
       def_option :precompile_assets, 'detect'
       def_option :precompile_assets_task, 'assets:precompile'
       def_option :asset_strategy,    'shifting'
-      def_option :asset_dependencies, %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb]
+      def_option :asset_dependencies, %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb config/application.rb]
       def_option :stack,             nil
       def_option :strategy,          'Git'
       def_option :branch,            'master'
