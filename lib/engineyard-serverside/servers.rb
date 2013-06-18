@@ -64,10 +64,6 @@ module EY
         end
       end
 
-      def scp(local_file, remote_file)
-        servers.run_for_each! { |server| server.scp_command(local_file, remote_file) }
-      end
-
       def run_on_each(cmd, &block)
         run_for_each do |server|
           server.command_on_server('sh -l -c', cmd, &block)

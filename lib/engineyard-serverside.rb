@@ -26,7 +26,6 @@ require 'engineyard-serverside/cli'
 require 'engineyard-serverside/configuration'
 require 'engineyard-serverside/deprecation'
 require 'engineyard-serverside/shell'
-require 'engineyard-serverside/propagator'
 
 
 module EY

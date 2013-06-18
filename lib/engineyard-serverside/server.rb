@@ -50,7 +50,7 @@ module EY
           "-o", "UserKnownHostsFile=#{self.class.known_hosts_file.path}",
           "-o", "PasswordAuthentication=no",
           local_file,
-          "#{server.authority}:#{remote_file}",
+          "#{authority}:#{remote_file}",
         ])
       end
 
