@@ -32,6 +32,21 @@ module EY
     class Strategies::Git
       def short_log_message(_) "" end
     end
+
+
+    class Paths
+      # This needs to be patched for the tests to succeed, but
+      # the chances of 2 real deploys colliding in the same second
+      # is very very low.
+      def active_release
+        @active_release ||= if Time.now.utc.strftime("%L") =~ /L/ # old ruby
+                              path(:releases, Time.now.utc.strftime("%Y%m%d%H%M%S#{Time.now.tv_usec}"))
+                            else
+                              path(:releases, Time.now.utc.strftime("%Y%m%d%H%M%S%L"))
+                            end
+      end
+    end
+
   end
 end
 
@@ -112,7 +127,7 @@ RSpec.configure do |config|
 
   def test_shell(verbose=true)
     @test_shell ||= begin
-                      @log_path = tmpdir.join("serverside-deploy-#{Time.now.to_i}-#{$$}.log")
+                      @log_path = tmpdir.join("serverside-deploy-#{Time.now.to_f}-#{$$}.log")
                       EY::Serverside::Shell.new(:verbose => verbose, :log_path => @log_path, :stdout => stdout, :stderr => stderr)
                     end
   end
@@ -123,7 +138,7 @@ RSpec.configure do |config|
 
   def bindir
     @bindir ||= begin
-                  dir = tmpdir.join("ey_test_cmds_#{Time.now.tv_sec}#{Time.now.tv_usec}_#{$$}")
+                  dir = tmpdir.join("ey_test_cmds_#{Time.now.to_f}_#{$$}")
                   dir.mkpath
                   dir
                 end
@@ -182,7 +197,7 @@ exec "$@"
 
 
   def deploy_dir
-    @deploy_dir ||= tmpdir.join("serverside-deploy-#{Time.now.to_i}-#{$$}")
+    @deploy_dir ||= tmpdir.join("serverside-deploy-#{Time.now.to_f}-#{$$}")
   end
 
   # set up EY::Serverside::Server like we're on a solo

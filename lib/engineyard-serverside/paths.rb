@@ -113,7 +113,7 @@ module EY
       end
 
       def active_release
-        @active_release ||= path(:releases, Time.now.utc.strftime("%Y%m%d%H%M%S%L"))
+        @active_release ||= path(:releases, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end
 
       def all_releases
