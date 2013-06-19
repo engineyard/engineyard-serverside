@@ -149,7 +149,7 @@ module EY
         path = paths.ssh_wrapper
         <<-SCRIPT
 mkdir -p #{path.dirname}
-[[ -x #{path} ]] || cat > #{path} <<'SSH'
+[ -x #{path} ] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
 ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=INFO -o IdentityFile=#{paths.deploy_key} -o IdentitiesOnly=yes $*
