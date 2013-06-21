@@ -86,10 +86,15 @@ module EY
         run_precompile_assets_task
 
         shell.warning <<-WARN
-Inferred asset compilation succeeded, but failures may be silently ignored!
+Assets were detected and precompiled for this application, but asset precompile
+failures may be silently ignored in the future without updating config/ey.yml.
 
-ACTION REQUIRED: Add precompile_assets option to ey.yml.
-  precompile_assets: true  # precompile assets when asset changes detected
+ACTION REQUIRED: Add this line to config/ey.yml to ensure assets are compiled
+every deploy and deploys are halted if there is an asset compilation failure.
+
+  precompile_assets: true  # precompile assets when assets are changed.
+
+This warning will continue to show until you update and commit config/ey.yml.
         WARN
       rescue EY::Serverside::RemoteFailure => e
         # If we are implicitly precompiling, we want to fail non-destructively
