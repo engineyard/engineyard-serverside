@@ -50,10 +50,15 @@ module EY
   end
 end
 
-RSpec.configure do |config|
+module SpecDependencyHelpers
   $NPM_INSTALLED = system('which npm 2>&1')
   unless $NPM_INSTALLED
     $stderr.puts "npm not found; skipping Node.js specs."
+  end
+
+  def with_npm_mocked(&block)
+    context("mocked") { yield true }
+    context("unmocked") { yield false } if $NPM_INSTALLED
   end
 
   $COMPOSER_INSTALLED = system('command -v composer > /dev/null')
@@ -62,6 +67,15 @@ RSpec.configure do |config|
   else
     $stderr.puts "composer not found; skipping tests that expect it to be available."
   end
+
+  def with_composer_mocked(&block)
+    context("mocked") { yield true }
+    context("unmocked") { yield false } if $COMPOSER_INSTALLED
+  end
+end
+
+RSpec.configure do |config|
+  config.extend SpecDependencyHelpers
 
   config.before(:all) do
     make_tmpdir
@@ -161,6 +175,20 @@ $stdout.flush
     SCRIPT
   end
 
+  def mock_npm(&block)
+    mock_command('npm', <<-SCRIPT, &block)
+#!/bin/bash
+echo "Running npm with $@"
+    SCRIPT
+  end
+
+  def mock_composer(&block)
+    mock_command('composer', <<-SCRIPT, &block)
+#!/bin/bash
+echo "Running composer with $@"
+    SCRIPT
+  end
+
   def mock_sudo(&block)
     mock_command('sudo', <<-SCRIPT, &block)
 #!/bin/bash
@@ -254,7 +282,9 @@ exec "$@"
 
     @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     FullTestDeploy.on_create_callback = block
-    mock_bundler(options['bundle_install_fails']) do
+
+    mock_bundler(options['bundle_install_fails'])
+    with_mocked_commands do
       capture do
         EY::Serverside::CLI.start(@argv)
       end
@@ -281,7 +311,10 @@ exec "$@"
     @argv = @action.commands.last.to_argv[2..-1]
 
     FullTestDeploy.on_create_callback = block
-    mock_bundler(bundle_install_fails) do
+
+    mock_bundler(bundle_install_fails)
+
+    with_mocked_commands do
       capture do
         EY::Serverside::CLI.start(@argv)
       end
