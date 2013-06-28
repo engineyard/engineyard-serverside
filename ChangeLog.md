@@ -2,8 +2,10 @@
 
 ## NEXT
 
-  * Add config/application.rb to the `asset_dependencies` to trigger asset precompilation.
+  * Replaces command runner to address streaming log, idle connection, and random systemu failures.
+  * Adds `config/application.rb` to the `asset_dependencies` to trigger asset precompilation.
   * Removes syncing of file modification times during push code operation in deploy. Syncing times occasionally causes unfixable permissions errors.
+  * Clarify inferred asset warning message.
 
 ## v2.1.4 (2013-06-17)
 
