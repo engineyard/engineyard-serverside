@@ -38,7 +38,10 @@ module EY
         return nil if local?
         [
           remote_command("mkdir -p #{directory}"),
-          Escape.shell_command(%w[rsync --delete -aq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
+          # File mod times aren't important during deploy, and
+          # -a (archive mode) sets --times which causes problems.
+          # -a is equivalent to -rlptgoD. We remove the -t, and add -q.
+          Escape.shell_command(%w[rsync --delete -rlpgoDq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
         ].join(' && ')
       end
 

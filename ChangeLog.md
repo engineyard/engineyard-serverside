@@ -3,6 +3,7 @@
 ## NEXT
 
   * Add config/application.rb to the `asset_dependencies` to trigger asset precompilation.
+  * Removes syncing of file modification times during push code operation in deploy. Syncing times occasionally causes unfixable permissions errors.
 
 ## v2.1.4 (2013-06-17)
 
