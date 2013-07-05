@@ -85,6 +85,14 @@ module EY
         dependency_manager.rails_version
       end
 
+      def bundle
+        install_dependencies
+      end
+
+      def install_dependencies
+        dependency_manager.install
+      end
+
       def restart_with_maintenance_page
         load_ey_yml
         require_custom_tasks
@@ -159,14 +167,6 @@ ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -
 SSH
 chmod 0700 #{path}
         SCRIPT
-      end
-
-      def bundle
-        install_dependencies
-      end
-
-      def install_dependencies
-        dependency_manager.install
       end
 
       # task

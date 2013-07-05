@@ -6,7 +6,7 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   def get_parser(file)
-    EY::Serverside::DependencyManager::BundlerLock::Lockfile.new(load_lockfile(file))
+    EY::Serverside::DependencyManager::Bundler::Lockfile.new(load_lockfile(file))
   end
 
   def get_version(file)

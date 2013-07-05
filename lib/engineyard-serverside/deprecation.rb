@@ -18,8 +18,8 @@ module EY
         EY::Serverside.deprecation_warning("EY::Serverside::LoggedOutput has been deprecated. Use EY::Serverside::Shell::Helpers instead.")
         EY::Serverside::Shell::Helpers
       when :LockfileParser
-        EY::Serverside.deprecation_warning("EY::Serverside::LockfileParser has been deprecated. Use EY::Serverside::DependencyManager::BundlerLock::Lockfile instead.")
-        EY::Serverside::DependencyManager::BundlerLock::Lockfile
+        EY::Serverside.deprecation_warning("EY::Serverside::LockfileParser has been deprecated. Use EY::Serverside::DependencyManager::Bundler::Lockfile instead.")
+        EY::Serverside::DependencyManager::Bundler::Lockfile
       else
         super
       end
