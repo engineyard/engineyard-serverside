@@ -79,7 +79,7 @@ module EY
 
       def precompile_detected_assets
         shell.status "Precompiling assets. ('#{app_assets}' exists, 'public/assets' not found, not disabled in config.)"
-        if !runner.dependency_manager.rails_version
+        if !runner.rails_application?
           shell.warning "Precompiling assets even though Rails was not bundled."
         end
 

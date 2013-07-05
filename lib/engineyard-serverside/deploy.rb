@@ -81,6 +81,10 @@ module EY
         dependency_manager.check
       end
 
+      def rails_application?
+        dependency_manager.rails_version
+      end
+
       def restart_with_maintenance_page
         load_ey_yml
         require_custom_tasks
@@ -433,7 +437,6 @@ YML
         ensure_git_ssh_wrapper
         @dependency_manager ||= DependencyManager.detect(servers, config, shell, self)
       end
-      public :dependency_manager # FIXME
 
       def compile_assets
         RailsAssets.detect_and_compile(config, shell, self)
