@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Supports using multiple dependency managers at the same time (bundler, composer, and/or npm)
   * Replaces command runner to address streaming log, idle connection, and random systemu failures.
   * Adds `config/application.rb` to the `asset_dependencies` to trigger asset precompilation.
   * Removes syncing of file modification times during push code operation in deploy. Syncing times occasionally causes unfixable permissions errors.

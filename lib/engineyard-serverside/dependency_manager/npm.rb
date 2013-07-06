@@ -1,6 +1,8 @@
+require 'engineyard-serverside/dependency_manager/base'
+
 module EY
   module Serverside
-    module DependencyManager
+    class DependencyManager
       class Npm < Base
         def detected?
           paths.package_json.exist?

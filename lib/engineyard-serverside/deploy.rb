@@ -261,7 +261,7 @@ Deploy again if your services configuration appears incomplete or out of date.
 
         if services = config.configured_services
           shell.status "Services configured: #{services.join(', ')}"
-          dependency_manager.check_ey_config
+          dependency_manager.show_ey_config_instructions
         end
       end
 
@@ -435,7 +435,7 @@ YML
 
       def dependency_manager
         ensure_git_ssh_wrapper
-        @dependency_manager ||= DependencyManager.detect(servers, config, shell, self)
+        @dependency_manager ||= DependencyManager.new(servers, config, shell, self)
       end
 
       def compile_assets

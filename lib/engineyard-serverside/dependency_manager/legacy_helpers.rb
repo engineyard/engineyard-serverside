@@ -1,6 +1,6 @@
 module EY
   module Serverside
-    module DependencyManager
+    class DependencyManager
       module LegacyHelpers
         [
           :gemfile?,
@@ -13,9 +13,7 @@ module EY
           :clean_environment,
         ].each do |meth|
           define_method(meth) do |*a|
-            if dependency_manager.respond_to?(meth)
-              dependency_manager.send(meth)
-            end
+            raise "The method '#{meth}' has been removed to better support future dependency management systems.\nAlthough using these methods directly is discouraged, please see the DependencyManager class and related subclasses if you need access to this information."
           end
         end
       end

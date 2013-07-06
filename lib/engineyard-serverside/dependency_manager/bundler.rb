@@ -1,22 +1,13 @@
+require 'engineyard-serverside/dependency_manager/base'
+
 module EY
   module Serverside
-    module DependencyManager
+    class DependencyManager
       class Bundler < Base
         DEFAULT_VERSION = "1.3.4"
 
         def self.default_version
           DEFAULT_VERSION
-        end
-
-        attr_accessor :lockfile
-
-        def initialize(*args)
-          super
-
-          lockfile_path = paths.gemfile_lock
-          if lockfile_path.exist?
-            self.lockfile = Lockfile.new(lockfile_path.read, self.class.default_version)
-          end
         end
 
         def detected?
@@ -56,16 +47,20 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         end
 
         def install
-          check_ruby_bundler
+          shell.status "Bundling gems..."
+          clean_bundle_on_system_version_change
+          install_bundler_gem
+          run "#{clean_environment} && cd #{paths.active_release} && #{bundle_install_command}"
+          write_system_version
         end
 
         def uses_sqlite3?
           lockfile && lockfile.uses_sqlite3?
         end
 
-        def check_ey_config
+        def show_ey_config_instructions
           if lockfile && !lockfile.has_ey_config?
-            shell.warning "Gemfile.lock does not contain ey_config.\nAdd gem 'ey_config' to get access to service configuration through EY::Config."
+            shell.warning "Gemfile.lock does not contain ey_config. Add gem 'ey_config' to your Gemfile to access service configurations through EY::Config."
           end
         end
 
@@ -81,14 +76,6 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
           run "mkdir -p #{paths.bundled_gems} && chown #{config.user}:#{config.group} #{paths.bundled_gems}"
           run "#{store_ruby_version} && #{store_system_version}"
-        end
-
-        def check_ruby_bundler
-          shell.status "Bundling gems..."
-          clean_bundle_on_system_version_change
-          install_bundler_gem
-          run "#{clean_environment} && cd #{paths.active_release} && #{bundle_install_command}"
-          write_system_version
         end
 
         # Install bundler in the system ruby
@@ -137,6 +124,15 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
         def bundler_version
           @bundler_version ||= lockfile && lockfile.bundler_version || self.class.default_version
+        end
+
+        def lockfile
+          return @lockfile if defined? @lockfile
+
+          lockfile_path = paths.gemfile_lock
+          if lockfile_path.exist?
+            @lockfile = Lockfile.new(lockfile_path.read, self.class.default_version)
+          end
         end
 
         class Lockfile

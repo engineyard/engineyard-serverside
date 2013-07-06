@@ -1,6 +1,8 @@
+require 'engineyard-serverside/dependency_manager/base'
+
 module EY
   module Serverside
-    module DependencyManager
+    class DependencyManager
       class Composer < Base
         def detected?
           composer_lock? || composer_json?
