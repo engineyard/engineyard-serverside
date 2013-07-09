@@ -43,6 +43,7 @@ module EY
           elsif paths.public_assets.exist?
             shell.status "Skipping asset precompilation. ('public/assets' directory already exists.)"
           else
+            shell.status "Precompiling assets. ('#{app_assets}' exists, 'public/assets' not found, not disabled in config.)"
             precompile_detected_assets
           end
         end
@@ -78,7 +79,6 @@ module EY
       end
 
       def precompile_detected_assets
-        shell.status "Precompiling assets. ('#{app_assets}' exists, 'public/assets' not found, not disabled in config.)"
         if !runner.rails_application?
           shell.warning "Precompiling assets even though Rails was not bundled."
         end
@@ -86,15 +86,15 @@ module EY
         run_precompile_assets_task
 
         shell.warning <<-WARN
-Assets were detected and precompiled for this application, but asset precompile
-failures may be silently ignored in the future without updating config/ey.yml.
+Assets were detected and precompiled for this application,
+but asset precompile failures may be silently ignored in the future.
 
-ACTION REQUIRED: Add this line to config/ey.yml to ensure assets are compiled
-every deploy and deploys are halted if there is an asset compilation failure.
+ACTION REQUIRED: Add or update config/ey.yml in your project to
+ensure assets are compiled every deploy and halted on failure.
 
-  precompile_assets: true  # precompile assets when assets are changed.
+  precompile_assets: true  # precompile assets
 
-This warning will continue to show until you update and commit config/ey.yml.
+This warning will continue until you update and commit config/ey.yml.
         WARN
       rescue EY::Serverside::RemoteFailure => e
         # If we are implicitly precompiling, we want to fail non-destructively
