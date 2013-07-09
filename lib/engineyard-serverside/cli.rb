@@ -30,7 +30,7 @@ module EY
       stack_option
       verbose_option
 
-      desc "deploy", "Deploy code from /data/<app>"
+      desc "deploy", "Deploy code to /data/<app>"
       def deploy(default_task=:deploy)
         init_and_propagate(options, default_task.to_s) do |servers, config, shell|
           EY::Serverside::Deploy.new(servers, config, shell).send(default_task)

@@ -393,6 +393,7 @@ YML
         cmd
       end
 
+      # FIXME: Legacy method, warn and remove.
       def serverside_bin
         About.binary
       end

@@ -19,7 +19,7 @@ module EY
           enable
           shell.status "Maintenance page enabled"
         else
-          shell.fatal "Cannot enabled maintenance page. Application #{config.app_name} has never been deployed."
+          shell.fatal "Cannot enable maintenance page. Application #{config.app_name} has never been deployed."
           false
         end
       end
@@ -29,7 +29,7 @@ module EY
           disable
           shell.status "Maintenance page disabled"
         else
-          shell.fatal "Cannot enabled maintenance page. Application #{config.app_name} has never been deployed."
+          shell.fatal "Cannot disable maintenance page. Application #{config.app_name} has never been deployed."
           false
         end
       end
