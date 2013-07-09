@@ -4,7 +4,7 @@ module EY
   module Serverside
     class DependencyManager
       class Bundler < Base
-        DEFAULT_VERSION = "1.3.4"
+        DEFAULT_VERSION = "1.3.5"
 
         def self.default_version
           DEFAULT_VERSION
