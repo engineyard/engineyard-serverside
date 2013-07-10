@@ -33,20 +33,6 @@ module EY
       def short_log_message(_) "" end
     end
 
-
-    class Paths
-      # This needs to be patched for the tests to succeed, but
-      # the chances of 2 real deploys colliding in the same second
-      # is very very low.
-      def active_release
-        @active_release ||= if Time.now.utc.strftime("%L") =~ /L/ # old ruby
-                              path(:releases, Time.now.utc.strftime("%Y%m%d%H%M%S#{Time.now.tv_usec}"))
-                            else
-                              path(:releases, Time.now.utc.strftime("%Y%m%d%H%M%S%L"))
-                            end
-      end
-    end
-
   end
 end
 
@@ -228,6 +214,15 @@ exec "$@"
     @deploy_dir ||= tmpdir.join("serverside-deploy-#{Time.now.to_f}-#{$$}")
   end
 
+  # This needs to be patched for the tests to succeed, but
+  # the chances of 2 real deploys colliding in the same second
+  # is very very low.
+  #
+  # can't use %L n strftime because old ruby doesn't support it.
+  def release_path
+    deploy_dir.join('releases', Time.now.utc.strftime("%Y%m%d%H%M%S#{Time.now.tv_usec}"))
+  end
+
   # set up EY::Serverside::Server like we're on a solo
   def test_servers
     @test_servers ||= EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => ENV['USER']}], test_shell)
@@ -239,6 +234,7 @@ exec "$@"
     options = {
       "strategy"         => "IntegrationSpec",
       "deploy_to"        => deploy_dir.to_s,
+      "release_path"     => release_path.to_s,
       "group"            => GROUP,
       "stack"            => 'nginx_passenger',
       "migrate"          => "ruby -e 'puts ENV[\"PATH\"]' > #{deploy_dir}/path-when-migrating",
@@ -268,9 +264,10 @@ exec "$@"
       args.config           = {
         "services_check_command" => "which echo",
         "services_setup_command" => "echo 'services setup command'",
-        "strategy" => options["strategy"],
-        "deploy_to" => options["deploy_to"],
-        "group" => options["group"]
+        "strategy"               => options["strategy"],
+        "deploy_to"              => options["deploy_to"],
+        "release_path"           => options["release_path"],
+        "group"                  => options["group"]
       }.merge(options['config'] || {})
       args.framework_env    = options['framework_env']
       args.stack            = options['stack']
@@ -299,6 +296,9 @@ exec "$@"
     bundle_install_fails = extra_config.delete('bundle_install_fails')
 
     @action = @adapter.deploy do |args|
+      # we must refresh the release path every deploy since we're setting it manually
+      args.config = args.config.merge({'release_path' => release_path})
+
       extra_config.each do |key,val|
         case key
         when 'branch' then args.ref    = val
