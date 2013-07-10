@@ -19,8 +19,6 @@ describe EY::Serverside::Deploy::Configuration do
       @config.maintenance_on_migrate.should == true
       @config.maintenance_on_restart.should == true
       @config.required_downtime_stack?.should == true
-      @config.enable_maintenance_page?.should == true
-      @config.disable_maintenance_page?.should == true
       @config.framework_env.should == "production"
       @config.precompile_assets.should == "detect"
       @config.precompile_assets_inferred?.should == true

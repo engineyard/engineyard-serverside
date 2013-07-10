@@ -8,6 +8,7 @@
   * Adds `config/application.rb` to the `asset_dependencies` to trigger asset precompilation.
   * Removes syncing of file modification times during push code operation in deploy. Syncing times occasionally causes unfixable permissions errors.
   * Clarify inferred asset warning message.
+  * Removes poorly encapsulated methods `config.enable_maintenance\_page?` and `config.disable_maintenance_page?`. Relocated to Maintenance class. (Check eydeploy.rb files)
 
 ## v2.1.4 (2013-06-17)
 

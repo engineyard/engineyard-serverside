@@ -19,8 +19,7 @@ module EY
           enable
           shell.status "Maintenance page enabled"
         else
-          shell.fatal "Cannot enable maintenance page. Application #{config.app_name} has never been deployed."
-          false
+          raise "Cannot enable maintenance page. Application #{config.app_name} has never been deployed."
         end
       end
 
@@ -29,13 +28,12 @@ module EY
           disable
           shell.status "Maintenance page disabled"
         else
-          shell.fatal "Cannot disable maintenance page. Application #{config.app_name} has never been deployed."
-          false
+          raise "Cannot disable maintenance page. Application #{config.app_name} has never been deployed."
         end
       end
 
       def conditionally_enable
-        if config.enable_maintenance_page?
+        if using_maintenance_page?
           enable
         else
           explain_not_enabling
@@ -43,16 +41,20 @@ module EY
       end
 
       def conditionally_disable
-        if config.disable_maintenance_page?
+        if using_maintenance_page?
           disable
         elsif exist?
-          shell.info "[Attention] Maintenance page is still up.\nYou must remove it manually using `ey web enable`."
+          shell.notice "[Attention] Maintenance page is still up.\nYou must remove it manually using `ey web enable`."
         end
       end
 
       protected
 
       attr_reader :config, :shell
+
+      def using_maintenance_page?
+        config.maintenance_on_restart? || (config.migrate? && config.maintenance_on_migrate?)
+      end
 
       def enable
         shell.status "Enabling maintenance page."
@@ -89,23 +91,19 @@ module EY
 
       def explain_not_enabling
         if config.migrate?
-          if !config.maintenance_on_migrate? && !config.maintenance_on_restart?
-            shell.status "Skipping maintenance page. (maintenance_on_migrate is false in ey.yml)"
-            shell.notice "[Caution] No maintenance migrations must be non-destructive!"
-            shell.notice "Requests may be served during a partially migrated state."
-          end
+          shell.status "Skipping maintenance page. (maintenance_on_migrate is false in ey.yml)"
+          shell.notice "[Caution] No maintenance migrations must be non-destructive!\nRequests may be served during a partially migrated state."
+        elsif config.required_downtime_stack?
+          shell.status "Skipping maintenance page. (maintenance_on_restart is false in ey.yml, overriding recommended default)"
         else
-          if config.required_downtime_stack? && !config.maintenance_on_restart?
-            shell.status "Skipping maintenance page. (maintenance_on_restart is false in ey.yml, overriding recommended default)"
-            unless exist?
-              shell.warning <<-WARN
-No maintenance page! Brief downtime may be possible during restart.
+          shell.status "Skipping maintenance page. (no-downtime restarts supported)"
+        end
+
+        if config.required_downtime_stack? && !exist?
+          shell.warning <<-WARN
+No maintenance page! Brief downtime is possible during restart.
 This application stack does not support no-downtime restarts.
-              WARN
-            end
-          elsif !config.required_downtime_stack?
-            shell.status "Skipping maintenance page. (no-downtime restarts supported)"
-          end
+          WARN
         end
       end
 

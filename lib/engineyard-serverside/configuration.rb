@@ -285,16 +285,6 @@ module EY
         [nil, 'nginx_mongrel', 'glassfish'].include? stack
       end
 
-      # Enable if stack requires it or if overridden in the ey.yml config.
-      def enable_maintenance_page?
-        maintenance_on_restart? || (migrate? && maintenance_on_migrate?)
-      end
-
-      # We disable the maintenance page if we would have enabled.
-      def disable_maintenance_page?
-        enable_maintenance_page?
-      end
-
       def configured_services
         services = YAML.load_file(paths.shared_services_yml.to_s)
         services.respond_to?(:keys) && !services.empty? ? services.keys : nil
