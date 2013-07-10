@@ -6,15 +6,9 @@ module EY
     class Task
       attr_reader :servers, :config, :shell
 
-      # deprecated, please don't use
-      def c
-        EY::Serverside.deprecation_warning("The method 'c' is deprecated in favor of 'config' for better clarity.")
-        config
-      end
-
-      def initialize(servers, conf, shell)
+      def initialize(servers, config, shell)
         @servers = servers
-        @config = conf
+        @config = config
         @shell = shell
         @roles = :all
       end

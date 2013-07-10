@@ -9,6 +9,7 @@
   * Removes syncing of file modification times during push code operation in deploy. Syncing times occasionally causes unfixable permissions errors.
   * Clarify inferred asset warning message.
   * Removes poorly encapsulated methods `config.enable_maintenance\_page?` and `config.disable_maintenance_page?`. Relocated to Maintenance class. (Check eydeploy.rb files)
+  * Removes deprecated `c` method (use `config` instead)
 
 ## v2.1.4 (2013-06-17)
 
