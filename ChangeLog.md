@@ -7,7 +7,8 @@
   * Replaces command runner to address streaming log, idle connection, and random systemu failures.
   * Adds `config/application.rb` to the `asset_dependencies` to trigger asset precompilation.
   * Removes syncing of file modification times during push code operation in deploy. Syncing times occasionally causes unfixable permissions errors.
-  * Clarify inferred asset warning message.
+  * Clarifies inferred asset warning message.
+  * Improves some of the maintenance page status messages.
   * Removes poorly encapsulated methods `config.enable_maintenance\_page?` and `config.disable_maintenance_page?`. Relocated to Maintenance class. (Check eydeploy.rb files)
   * Removes deprecated `c` method (use `config` instead)
 
