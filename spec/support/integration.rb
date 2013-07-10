@@ -33,14 +33,11 @@ class FullTestDeploy < EY::Serverside::Deploy
   # deploy does not
   def bundle
     my_env = ENV.to_hash
-    result = super
+    super
+  ensure
     ENV.replace(my_env)
-    result
   end
 
-  def framework_env
-    config.framework_env
-  end
 end
 
 class EY::Serverside::Deploy

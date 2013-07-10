@@ -9,7 +9,7 @@ describe "Deploying an application with sqlite3 as the only DB adapter in the Ge
     deploy_test_application('sqlite3')
     @shared_path   = @deployer.config.paths.shared
     @release_path  = @deployer.config.paths.active_release
-    @framework_env = @deployer.framework_env
+    @framework_env = @deployer.config.framework_env
   end
 
   it 'should symlink database.sqlite3.yml' do
