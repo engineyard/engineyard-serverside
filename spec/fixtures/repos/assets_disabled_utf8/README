@@ -1,0 +1,3 @@
+Assets disabled in application.rb, but the application.rb file has characters we don't expect.
+
+Previous versions of serverside would crash if the file encoding was loaded incorrectly.

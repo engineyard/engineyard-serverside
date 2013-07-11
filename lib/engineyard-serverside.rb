@@ -7,6 +7,11 @@ else
   $string_encodings = false
 end
 
+if defined?(Encoding) && Encoding.respond_to?(:default_internal=) # String.instance_methods.include?(:force_encoding)
+  Encoding.default_internal = Encoding::UTF_8
+  Encoding.default_external = Encoding::UTF_8
+end
+
 $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/systemu/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
