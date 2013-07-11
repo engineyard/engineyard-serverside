@@ -102,7 +102,7 @@ describe "Deploying a Rails 3.1 application" do
 
     it "deploys successfully when application.rb has utf-8 encoding" do
       deploy_test_application('assets_disabled_utf8')
-      deploy_dir.join('current', 'precompiled').should exist
+      deploy_dir.join('current', 'precompiled').should_not exist
       read_output.should include("Skipping asset precompilation. ('config/application.rb' disables assets.)")
     end
   end
