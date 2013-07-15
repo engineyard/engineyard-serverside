@@ -2,7 +2,6 @@ require 'logger'
 require 'pathname'
 require 'open3'
 require 'engineyard-serverside/shell/formatter'
-require 'engineyard-serverside/shell/command_result'
 require 'engineyard-serverside/shell/yieldio'
 
 module EY
