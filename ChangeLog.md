@@ -11,6 +11,7 @@
   * Improves some of the maintenance page status messages.
   * Removes poorly encapsulated methods `config.enable_maintenance\_page?` and `config.disable_maintenance_page?`. Relocated to Maintenance class. (Check eydeploy.rb files)
   * Removes deprecated `c` method (use `config` instead)
+  * In deploy hooks, deprecates @configuration (use `config`), @node (use `config.node`), and method\_missing access of config methods (use `config.method`).
 
 ## v2.1.4 (2013-06-17)
 

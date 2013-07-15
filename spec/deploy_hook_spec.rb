@@ -119,6 +119,13 @@ describe "deploy hooks" do
         deploy_hook.eval_hook('respond_to?(:failed_release_dir)').should be_true
         deploy_hook.eval_hook('respond_to?(:release_path)      ').should be_true
       end
+
+      it "shows a deprecation warning that asks you to use config to access these variables" do
+        deploy_hook.eval_hook('shared_path.nil?').should be_false
+        out = read_output
+        out.should include("Use of `shared_path` (via method_missing) is deprecated in favor of `config.shared_path` for improved error messages and compatibility.")
+        out.should =~ %r|in /data/app_name/releases/\d+/deploy/fake_test_hook.rb|
+      end
     end
 
     context "access to command line options that should be handed through to the config" do
@@ -139,7 +146,7 @@ describe "deploy hooks" do
       end
     end
 
-    context "the @node ivar" do
+    context "node" do
       before(:each) do
         EY::Serverside.dna_json = MultiJson.dump({
           'instance_role' => 'solo',
@@ -152,35 +159,51 @@ describe "deploy hooks" do
         })
       end
 
-      it "is available" do
+      it "is deprecated through the @node ivar" do
         deploy_hook.eval_hook('@node.nil?').should be_false
+        out = read_output
+        out.should =~ %r|Use of `@node` in deploy hooks is deprecated.|
+        out.should =~ %r|Please use `config.node`, which provides access to the same object.|
+        out.should =~ %r|/data/app_name/releases/\d+/deploy/fake_test_hook.rb|
+      end
+
+      it "is available" do
+        deploy_hook.eval_hook('config.node.nil?').should be_false
       end
 
       it "has indifferent access" do
-        deploy_hook.eval_hook('@node[:instance_role] ').should == 'solo'
-        deploy_hook.eval_hook('@node["instance_role"]').should == 'solo'
+        deploy_hook.eval_hook('config.node[:instance_role] ').should == 'solo'
+        deploy_hook.eval_hook('config.node["instance_role"]').should == 'solo'
       end
 
       it "has deep indifferent access" do
-        deploy_hook.eval_hook('@node["applications"]["myapp"]["type"]').should == 'rails'
-        deploy_hook.eval_hook('@node[:applications]["myapp"][:type]  ').should == 'rails'
-        deploy_hook.eval_hook('@node[:applications][:myapp][:type]   ').should == 'rails'
+        deploy_hook.eval_hook('config.node["applications"]["myapp"]["type"]').should == 'rails'
+        deploy_hook.eval_hook('config.node[:applications]["myapp"][:type]  ').should == 'rails'
+        deploy_hook.eval_hook('config.node[:applications][:myapp][:type]   ').should == 'rails'
       end
     end
 
-    context "the @configuration ivar" do
+    context "config" do
       it "is available" do
+        deploy_hook.eval_hook('config.nil?').should be_false
+      end
+
+      it "is deprecated through the @configuration ivar" do
         deploy_hook.eval_hook('@configuration.nil?').should be_false
+        out = read_output
+        out.should =~ %r|Use of `@configuration` in deploy hooks is deprecated.|
+        out.should =~ %r|Please use `config`, which provides access to the same object.|
+        out.should =~ %r|/data/app_name/releases/\d+/deploy/fake_test_hook.rb|
       end
 
       it "has the configuration in it" do
-        deploy_hook('bert' => 'ernie').eval_hook('@configuration.bert').should == 'ernie'
+        deploy_hook('bert' => 'ernie').eval_hook('config.bert').should == 'ernie'
       end
 
       it "can be accessed with method calls, with [:symbols], or ['strings']" do
-        deploy_hook('bert' => 'ernie').eval_hook('@configuration.bert   ').should == 'ernie'
-        deploy_hook('bert' => 'ernie').eval_hook('@configuration[:bert] ').should == 'ernie'
-        deploy_hook('bert' => 'ernie').eval_hook('@configuration["bert"]').should == 'ernie'
+        deploy_hook('bert' => 'ernie').eval_hook('config.bert   ').should == 'ernie'
+        deploy_hook('bert' => 'ernie').eval_hook('config[:bert] ').should == 'ernie'
+        deploy_hook('bert' => 'ernie').eval_hook('config["bert"]').should == 'ernie'
       end
 
       [:repository_cache,
@@ -192,7 +215,7 @@ describe "deploy hooks" do
         :revision,
         :environment].each do |attribute|
         it "has the #{attribute.inspect} attribute for compatibility with chef-deploy" do
-          deploy_hook.eval_hook("@configuration.has_key?(#{attribute.inspect})").should be_true
+          deploy_hook.eval_hook("config.has_key?(#{attribute.inspect})").should be_true
         end
       end
     end

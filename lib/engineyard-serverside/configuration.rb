@@ -7,7 +7,7 @@ require 'engineyard-serverside/paths'
 module EY
   module Serverside
     class Deploy::Configuration
-      include Paths::LegacyHelpers
+      include Paths::LegacyHelpers # deploy hooks depend on these to be here as well. Don't remove without plenty of deprecation warnings.
 
       # Defines a fetch method for the specified key.
       # If no default and no block is specified, it means the key is required
