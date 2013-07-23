@@ -58,6 +58,21 @@ describe "Deploying a Rails 3.1 application" do
       deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
       read_output.should_not =~ %r#Reusing existing assets#
     end
+
+    %w[cleaning shared private].each do |strategy|
+      it "precompiles assets with asset_strategy '#{strategy}', then reuses them on the next deploy if nothing has changed" do
+        deploy_test_application('assets_enabled_in_ey_yml', 'config' => {'asset_strategy' => strategy})
+        deploy_dir.join('current', 'precompiled').should exist
+        deploy_dir.join('current', 'public', 'assets').should exist
+        deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
+
+        redeploy_test_application
+        deploy_dir.join('current', 'precompiled').should_not exist # doesn't run the task
+        deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
+        deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
+        read_output.should =~ %r#Reusing existing assets\. \(configured asset_dependencies unchanged from \w{7}..\w{7}\)#
+      end
+    end
   end
 
   context "with asset compilation enabled in ey.yml, despite not otherwise being enabled" do

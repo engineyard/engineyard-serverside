@@ -34,7 +34,7 @@ module EY
           end
 
           def reusable?
-            previous_assets_path.directory? && previous_assets_path.entries.any?
+            previous_assets_path && previous_assets_path.entries.any?
           end
 
           def reuse
@@ -47,8 +47,11 @@ module EY
           # This results in the directory structure:
           #   deploy_root/current/public/last_assets/assets -> deploy_root/releases/<prev>/public/assets
           def prepare
-            last = paths.public.join('last_assets')
-            run "mkdir -p #{last} && ln -nfs #{previous_assets_path} #{last.join('assets')}"
+            if previous_assets_path
+              last = paths.public.join('last_assets')
+              run "mkdir -p #{last} && ln -nfs #{previous_assets_path} #{last.join('assets')}"
+            end
+
             yield
           end
 
@@ -58,8 +61,17 @@ module EY
             runner.run cmd
           end
 
+          # Just to be safe, we don't check the real path until runtime
+          # to make sure the relevant directories are there.
           def previous_assets_path
-            paths.previous_release(paths.active_release).join('public','assets')
+            return @previous_assets_path if defined? @previous_assets_path
+            if prev = paths.previous_release(paths.active_release)
+              @previous_assets_path = prev.join('public','assets')
+              @previous_assets_path = nil unless @previous_assets_path.directory?
+            else
+              @previous_assets_path = nil
+            end
+            @previous_assets_path
           end
         end
 
