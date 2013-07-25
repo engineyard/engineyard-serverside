@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.2.0 (2013-07-25)
+
   * Updates fallback bundler version to latest v1.3.5.
   * Supports using multiple dependency managers at the same time (bundler, composer, and/or npm)
   * Replaces command runner to address streaming log, idle connection, and random systemu failures.
