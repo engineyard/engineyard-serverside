@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.email = "cloud@engineyard.com"
   s.homepage = "http://github.com/engineyard/engineyard-serverside"
   s.summary = "A gem that deploys ruby applications on EY Cloud instances"
+  s.license = 'MIT'
 
   s.files = Dir.glob("{bin,lib}/**/*") + %w(LICENSE)
   s.executables = ["engineyard-serverside"]
