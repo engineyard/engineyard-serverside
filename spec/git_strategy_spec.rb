@@ -11,7 +11,7 @@ describe EY::Serverside::Strategies::Git do
   it "#checkout returns true for branches that exist" do
     git = EY::Serverside::Strategies::Git.new(
       test_shell,
-      :remote_uri => FIXTURES_DIR.join('repos','default'),
+      :uri => FIXTURES_DIR.join('repos','default'),
       :repository_cache => @gitrepo_dir,
       :ref => "somebranch"
     )
@@ -21,7 +21,7 @@ describe EY::Serverside::Strategies::Git do
   it "#checkout returns false for branches that do not exist" do
     git = EY::Serverside::Strategies::Git.new(
       test_shell,
-      :remote_uri => FIXTURES_DIR.join('repos','default'),
+      :uri => FIXTURES_DIR.join('repos','default'),
       :repository_cache => @gitrepo_dir,
       :ref => "notabranch"
     )

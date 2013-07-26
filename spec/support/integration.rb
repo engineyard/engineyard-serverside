@@ -57,7 +57,7 @@ class EY::Serverside::Strategies::IntegrationSpec
   def initialize(shell, opts)
     @shell = shell
     @ref = opts[:ref]
-    @source_repo = Pathname.new(opts[:remote_uri])
+    @source_repo = Pathname.new(opts[:uri])
     @repository_cache = Pathname.new(opts[:repository_cache])
   end
 

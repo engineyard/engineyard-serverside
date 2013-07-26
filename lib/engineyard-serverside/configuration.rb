@@ -56,6 +56,7 @@ module EY
       def_required_option :instance_names
 
       def_option :repo,              nil
+      def_option :uri,               nil
       def_option :migrate,           nil
       def_option :precompile_assets, 'detect'
       def_option :precompile_assets_task, 'assets:precompile'

@@ -1,30 +1,44 @@
 require 'pathname'
+require 'uri'
 
 module EY
   module Serverside
     module Strategies
       class Package
-        attr_reader :shell, :opts, :remote_uri, :source_cache, :ref
+        attr_reader :shell, :opts, :uri, :filename, :source_cache, :ref
 
         def initialize(shell, opts)
           @shell = shell
           @opts = opts
           @ref = @opts[:ref]
-          @remote_uri = @opts[:remote_uri]
+          @uri = URI.parse(@opts[:uri])
+          @filename = File.basename(@uri.path)
           @source_cache = Pathname.new(@opts[:repository_cache])
         end
 
         # Expand the correct file into the source_cache location
         def update_repository_cache
-          run "rm -rf #{source_cache} && mkdir -p #{source_cache} && #{fetch}"
+          clean_cache
+          fetch
+          unarchive
+        end
+
+        def clean_cache
+          run "rm -rf #{source_cache} && mkdir -p #{source_cache}"
         end
 
         def fetch
-          uri = URI.parse(remote_uri)
-          if uri.scheme == 'file' || uri.relative
-            "rsync -aq --delete #{uri.path} #{source_cache}"
-          else
-            "cd #{source_cache} && curl -sSO --user-agent 'EngineYardDeploy/#{EY::Serverside::VERSION}' '#{uri}'"
+          #if uri.scheme == 'file' || uri.relative
+          #  "rsync -aq --delete #{uri.path} #{source_cache}"
+          #else
+            run "curl -sSO --user-agent 'EngineYardDeploy/#{EY::Serverside::VERSION}' '#{uri}'"
+          #end
+        end
+
+        def unarchive
+          case File.extname(filename)
+          when 'zip','war'
+            run "cd #{source_cache} && unzip #{filename} && rm #{filename}"
           end
         end
 

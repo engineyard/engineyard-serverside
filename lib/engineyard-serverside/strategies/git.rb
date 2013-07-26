@@ -4,16 +4,16 @@ module EY
   module Serverside
     module Strategies
       class Git
-        attr_reader :shell, :opts, :remote_uri, :repository_cache
+        attr_reader :shell, :opts, :uri, :repository_cache
 
         def initialize(shell, opts)
           @shell = shell
           @opts = opts
-          unless @opts[:ref] && @opts[:remote_uri] && @opts[:repository_cache]
-            raise ArgumentError, "Missing required keys. (:ref, :remote_uri, and :repository_cache are required)"
+          unless @opts[:ref] && @opts[:uri] && @opts[:repository_cache]
+            raise ArgumentError, "Missing required keys. (:ref, :uri, and :repository_cache are required)"
           end
           @ref = opts[:ref]
-          @remote_uri = @opts[:remote_uri]
+          @uri = @opts[:uri]
           @repository_cache = Pathname.new(@opts[:repository_cache])
         end
 
@@ -24,14 +24,14 @@ module EY
         end
 
         def usable_repository?
-          repository_cache.directory? && `#{git} remote -v | grep origin`.include?(remote_uri)
+          repository_cache.directory? && `#{git} remote -v | grep origin`.include?(uri)
         end
 
         def fetch
           if usable_repository?
             run("#{git} fetch -q origin 2>&1")
           else
-            run("rm -rf #{repository_cache} && git clone -q #{remote_uri} #{repository_cache} 2>&1")
+            run("rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1")
           end
         end
 

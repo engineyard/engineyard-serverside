@@ -23,6 +23,10 @@ module EY
       method_option :repo,            :type     => :string,
                                       :desc     => "Remote repo to deploy",
                                       :aliases  => ["-r"]
+
+      method_option :uri,             :type     => :string,
+                                      :desc     => "Remote URI for archive to download",
+                                      :aliases  => ["-u"]
       account_app_env_options
       config_option
       framework_env_option
