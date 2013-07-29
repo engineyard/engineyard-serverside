@@ -55,8 +55,9 @@ module EY
       def_required_option :instance_roles
       def_required_option :instance_names
 
+      def_option :git,               nil
+      def_option :archive,           nil
       def_option :repo,              nil
-      def_option :uri,               nil
       def_option :migrate,           nil
       def_option :precompile_assets, 'detect'
       def_option :precompile_assets_task, 'assets:precompile'
@@ -181,8 +182,29 @@ module EY
         EY::Serverside.node
       end
 
-      def strategy_class
-        EY::Serverside::Strategies.const_get(strategy)
+      # Infer the deploy strategy to use based on flag or
+      # default to specified strategy.
+      #
+      # Returns a strategy object.
+      def source_cache_strategy(shell)
+        if git
+          load_strategy(EY::Serverside::Strategy::Git, shell, git)
+        elsif archive
+          load_strategy(EY::Serverside::Strategy::Archive, shell, archive)
+        else # repo is allowed to be nil
+          load_strategy(EY::Serverside::Strategy.for(strategy), shell, repo)
+        end
+      end
+
+      def load_strategy(klass, shell, uri)
+        klass.new(
+          shell,
+          :verbose          => verbose,
+          :repository_cache => paths.repository_cache,
+          :app              => app,
+          :uri              => uri,
+          :ref              => branch
+        )
       end
 
       def paths
