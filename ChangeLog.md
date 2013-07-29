@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Fixes deprecation warnings for internal method calls in deploy hooks.
 
 ## v2.2.0 (2013-07-25)
 

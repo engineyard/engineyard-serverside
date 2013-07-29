@@ -120,13 +120,13 @@ Please fix this error before retrying.
         def on_utilities(*names, &blk)
           names.flatten!
           on_roles(%w[util]) do
-            blk.call if names.empty? || names.include?(current_name)
+            blk.call if names.empty? || names.include?(config.current_name)
           end
         end
 
         private
         def on_roles(desired_roles)
-          yield if desired_roles.any? { |role| current_roles.include?(role) }
+          yield if desired_roles.any? { |role| config.current_roles.include?(role) }
         end
 
       end
