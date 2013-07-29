@@ -19,8 +19,10 @@ module EY
         # Expand the correct file into the source_cache location
         def update_repository_cache
           clean_cache
-          fetch
-          unarchive
+          in_source_cache do
+            fetch
+            unarchive
+          end
         end
 
         def clean_cache
@@ -28,17 +30,14 @@ module EY
         end
 
         def fetch
-          #if uri.scheme == 'file' || uri.relative
-          #  "rsync -aq --delete #{uri.path} #{source_cache}"
-          #else
-            run "curl -sSO --user-agent 'EngineYardDeploy/#{EY::Serverside::VERSION}' '#{uri}'"
-          #end
+          run "curl --location --silent --show-error -O --user-agent 'EngineYardDeploy/#{EY::Serverside::VERSION}' '#{uri}'"
         end
 
         def unarchive
-          case File.extname(filename)
-          when 'zip','war'
-            run "cd #{source_cache} && unzip #{filename} && rm #{filename}"
+          ext = File.extname(filename)
+          case ext
+          when '.zip', '.war'
+            run "unzip #{filename} && rm #{filename}"
           end
         end
 
@@ -62,6 +61,11 @@ module EY
       private
         def run(cmd)
           shell.logged_system(cmd).success?
+        end
+
+        def in_source_cache(&block)
+          return unless block
+          Dir.chdir(@source_cache) { block.call }
         end
 
       end
