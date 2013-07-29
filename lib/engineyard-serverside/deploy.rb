@@ -73,6 +73,10 @@ module EY
         strategy.short_log_message(revision)
       end
 
+      def unchanged_diff_between_revisions?(previous_revision, active_revision, asset_dependencies)
+        strategy.same?(previous_revision, active_revision, asset_dependencies)
+      end
+
       def check_repository
         check_dependencies
       end
