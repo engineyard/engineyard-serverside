@@ -56,7 +56,6 @@ module EY
       def_required_option :instance_names
 
       def_option :repo,              nil
-      def_option :uri,               nil
       def_option :migrate,           nil
       def_option :precompile_assets, 'detect'
       def_option :precompile_assets_task, 'assets:precompile'
@@ -193,7 +192,13 @@ module EY
       #
       # Returns a string strategy class name.
       def detect_strategy
-        @detected_strategy ||= %w(Git Archive).detect {|strategy| self[strategy.downcase] } || strategy
+        @detected_strategy ||= if git
+          "Git"
+        elsif archive
+          "Archive"
+        else
+          strategy
+        end
       end
 
       # Get the uri that the strategy should use.

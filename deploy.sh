@@ -7,6 +7,7 @@ engineyard-serverside deploy --verbose \
   --environment-name production \
   --framework-env production \
   --instances localhost \
+  --instance-roles localhost:solo \
   --archive https://github.com/engineyard/todo/archive/master.zip
   # --ref master \
   # --git https://github.com/engineyard/todo.git
