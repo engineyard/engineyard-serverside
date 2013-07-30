@@ -181,8 +181,26 @@ module EY
         EY::Serverside.node
       end
 
+      # Infer the deploy strategy to use based on flag or default to specified
+      # strategy.
+      #
+      # Returns a strategy class.
       def strategy_class
-        EY::Serverside::Strategies.const_get(strategy)
+        EY::Serverside::Strategies.const_get(detect_strategy)
+      end
+
+      # Check for which strategy is being used or return the default.
+      #
+      # Returns a string strategy class name.
+      def detect_strategy
+        @detected_strategy ||= %w(Git Archive).detect {|strategy| self[strategy.downcase] } || strategy
+      end
+
+      # Get the uri that the strategy should use.
+      #
+      # Returns a string uri.
+      def strategy_uri
+        self[detect_strategy.downcase] || self[:repo]
       end
 
       def paths

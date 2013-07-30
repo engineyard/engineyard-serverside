@@ -394,7 +394,7 @@ YML
           :verbose          => config.verbose,
           :repository_cache => paths.repository_cache,
           :app              => config.app,
-          :uri              => config[:uri] || config[:repo], # FIXME: hax for java
+          :uri              => config.strategy_uri,
           :ref              => config[:branch]
         )
       end

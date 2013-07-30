@@ -4,7 +4,7 @@ require 'uri'
 module EY
   module Serverside
     module Strategies
-      class Package
+      class Archive
         attr_reader :shell, :opts, :uri, :filename, :source_cache, :ref
 
         def initialize(shell, opts)
