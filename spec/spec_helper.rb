@@ -15,7 +15,8 @@ end
 require 'pp'
 require 'engineyard-serverside'
 require 'engineyard-serverside-adapter'
-require File.expand_path('../support/integration', __FILE__)
+require 'support/integration'
+require 'support/strategy_doubles'
 
 FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
 TMPDIR = Pathname.new(__FILE__).dirname.parent.join('tmp')
@@ -28,11 +29,6 @@ module EY
       @dna_json = j
       @node = nil
     end
-
-    class Strategies::Git
-      def short_log_message(_) "" end
-    end
-
   end
 end
 

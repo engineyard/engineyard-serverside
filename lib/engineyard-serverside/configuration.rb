@@ -75,6 +75,9 @@ module EY
       def_option :services_check_command, "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
       def_option(:services_setup_command) { "/usr/local/ey_resin/ruby/bin/ey-services-setup #{app}" }
 
+      def_option :git,               nil
+      def_option :archive,           nil
+
       def_boolean_option :verbose,                         false
       def_boolean_option :precompile_unchanged_assets,     false
       def_boolean_option :ignore_database_adapter_warning, false
@@ -185,7 +188,7 @@ module EY
       #
       # Returns a strategy class.
       def strategy_class
-        EY::Serverside::Strategies.const_get(detect_strategy)
+        EY::Serverside::Strategy.for(detect_strategy)
       end
 
       # Check for which strategy is being used or return the default.

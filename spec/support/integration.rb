@@ -51,14 +51,12 @@ class EY::Serverside::Deploy
   end
 end
 
-class EY::Serverside::Strategies::IntegrationSpec
-  attr_reader :shell, :source_repo, :repository_cache
+class EY::Serverside::Strategy::IntegrationSpec < EY::Serverside::Strategy
+  attr_reader :source_repo
 
-  def initialize(shell, opts)
-    @shell = shell
-    @ref = opts[:ref]
-    @source_repo = Pathname.new(opts[:uri])
-    @repository_cache = Pathname.new(opts[:repository_cache])
+  def initialize(*a)
+    super
+    @source_repo = Pathname.new(uri)
   end
 
   def update_repository_cache

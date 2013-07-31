@@ -15,7 +15,6 @@ describe EY::Serverside::Deploy::Configuration do
       @config.migrate.should == nil
       @config.migrate?.should == false
       @config.branch.should == "master"
-      @config.strategy_class.should == EY::Serverside::Strategies::Git
       @config.maintenance_on_migrate.should == true
       @config.maintenance_on_restart.should == true
       @config.required_downtime_stack?.should == true
@@ -48,7 +47,7 @@ describe EY::Serverside::Deploy::Configuration do
       @config = EY::Serverside::Deploy::Configuration.new({
         'repo' => 'git@github.com:engineyard/todo.git'
       })
-      expect(@config.strategy_class).to eq(EY::Serverside::Strategies::Git)
+      expect(@config.strategy_class).to eq(EY::Serverside::Strategy::Git)
       expect(@config.strategy_uri).to eq("git@github.com:engineyard/todo.git")
     end
 
@@ -56,7 +55,7 @@ describe EY::Serverside::Deploy::Configuration do
       @config = EY::Serverside::Deploy::Configuration.new({
         'git' => 'git@github.com:engineyard/todo.git'
       })
-      expect(@config.strategy_class).to eq(EY::Serverside::Strategies::Git)
+      expect(@config.strategy_class).to eq(EY::Serverside::Strategy::Git)
       expect(@config.strategy_uri).to eq("git@github.com:engineyard/todo.git")
     end
 
@@ -64,7 +63,7 @@ describe EY::Serverside::Deploy::Configuration do
       @config = EY::Serverside::Deploy::Configuration.new({
         'archive' => 'https://github.com/engineyard/todo/archive/master.zip'
       })
-      expect(@config.strategy_class).to eq(EY::Serverside::Strategies::Archive)
+      expect(@config.strategy_class).to eq(EY::Serverside::Strategy::Archive)
       expect(@config.strategy_uri).to eq("https://github.com/engineyard/todo/archive/master.zip")
     end
   end
