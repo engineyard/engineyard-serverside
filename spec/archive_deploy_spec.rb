@@ -1,5 +1,10 @@
 require 'spec_helper'
-require 'pry'
+
+class EY::Serverside::Strategy::Archive
+  def fetch_command
+    "cp #{uri} ./"
+  end
+end
 
 describe "Deploying a simple application" do
   let(:adapter) {
@@ -8,10 +13,8 @@ describe "Deploying a simple application" do
       args.app = "application_name"
       args.stack = "nginx_unicorn"
       args.environment_name = "environment_name"
-      # args.ref = "master"
       args.framework_env = "production"
-      args.archive = "https://dl.dropboxusercontent.com/u/114389/retwisj.war"
-      # args.archive = FIXTURES_DIR.join('retwisj.war')
+      args.archive = FIXTURES_DIR.join('retwisj.war')
       args.verbose = true
       args.instances = [{ :hostname => "localhost", :roles => ["solo"], :name => "single" }]
       args.config = {
@@ -33,6 +36,12 @@ describe "Deploying a simple application" do
         EY::Serverside::CLI.start(argv)
       end
     end
+  end
+
+  it "exploded the war" do
+    %w(META-INF WEB-INF).each {|dir|
+      File.exists?(deploy_dir.join('current', dir))
+    }
   end
 
   it "creates a REVISION file" do

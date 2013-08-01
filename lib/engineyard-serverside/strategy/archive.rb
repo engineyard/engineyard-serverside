@@ -19,8 +19,7 @@ class EY::Serverside::Strategy::Archive < EY::Serverside::Strategy
   def update_repository_cache
     clean_cache
     in_source_cache do
-      fetch
-      unarchive
+      fetch && unarchive
     end
   end
 
@@ -30,9 +29,12 @@ class EY::Serverside::Strategy::Archive < EY::Serverside::Strategy
     run "rm -rf #{source_cache} && mkdir -p #{source_cache}"
   end
 
+  def fetch_command
+    "curl --location --silent --show-error -O --user-agent #{escape("EngineYardDeploy/#{EY::Serverside::VERSION}")} #{escape(uri)}"
+  end
+
   def fetch
-    cmd = %w[curl --location --silent --show-error -O --user-agent] + ["EngineYardDeploy/#{EY::Serverside::VERSION}", uri]
-    run Escape.shell_command(cmd)
+    run_and_success?(fetch_command)
   end
 
   def filename
