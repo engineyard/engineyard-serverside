@@ -186,12 +186,28 @@ chmod 0700 #{path}
         @cleanup_failed = false
       end
 
+      def abort_on_bad_paths_in_release_directory
+        shell.substatus "Checking for disruptive files in #{paths.releases}"
+
+        bad_paths = paths.all_releases.reject do |path|
+          path.basename.to_s =~ /^[\d]+$/
+        end
+
+        if bad_paths.any?
+          shell.fatal "Bad paths found in #{paths.releases}:\n\t#{bad_paths.join("\n\t")}\nStoring files in this directory will disrupt latest_release, diff detection, rollback, and possibly other features."
+          raise
+        end
+      end
+
+
       # task
       def rollback
         if config.rollback_paths!
           begin
-            rolled_back_release = paths.latest_release
             shell.status "Rolling back to previous release: #{short_log_message(config.active_revision)}"
+            abort_on_bad_paths_in_release_directory
+            rolled_back_release = paths.latest_release
+
             run_with_callbacks(:symlink)
             sudo "rm -rf #{rolled_back_release}"
             bundle
