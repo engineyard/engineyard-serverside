@@ -14,7 +14,7 @@ describe EY::Serverside::Strategy::Archive do
     }
 
     it "creates the correct revision command using the filename" do
-      expect(subject.create_revision_file_command("directory")).to eq(
+      expect(subject.create_revision_file_command("directory/REVISION")).to eq(
         "echo app.war > directory/REVISION"
       )
     end

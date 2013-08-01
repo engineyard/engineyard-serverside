@@ -39,6 +39,10 @@ class EY::Serverside::Strategy
     Dir.chdir(source_cache, &block)
   end
 
+  def escape(*shell_commands)
+    Escape.shell_command(shell_commands)
+  end
+
   def runner
     EY::Serverside::Spawner
   end

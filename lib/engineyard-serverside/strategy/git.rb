@@ -2,8 +2,8 @@
 class EY::Serverside::Strategy::Git < EY::Serverside::Strategy
   require_opts :uri, :ref, :repository_cache
 
-  def create_revision_file_command(dir)
-    %Q{#{git} show --pretty=format:"%H" | head -1 > "#{dir}/REVISION"}
+  def create_revision_file_command(revision_file_path)
+    %Q{#{git} show --pretty=format:"%H" | head -1 > "#{revision_file_path}"}
   end
 
   def gc_repository_cache
@@ -26,8 +26,8 @@ class EY::Serverside::Strategy::Git < EY::Serverside::Strategy
   end
 
   # Get most recent commit message for revision.
-  def short_log_message(rev)
-    run_and_output("#{git} log --pretty=oneline --abbrev-commit -n 1 '#{rev}'").strip
+  def short_log_message(revision)
+    run_and_output("#{git} log --pretty=oneline --abbrev-commit -n 1 '#{revision}'").strip
   end
 
   def update_repository_cache

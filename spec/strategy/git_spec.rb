@@ -19,7 +19,7 @@ describe EY::Serverside::Strategy::Git do
     }
 
     it "creates the correct reivison file command" do
-      expect(subject.create_revision_file_command("directory")).to eq(
+      expect(subject.create_revision_file_command("directory/REVISION")).to eq(
         "git --git-dir cache_dir/.git --work-tree cache_dir show --pretty=format:\"%H\" | head -1 > \"directory/REVISION\""
       )
     end

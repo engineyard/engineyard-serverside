@@ -1,7 +1,7 @@
 # Deploy strategy for archive source based deploy.
 class EY::Serverside::Strategy::Archive < EY::Serverside::Strategy
-  def create_revision_file_command(dir)
-    Escape.shell_command(["echo", filename, ">", "#{dir}/REVISION"])
+  def create_revision_file_command(revision_file_path)
+    "echo #{escape(filename)} > #{escape(revision_file_path)}"
   end
 
   def gc_repository_cache

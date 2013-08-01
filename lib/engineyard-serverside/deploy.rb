@@ -66,7 +66,7 @@ module EY
       end
 
       def create_revision_file_command
-        strategy.create_revision_file_command(paths.active_release)
+        strategy.create_revision_file_command(paths.active_revision)
       end
 
       def short_log_message(revision)
@@ -208,10 +208,14 @@ chmod 0700 #{path}
       def rollback
         if config.rollback_paths!
           begin
-            shell.status "Rolling back to previous release: #{short_log_message(config.active_revision)}"
-            abort_on_bad_paths_in_release_directory
             rolled_back_release = paths.latest_release
-
+            if config.active_revision.exist?
+              revision = config.active_revision.read
+              shell.status "Rolling back to previous release: #{short_log_message(revision)}"
+            else
+              shell.status "Rolling back to previous release."
+            end
+            abort_on_bad_paths_in_release_directory
             run_with_callbacks(:symlink)
             sudo "rm -rf #{rolled_back_release}"
             bundle
