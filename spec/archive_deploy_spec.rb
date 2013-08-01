@@ -47,7 +47,8 @@ describe "Deploying a simple application" do
   it "creates a REVISION file" do
     path = deploy_dir.join('current', 'REVISION')
     expect(path).to exist
-    expect(File.read(path).strip).to eq("retwisj.war")
+    checksum = File.read(path).strip
+    expect(checksum).to match(/7400dc058376745c11a98f768b799c6651428857\s+.*retwisj.war$/)
   end
 
   it "restarts the app servers" do

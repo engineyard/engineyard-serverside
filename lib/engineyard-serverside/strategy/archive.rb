@@ -1,7 +1,7 @@
 # Deploy strategy for archive source based deploy.
 class EY::Serverside::Strategy::Archive < EY::Serverside::Strategy
   def create_revision_file_command(revision_file_path)
-    "echo #{escape(filename)} > #{escape(revision_file_path.to_s)}"
+    "echo #{escape(@checksum)} > #{escape(revision_file_path.to_s)}"
   end
 
   def gc_repository_cache
@@ -19,11 +19,15 @@ class EY::Serverside::Strategy::Archive < EY::Serverside::Strategy
   def update_repository_cache
     clean_cache
     in_source_cache do
-      fetch && unarchive
+      fetch && checksum && unarchive
     end
   end
 
   protected
+
+  def checksum
+    @checksum = run_and_output("shasum #{escape(File.join(source_cache, filename))}").strip
+  end
 
   def clean_cache
     run "rm -rf #{source_cache} && mkdir -p #{source_cache}"
