@@ -389,14 +389,7 @@ YML
       # should it need to), but it would like to use #short_log_message.
       def strategy
         ensure_git_ssh_wrapper
-        @strategy ||= config.strategy_class.new(
-          shell,
-          :verbose          => config.verbose,
-          :repository_cache => paths.repository_cache,
-          :app              => config.app,
-          :uri              => config.strategy_uri,
-          :ref              => config[:branch]
-        )
+        @strategy ||= config.source_cache_strategy(shell)
       end
 
       protected
