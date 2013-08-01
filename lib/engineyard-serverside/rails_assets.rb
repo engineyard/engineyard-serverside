@@ -75,7 +75,7 @@ module EY
         asset_strategy.reusable? &&
           previous_revision &&
           active_revision &&
-          runner.strategy.same?(previous_revision, active_revision, asset_dependencies)
+          runner.unchanged_diff_between_revisions?(previous_revision, active_revision, asset_dependencies)
       end
 
       def precompile_detected_assets

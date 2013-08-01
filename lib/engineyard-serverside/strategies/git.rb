@@ -4,11 +4,17 @@ module EY
   module Serverside
     module Strategies
       class Git
-        attr_reader :shell, :opts
+        attr_reader :shell, :opts, :uri, :repository_cache
 
         def initialize(shell, opts)
           @shell = shell
           @opts = opts
+          unless @opts[:ref] && @opts[:uri] && @opts[:repository_cache]
+            raise ArgumentError, "Missing required keys. (:ref, :uri, and :repository_cache are required)"
+          end
+          @ref = opts[:ref]
+          @uri = @opts[:uri]
+          @repository_cache = Pathname.new(@opts[:repository_cache])
         end
 
         def update_repository_cache
@@ -18,14 +24,14 @@ module EY
         end
 
         def usable_repository?
-          repository_cache.directory? && `#{git} remote -v | grep origin`[remote_uri]
+          repository_cache.directory? && `#{git} remote -v | grep origin`.include?(uri)
         end
 
         def fetch
           if usable_repository?
             run("#{git} fetch -q origin 2>&1")
           else
-            run("rm -rf #{repository_cache} && git clone -q #{remote_uri} #{repository_cache} 2>&1")
+            run("rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1")
           end
         end
 
@@ -42,14 +48,14 @@ module EY
         end
 
         def to_checkout
-          return @to_checkout if @opts_ref == opts[:ref]
-          @opts_ref = opts[:ref]
-          clean_local_branch(@opts_ref)
-          @to_checkout = remote_branch?(@opts_ref) ? "origin/#{@opts_ref}" : @opts_ref
+          @to_checkout ||= begin
+                             clean_local_branch(@ref)
+                             remote_branch?(@ref) ? "origin/#{@ref}" : @ref
+                           end
         end
 
-        def clean_local_branch(ref)
-          system("#{git} show-branch #{ref} > /dev/null 2>&1 && #{git} branch -D #{ref} > /dev/null 2>&1")
+        def clean_local_branch(given_ref)
+          system("#{git} show-branch #{given_ref} > /dev/null 2>&1 && #{git} branch -D #{given_ref} > /dev/null 2>&1")
         end
 
         def gc_repository_cache
@@ -83,20 +89,12 @@ module EY
           Dir.chdir(repository_cache) { yield }
         end
 
-        def remote_uri
-          opts[:repo]
-        end
-
-        def repository_cache
-          Pathname.new(opts[:repository_cache])
-        end
-
         def git
           "git --git-dir #{repository_cache}/.git --work-tree #{repository_cache}"
         end
 
-        def remote_branch?(ref)
-          system("#{git} show-branch origin/#{ref} > /dev/null 2>&1")
+        def remote_branch?(given_ref)
+          system("#{git} show-branch origin/#{given_ref} > /dev/null 2>&1")
         end
       end
     end

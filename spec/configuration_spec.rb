@@ -43,6 +43,32 @@ describe EY::Serverside::Deploy::Configuration do
     end
   end
 
+  context "strategies" do
+    it "defaults to git" do
+      @config = EY::Serverside::Deploy::Configuration.new({
+        'repo' => 'git@github.com:engineyard/todo.git'
+      })
+      expect(@config.strategy_class).to eq(EY::Serverside::Strategies::Git)
+      expect(@config.strategy_uri).to eq("git@github.com:engineyard/todo.git")
+    end
+
+    it "infers a git strategy" do
+      @config = EY::Serverside::Deploy::Configuration.new({
+        'git' => 'git@github.com:engineyard/todo.git'
+      })
+      expect(@config.strategy_class).to eq(EY::Serverside::Strategies::Git)
+      expect(@config.strategy_uri).to eq("git@github.com:engineyard/todo.git")
+    end
+
+    it "infers a archive strategy" do
+      @config = EY::Serverside::Deploy::Configuration.new({
+        'archive' => 'https://github.com/engineyard/todo/archive/master.zip'
+      })
+      expect(@config.strategy_class).to eq(EY::Serverside::Strategies::Archive)
+      expect(@config.strategy_uri).to eq("https://github.com/engineyard/todo/archive/master.zip")
+    end
+  end
+
   context "command line options" do
     before do
       @config = EY::Serverside::Deploy::Configuration.new({

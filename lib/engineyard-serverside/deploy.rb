@@ -73,6 +73,10 @@ module EY
         strategy.short_log_message(revision)
       end
 
+      def unchanged_diff_between_revisions?(previous_revision, active_revision, asset_dependencies)
+        strategy.same?(previous_revision, active_revision, asset_dependencies)
+      end
+
       def check_repository
         check_dependencies
       end
@@ -378,8 +382,6 @@ YML
         end
       end
 
-      protected
-
       # Use [] to access attributes instead of calling methods so
       # that we get nils instead of NoMethodError.
       #
@@ -390,13 +392,14 @@ YML
         @strategy ||= config.strategy_class.new(
           shell,
           :verbose          => config.verbose,
-          :repository_cache => paths.repository_cache.to_s,
+          :repository_cache => paths.repository_cache,
           :app              => config.app,
-          :repo             => config[:repo],
+          :uri              => config.strategy_uri,
           :ref              => config[:branch]
         )
       end
-      public :strategy
+
+      protected
 
       def base_callback_command_for(what)
         cmd =  [About.binary, 'hook', what.to_s]
