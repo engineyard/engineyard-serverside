@@ -55,6 +55,8 @@ module EY
       def_required_option :instance_roles
       def_required_option :instance_names
 
+      def_option :git,               nil
+      def_option :archive,           nil
       def_option :repo,              nil
       def_option :migrate,           nil
       def_option :precompile_assets, 'detect'
@@ -180,32 +182,29 @@ module EY
         EY::Serverside.node
       end
 
-      # Infer the deploy strategy to use based on flag or default to specified
-      # strategy.
+      # Infer the deploy strategy to use based on flag or
+      # default to specified strategy.
       #
-      # Returns a strategy class.
-      def strategy_class
-        EY::Serverside::Strategies.const_get(detect_strategy)
-      end
-
-      # Check for which strategy is being used or return the default.
-      #
-      # Returns a string strategy class name.
-      def detect_strategy
-        @detected_strategy ||= if git
-          "Git"
+      # Returns a strategy object.
+      def source_cache_strategy(shell)
+        if git
+          load_strategy(EY::Serverside::Strategy::Git, shell, git)
         elsif archive
-          "Archive"
-        else
-          strategy
+          load_strategy(EY::Serverside::Strategy::Archive, shell, archive)
+        else # repo is allowed to be nil
+          load_strategy(EY::Serverside::Strategy.for(strategy), shell, repo)
         end
       end
 
-      # Get the uri that the strategy should use.
-      #
-      # Returns a string uri.
-      def strategy_uri
-        self[detect_strategy.downcase] || self[:repo]
+      def load_strategy(klass, shell, uri)
+        klass.new(
+          shell,
+          :verbose          => verbose,
+          :repository_cache => paths.repository_cache,
+          :app              => app,
+          :uri              => uri,
+          :ref              => branch
+        )
       end
 
       def paths
