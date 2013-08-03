@@ -1,29 +1,34 @@
 require 'spec_helper'
 
-describe "the git deploy strategy" do
-  subject do
-    fixtures_dir = Pathname.new(__FILE__).dirname.join("fixtures")
-    gitrepo_dir = tmpdir.join("gitrepo-#{Time.now.utc.strftime("%Y%m%d%H%M%S")}#{Time.now.tv_usec}-#{$$}")
-    gitrepo_dir.mkdir
-    system "tar xzf #{fixtures_dir.join('gitrepo.tar.gz')} --strip-components 1 -C #{gitrepo_dir}"
+class EY::Serverside::Strategy::Git
+  def fetch_command
+    "mkdir -p #{source_cache} && tar xzf #{FIXTURES_DIR.join('gitrepo.tar.gz')} --strip-components 1 -C #{source_cache}"
+  end
+end
 
-    EY::Serverside::Strategies::Git.new(
+describe EY::Serverside::Strategy::Git do
+  before do
+    @source_cache = tmpdir.join("gitrepo-#{Time.now.utc.strftime("%Y%m%d%H%M%S")}#{Time.now.tv_usec}-#{$$}")
+  end
+
+
+  it "#update_repository_cache returns true for branches that exist" do
+    git = EY::Serverside::Strategy::Git.new(
       test_shell,
-      :repo => FIXTURES_DIR.join('repos','default'),
-      :repository_cache => gitrepo_dir,
-      :ref => "master"
+      :uri => FIXTURES_DIR.join('repos','default'),
+      :repository_cache => @source_cache,
+      :ref => "somebranch"
     )
+    git.update_repository_cache
   end
 
-  before { subject.checkout }
-
-  it "#checkout returns true for branches that exist" do
-    subject.opts[:ref] = "somebranch"
-    subject.checkout.should be_true
-  end
-
-  it "#checkout returns false for branches that do not exist" do
-    subject.opts[:ref] = "notabranch"
-    subject.checkout.should be_false
+  it "#update_repository_cache returns false for branches that do not exist" do
+    git = EY::Serverside::Strategy::Git.new(
+      test_shell,
+      :uri => FIXTURES_DIR.join('repos','default'),
+      :repository_cache => @source_cache,
+      :ref => "notabranch"
+    )
+    expect { git.update_repository_cache }.to raise_error
   end
 end

@@ -3,6 +3,8 @@ require 'thor'
 require 'pp'
 require 'yaml'
 require 'engineyard-serverside/paths'
+require 'engineyard-serverside/strategy/git'
+require 'engineyard-serverside/strategy/archive'
 
 module EY
   module Serverside
@@ -55,14 +57,15 @@ module EY
       def_required_option :instance_roles
       def_required_option :instance_names
 
-      def_option :repo,              nil
+      def_option :git,               nil
+      def_option :archive,           nil
       def_option :migrate,           nil
       def_option :precompile_assets, 'detect'
       def_option :precompile_assets_task, 'assets:precompile'
       def_option :asset_strategy,    'shifting'
       def_option :asset_dependencies, %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb config/application.rb]
       def_option :stack,             nil
-      def_option :strategy,          'Git'
+      def_option :strategy,          nil
       def_option :branch,            'master'
       def_option :current_roles,     []
       def_option :current_name,      nil
@@ -85,6 +88,7 @@ module EY
       alias app_name app
       alias environment framework_env # legacy because it would be nice to have less confusion around "environment"
       alias migration_command migrate
+      alias repo git
 
       def initialize(options)
         opts = string_keys(options)
@@ -180,8 +184,33 @@ module EY
         EY::Serverside.node
       end
 
-      def strategy_class
-        EY::Serverside::Strategies.const_get(strategy)
+      # Infer the deploy strategy to use based on flag or
+      # default to specified strategy.
+      #
+      # Returns a strategy object.
+      def source_cache_strategy(shell)
+        if archive && git
+          shell.fatal "Both --git and --archive specified. Precedence is not defined. Aborting"
+          raise "Both --git and --archive specified. Precedence is not defined. Aborting"
+        end
+        if archive
+          load_strategy(EY::Serverside::Strategy::Archive, shell, archive)
+        elsif strategy
+          load_strategy(EY::Serverside::Strategy.for(strategy), shell, git)
+        else # git can be nil for integrate or rollback
+          load_strategy(EY::Serverside::Strategy::Git, shell, git)
+        end
+      end
+
+      def load_strategy(klass, shell, uri)
+        klass.new(
+          shell,
+          :verbose          => verbose,
+          :repository_cache => paths.repository_cache,
+          :app              => app,
+          :uri              => uri,
+          :ref              => branch
+        )
       end
 
       def paths

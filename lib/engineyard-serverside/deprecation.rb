@@ -20,6 +20,9 @@ module EY
       when :LockfileParser
         EY::Serverside.deprecation_warning("EY::Serverside::LockfileParser has been deprecated. Use EY::Serverside::DependencyManager::Bundler::Lockfile instead.")
         EY::Serverside::DependencyManager::Bundler::Lockfile
+      when :Strategies
+        EY::Serverside.deprecation_warning("EY::Serverside::Strategies has been deprecated. Use EY::Serverside::Strategy instead.")
+        EY::Serverside::Strategy
       else
         super
       end

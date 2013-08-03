@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('timecop', '0.6.1')
   s.add_development_dependency('simplecov')
   s.add_development_dependency('engineyard-cloud-client', '~>1.0.11')
-  s.add_development_dependency('engineyard-serverside-adapter', '~>2.0.6')
+  s.add_development_dependency('engineyard-serverside-adapter', '~>2.1.0')
   s.add_development_dependency('sqlite3')
 
   s.required_rubygems_version = %q{>= 1.3.6}

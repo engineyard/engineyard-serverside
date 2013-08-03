@@ -15,7 +15,8 @@ end
 require 'pp'
 require 'engineyard-serverside'
 require 'engineyard-serverside-adapter'
-require File.expand_path('../support/integration', __FILE__)
+require 'support/integration'
+require 'support/strategy_doubles'
 
 FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
 TMPDIR = Pathname.new(__FILE__).dirname.parent.join('tmp')
@@ -28,11 +29,6 @@ module EY
       @dna_json = j
       @node = nil
     end
-
-    class Strategies::Git
-      def short_log_message(_) "" end
-    end
-
   end
 end
 
@@ -244,7 +240,7 @@ exec "$@"
       "framework_env"    => 'staging',
       "branch"           => 'somebranch',
       "verbose"          => true,
-      "repo"             => FIXTURES_DIR.join('repos', repo_fixture_name),
+      "git"              => FIXTURES_DIR.join('repos', repo_fixture_name),
     }.merge(extra_config)
 
     # pretend there is a shared bundled_gems directory
@@ -260,7 +256,7 @@ exec "$@"
       args.account_name     = options['account_name']
       args.migrate          = options['migrate']
       args.ref              = options['branch']
-      args.repo             = options['repo']
+      args.git              = options['git']
       args.config           = {
         "services_check_command" => "which echo",
         "services_setup_command" => "echo 'services setup command'",
