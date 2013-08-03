@@ -209,12 +209,7 @@ chmod 0700 #{path}
         if config.rollback_paths!
           begin
             rolled_back_release = paths.latest_release
-            if config.active_revision.exist?
-              revision = config.active_revision.read
-              shell.status "Rolling back to previous release: #{short_log_message(revision)}"
-            else
-              shell.status "Rolling back to previous release."
-            end
+            shell.status "Rolling back to previous release: #{short_log_message(config.active_revision)}"
             abort_on_bad_paths_in_release_directory
             run_with_callbacks(:symlink)
             sudo "rm -rf #{rolled_back_release}"

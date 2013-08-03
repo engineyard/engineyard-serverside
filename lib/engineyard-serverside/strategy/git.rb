@@ -32,7 +32,8 @@ class EY::Serverside::Strategy::Git < EY::Serverside::Strategy
 
   def update_repository_cache
     unless fetch && checkout
-      abort "*** [Error] Git could not checkout (#{to_checkout}) ***"
+      shell.fatal "git checkout #{to_checkout} failed."
+      raise "git checkout #{to_checkout} failed."
     end
   end
 
@@ -61,10 +62,14 @@ class EY::Serverside::Strategy::Git < EY::Serverside::Strategy
 
   # Internal:
   def fetch
+    run_and_success?(fetch_command)
+  end
+
+  def fetch_command
     if usable_repository?
-      run_and_success?("#{git} fetch -q origin 2>&1")
+      "#{git} fetch -q origin 2>&1"
     else
-      run_and_success?("rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1")
+      "rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1"
     end
   end
 

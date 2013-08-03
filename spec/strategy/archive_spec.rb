@@ -13,12 +13,6 @@ describe EY::Serverside::Strategy::Archive do
         :repository_cache => TMPDIR)
     }
 
-    it "creates the correct revision command using the filename" do
-      expect(subject.create_revision_file_command("directory/REVISION")).to eq(
-        "shasum #{File.join(subject.source_cache, "app.war")} > directory/REVISION"
-      )
-    end
-
     it "cleans cache" do
       expect(subject).to respond_to(:gc_repository_cache)
     end

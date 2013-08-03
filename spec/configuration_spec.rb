@@ -46,11 +46,11 @@ describe EY::Serverside::Deploy::Configuration do
     let(:options) {
       { "app" => "serverside" }
     }
-    it "defaults to git" do
+    it "uses strategy if set" do
       @config = EY::Serverside::Deploy::Configuration.new(
-        options.merge({ 'repo' => 'git@github.com:engineyard/todo.git'})
+        options.merge({'strategy' => 'IntegrationSpec', 'git' => 'git@github.com:engineyard/todo.git'})
       )
-      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::Git)
+      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::IntegrationSpec)
     end
 
     it "infers a git strategy" do
