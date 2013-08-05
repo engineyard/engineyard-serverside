@@ -58,23 +58,23 @@ module EY
       end
 
       def update_repository_cache
-        strategy.update_repository_cache
+        source.update_repository_cache
       end
 
       def gc_repository_cache
-        strategy.gc_repository_cache
+        source.gc_repository_cache
       end
 
       def create_revision_file_command
-        strategy.create_revision_file_command(paths.active_revision)
+        source.create_revision_file_command(paths.active_revision)
       end
 
       def short_log_message(revision)
-        strategy.short_log_message(revision)
+        source.short_log_message(revision)
       end
 
       def unchanged_diff_between_revisions?(previous_revision, active_revision, asset_dependencies)
-        strategy.same?(previous_revision, active_revision, asset_dependencies)
+        source.same?(previous_revision, active_revision, asset_dependencies)
       end
 
       def check_repository
@@ -386,9 +386,9 @@ YML
       #
       # Rollback doesn't know about the repository location (nor
       # should it need to), but it would like to use #short_log_message.
-      def strategy
+      def source
         ensure_git_ssh_wrapper
-        @strategy ||= config.source_cache_strategy(shell)
+        @source ||= config.source(shell)
       end
 
       protected

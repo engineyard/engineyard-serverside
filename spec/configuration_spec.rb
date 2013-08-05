@@ -50,22 +50,29 @@ describe EY::Serverside::Deploy::Configuration do
       @config = EY::Serverside::Deploy::Configuration.new(
         options.merge({'strategy' => 'IntegrationSpec', 'git' => 'git@github.com:engineyard/todo.git'})
       )
-      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::IntegrationSpec)
+      expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::IntegrationSpec)
     end
 
-    it "infers a git strategy" do
+    it "uses source_class if set" do
+      @config = EY::Serverside::Deploy::Configuration.new(
+        options.merge({'source_class' => 'IntegrationSpec', 'git' => 'git@github.com:engineyard/todo.git'})
+      )
+      expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::IntegrationSpec)
+    end
+
+    it "infers a git source" do
       @config = EY::Serverside::Deploy::Configuration.new(
         options.merge({ 'git' => 'git@github.com:engineyard/todo.git' })
       )
-      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::Git)
+      expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::Git)
     end
 
-    it "infers a archive strategy" do
+    it "infers a archive source" do
       @config = EY::Serverside::Deploy::Configuration.new(
         options.merge({'archive' => 'https://github.com/engineyard/todo/archive/master.zip'})
       )
 
-      expect(@config.source_cache_strategy(nil)).to be_a_kind_of(EY::Serverside::Strategy::Archive)
+      expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::Archive)
     end
   end
 

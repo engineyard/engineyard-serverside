@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe EY::Serverside::Strategy::Git do
+describe EY::Serverside::Source::Git do
   before do
     described_class.any_instance.stub(:runner) { RunnerDouble }
   end
@@ -9,7 +9,7 @@ describe EY::Serverside::Strategy::Git do
     expect { described_class.new(nil, {}) }.to raise_error(ArgumentError)
   end
 
-  context "strategy" do
+  context "source" do
     let(:shell) { ShellDouble.new }
     subject {
       described_class.new(shell,
@@ -39,6 +39,6 @@ describe EY::Serverside::Strategy::Git do
       )
     end
 
-  end # / strategy
+  end
 
 end

@@ -1,5 +1,7 @@
-# Deploy strategy for archive source based deploy.
-class EY::Serverside::Strategy::Archive < EY::Serverside::Strategy
+require 'engineyard-serverside/source'
+
+# Deploy source for archive sourced deploy.
+class EY::Serverside::Source::Archive < EY::Serverside::Source
   def create_revision_file_command(revision_file_path)
     "echo #{escape(@checksum || filename)} > #{escape(revision_file_path.to_s)}"
   end

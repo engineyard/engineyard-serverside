@@ -51,7 +51,7 @@ class EY::Serverside::Deploy
   end
 end
 
-class EY::Serverside::Strategy::IntegrationSpec < EY::Serverside::Strategy
+class EY::Serverside::Source::IntegrationSpec < EY::Serverside::Source
   attr_reader :source_repo
 
   def initialize(*a)

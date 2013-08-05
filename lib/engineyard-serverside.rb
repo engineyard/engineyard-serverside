@@ -24,10 +24,6 @@ require 'uri'
 require 'engineyard-serverside/version'
 require 'engineyard-serverside/about'
 
-require 'engineyard-serverside/strategy'
-require 'engineyard-serverside/strategy/git'
-require 'engineyard-serverside/strategy/archive'
-
 require 'engineyard-serverside/task'
 require 'engineyard-serverside/server'
 require 'engineyard-serverside/deploy'

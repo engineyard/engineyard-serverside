@@ -1,4 +1,6 @@
 require 'engineyard-serverside/shell/helpers'
+require 'engineyard-serverside/dependency_manager/bundler'
+require 'engineyard-serverside/source/git'
 
 module EY
   module Serverside
@@ -12,17 +14,15 @@ module EY
       end
     end
 
+    DEPRECATED_CLASSES = {
+      :LoggedOutput   => EY::Serverside::Shell::Helpers,
+      :LockfileParser => EY::Serverside::DependencyManager::Bundler::Lockfile,
+      :Strategies     => EY::Serverside::Source::Git
+    }
     def self.const_missing(const)
-      case const
-      when :LoggedOutput
-        EY::Serverside.deprecation_warning("EY::Serverside::LoggedOutput has been deprecated. Use EY::Serverside::Shell::Helpers instead.")
-        EY::Serverside::Shell::Helpers
-      when :LockfileParser
-        EY::Serverside.deprecation_warning("EY::Serverside::LockfileParser has been deprecated. Use EY::Serverside::DependencyManager::Bundler::Lockfile instead.")
-        EY::Serverside::DependencyManager::Bundler::Lockfile
-      when :Strategies
-        EY::Serverside.deprecation_warning("EY::Serverside::Strategies has been deprecated. Use EY::Serverside::Strategy instead.")
-        EY::Serverside::Strategy
+      if klass = DEPRECATED_CLASSES[const]
+        deprecation_warning("EY::Serverside::#{const} has been deprecated. Please use: #{klass}")
+        klass
       else
         super
       end

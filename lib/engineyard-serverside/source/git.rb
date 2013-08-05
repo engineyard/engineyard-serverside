@@ -1,5 +1,7 @@
-# Deploy strategy for git repository source based deploy.
-class EY::Serverside::Strategy::Git < EY::Serverside::Strategy
+require 'engineyard-serverside/source'
+
+# Deploy source for git repository sourced deploy.
+class EY::Serverside::Source::Git < EY::Serverside::Source
   require_opts :uri, :ref, :repository_cache
 
   def create_revision_file_command(revision_file_path)

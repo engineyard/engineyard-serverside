@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-class EY::Serverside::Strategy::Archive
+class EY::Serverside::Source::Archive
   def fetch_command
     "cp #{uri} #{source_cache}"
   end

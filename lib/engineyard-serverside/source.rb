@@ -1,7 +1,7 @@
 require 'pathname'
 require 'engineyard-serverside/spawner'
 
-class EY::Serverside::Strategy
+class EY::Serverside::Source
   attr_reader :uri, :opts, :source_cache, :ref, :shell
   alias repository_cache source_cache
 

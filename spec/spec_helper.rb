@@ -16,7 +16,7 @@ require 'pp'
 require 'engineyard-serverside'
 require 'engineyard-serverside-adapter'
 require 'support/integration'
-require 'support/strategy_doubles'
+require 'support/source_doubles'
 
 FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
 TMPDIR = Pathname.new(__FILE__).dirname.parent.join('tmp')
@@ -228,7 +228,7 @@ exec "$@"
   # spec/fixtures/repos dir are copied into the test github repository.
   def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
     options = {
-      "strategy"         => "IntegrationSpec",
+      "source_class"     => "IntegrationSpec",
       "deploy_to"        => deploy_dir.to_s,
       "release_path"     => release_path.to_s,
       "group"            => GROUP,
@@ -260,7 +260,7 @@ exec "$@"
       args.config           = {
         "services_check_command" => "which echo",
         "services_setup_command" => "echo 'services setup command'",
-        "strategy"               => options["strategy"],
+        "source_class"           => options["source_class"],
         "deploy_to"              => options["deploy_to"],
         "release_path"           => options["release_path"],
         "group"                  => options["group"]

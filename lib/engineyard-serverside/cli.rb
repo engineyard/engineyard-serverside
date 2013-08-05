@@ -25,11 +25,11 @@ module EY
                                       :aliases  => ["-r"]
 
 
-      # Archive strategy
+      # Archive source strategy
       method_option :archive,        :type     => :string,
                                      :desc     => "Remote URI for archive to download and unzip"
 
-      # Git strategy
+      # Git source strategy
       method_option :git,            :type     => :string,
                                      :desc     => "Remote git repo to deploy"
 

@@ -3,8 +3,9 @@ require 'thor'
 require 'pp'
 require 'yaml'
 require 'engineyard-serverside/paths'
-require 'engineyard-serverside/strategy/git'
-require 'engineyard-serverside/strategy/archive'
+require 'engineyard-serverside/source'
+require 'engineyard-serverside/source/git'
+require 'engineyard-serverside/source/archive'
 
 module EY
   module Serverside
@@ -65,7 +66,8 @@ module EY
       def_option :asset_strategy,    'shifting'
       def_option :asset_dependencies, %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb config/application.rb]
       def_option :stack,             nil
-      def_option :strategy,          nil
+      def_option :strategy,          nil # deprecated
+      def_option :source_class,      nil
       def_option :branch,            'master'
       def_option :current_roles,     []
       def_option :current_name,      nil
@@ -184,25 +186,25 @@ module EY
         EY::Serverside.node
       end
 
-      # Infer the deploy strategy to use based on flag or
+      # Infer the deploy source strategy to use based on flag or
       # default to specified strategy.
       #
-      # Returns a strategy object.
-      def source_cache_strategy(shell)
+      # Returns a Source object.
+      def source(shell)
         if archive && git
           shell.fatal "Both --git and --archive specified. Precedence is not defined. Aborting"
           raise "Both --git and --archive specified. Precedence is not defined. Aborting"
         end
         if archive
-          load_strategy(EY::Serverside::Strategy::Archive, shell, archive)
-        elsif strategy
-          load_strategy(EY::Serverside::Strategy.for(strategy), shell, git)
+          load_source(EY::Serverside::Source::Archive, shell, archive)
+        elsif source_class || strategy
+          load_source(EY::Serverside::Source.for(source_class || strategy), shell, git)
         else # git can be nil for integrate or rollback
-          load_strategy(EY::Serverside::Strategy::Git, shell, git)
+          load_source(EY::Serverside::Source::Git, shell, git)
         end
       end
 
-      def load_strategy(klass, shell, uri)
+      def load_source(klass, shell, uri)
         klass.new(
           shell,
           :verbose          => verbose,
