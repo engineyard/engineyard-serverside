@@ -9,6 +9,7 @@ RSpec::Core::RakeTask.new(:php) do |spec|
   t.pattern = 'spec/**/*php*_spec.rb'
 end
 
+desc "Run specs and generate coverage data"
 task :coverage => [:coverage_env, :spec]
 
 task :coverage_env do
