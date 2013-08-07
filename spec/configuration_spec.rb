@@ -50,7 +50,10 @@ describe EY::Serverside::Deploy::Configuration do
       @config = EY::Serverside::Deploy::Configuration.new(
         options.merge({'strategy' => 'IntegrationSpec', 'git' => 'git@github.com:engineyard/todo.git'})
       )
-      expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::IntegrationSpec)
+      capture do # deprecation warning
+        expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::IntegrationSpec)
+      end
+      read_output.should include("DEPRECATION WARNING: The configuration key 'strategy' is deprecated in favor of 'source_class'.")
     end
 
     it "uses source_class if set" do

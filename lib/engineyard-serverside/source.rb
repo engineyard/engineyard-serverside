@@ -11,19 +11,16 @@ class EY::Serverside::Source
       @required_opts ||= []
       @required_opts += names
     end
-
-    def for(type)
-      const_get(type)
-    end
   end
 
   def initialize(shell, opts={})
     @shell = shell
     @opts = opts
 
-    if self.class.required_opts && !self.class.required_opts.all? {|name| @opts[name] }
+    missing = self.class.required_opts && self.class.required_opts.reject {|name| @opts[name] }
+    if missing and missing.any?
       raise ArgumentError,
-        "Missing required key(s) (#{self.class.required_opts.join(', ')} required)"
+        "Internal error: Missing keys #{missing.join(',')}. Required: #{self.class.required_opts.join(', ')}"
     end
 
     @ref = @opts[:ref]

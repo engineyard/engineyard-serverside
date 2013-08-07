@@ -2,6 +2,8 @@ require 'engineyard-serverside/source'
 
 # Deploy source for archive sourced deploy.
 class EY::Serverside::Source::Archive < EY::Serverside::Source
+  require_opts :uri, :repository_cache
+
   def create_revision_file_command(revision_file_path)
     "echo #{escape(@checksum || filename)} > #{escape(revision_file_path.to_s)}"
   end

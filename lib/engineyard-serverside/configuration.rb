@@ -50,6 +50,19 @@ module EY
         end
       end
 
+      def fetch_deprecated(attr, replacement, default)
+        called = false
+        result = fetch(attr) { called = true; default }
+        if !called # deprecated attr was found
+          @deprecation_warning ||= {}
+          @deprecation_warning[attr] ||= begin
+                                           EY::Serverside.deprecation_warning "The configuration key '#{attr}' is deprecated in favor of '#{replacement}'."
+                                           true
+                                         end
+        end
+        result
+      end
+
       def_required_option :app
       def_required_option :environment_name
       def_required_option :account_name
@@ -58,7 +71,7 @@ module EY
       def_required_option :instance_roles
       def_required_option :instance_names
 
-      def_option :git                { fetch(:repo, nil) }
+      def_option(:git)               { fetch_deprecated(:repo, :git, nil) } # repo is deprecated
       def_option :archive,           nil
       def_option :migrate,           nil
       def_option :precompile_assets, 'detect'
@@ -66,8 +79,7 @@ module EY
       def_option :asset_strategy,    'shifting'
       def_option :asset_dependencies, %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb config/application.rb]
       def_option :stack,             nil
-      def_option :strategy,          nil # deprecated
-      def_option :source_class,      nil
+      def_option(:source_class)      { fetch_deprecated(:strategy, :source_class, nil) } # strategy is deprecated
       def_option :branch,            'master'
       def_option :current_roles,     []
       def_option :current_name,      nil
@@ -196,8 +208,8 @@ module EY
         end
         if archive
           load_source(EY::Serverside::Source::Archive, shell, archive)
-        elsif source_class || strategy
-          load_source(EY::Serverside::Source.for(source_class || strategy), shell, git)
+        elsif source_class
+          load_source(EY::Serverside::Source.const_get(source_class), shell, git)
         else # git can be nil for integrate or rollback
           load_source(EY::Serverside::Source::Git, shell, git)
         end
