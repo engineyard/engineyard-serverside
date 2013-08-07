@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.3.0 (2013-08-07)
+
   * Abort rollbacks if unexpected files are found in the /data/app/releases/ directory because they disrupt the ability to find the previous and latest releases.
   * Accepts flags for git and archive strategies (`--git` and `--archive`) that are passed a uri
   * Changes the name of the Strategy class to Source.
