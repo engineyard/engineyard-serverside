@@ -58,7 +58,7 @@ module EY
       def_required_option :instance_roles
       def_required_option :instance_names
 
-      def_option :git,               nil
+      def_option :git                { fetch(:repo, nil) }
       def_option :archive,           nil
       def_option :migrate,           nil
       def_option :precompile_assets, 'detect'
@@ -90,7 +90,6 @@ module EY
       alias app_name app
       alias environment framework_env # legacy because it would be nice to have less confusion around "environment"
       alias migration_command migrate
-      alias repo git
 
       def initialize(options)
         opts = string_keys(options)
