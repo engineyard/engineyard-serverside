@@ -23,7 +23,7 @@ class EY::Serverside::Source
         "Internal error: Missing keys #{missing.join(',')}. Required: #{self.class.required_opts.join(', ')}"
     end
 
-    @ref = @opts[:ref]
+    @ref = @opts[:ref].to_s.strip
     @uri = @opts[:uri].to_s if @opts[:uri]
     @source_cache = Pathname.new(@opts[:repository_cache]) if @opts[:repository_cache]
   end
