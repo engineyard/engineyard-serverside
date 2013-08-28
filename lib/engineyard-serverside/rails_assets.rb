@@ -52,7 +52,7 @@ module EY
       def run_precompile_assets_task
         asset_strategy.prepare do
           cd   = "cd #{paths.active_release}"
-          task = "PATH=#{paths.binstubs}:$PATH #{framework_envs} rake #{precompile_assets_task} RAILS_GROUPS=assets"
+          task = "PATH=#{paths.binstubs}:$PATH #{framework_envs} bundle exec rake #{precompile_assets_task} RAILS_GROUPS=assets"
           runner.run "#{cd} && #{task}"
         end
       end
