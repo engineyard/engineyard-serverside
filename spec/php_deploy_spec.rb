@@ -5,6 +5,7 @@ describe "Deploying an application that uses PHP and Composer" do
   with_composer_mocked do |mocked|
     context "with composer available" do
       before(:all) { mock_composer if mocked }
+
       context "with a composer.lock" do
         before(:all) do
           deploy_test_application('php_composer_lock')
@@ -23,6 +24,16 @@ describe "Deploying an application that uses PHP and Composer" do
               update_cmd.should_not be nil
             end
           end
+        end
+      end
+
+      context "with composer disabled in ey.yml" do
+        before(:all) do
+          deploy_test_application('php_composer_disabled')
+        end
+
+        it "does not run composer" do
+          @deployer.commands.grep(/composer/).should be_empty
         end
       end
 

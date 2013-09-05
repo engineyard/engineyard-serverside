@@ -20,13 +20,32 @@ module EY
       # Registry pattern be damned. Hard code it and fix it when we want to
       # support dynamic loading. Right now we have no way to load dependency
       # managers dynamically, so why support it?
-      AVAILABLE_MANAGERS = [Bundler, Composer, Npm]
+      AVAILABLE_MANAGERS = {
+        'bundler'  => Bundler,
+        'composer' => Composer,
+        'npm'      => Npm
+      }
 
       include Enumerable
 
       # Initialize detected dependency managers
-      def initialize(*args)
-        @detected = AVAILABLE_MANAGERS.map { |klass| klass.new(*args) }.select { |manager| manager.detected? }
+      def initialize(servers, config, shell, runner)
+        @config = config
+        @detected = select_managers(servers, config, shell, runner)
+      end
+
+      def select_managers(servers, config, shell, runner)
+        managers = AVAILABLE_MANAGERS.map do |name, klass|
+          enabled = config[name]
+          case enabled
+          when 'false', false then nil
+          when 'true',  true  then klass.new(servers, config, shell, runner)
+          when 'detect'       then klass.detect(servers, config, shell, runner)
+          else
+            raise "Unknown value #{enabled.inspect} for option #{name.inspect}. Expected [true, false, detect]"
+          end
+        end
+        managers.compact
       end
 
       def each(&block)

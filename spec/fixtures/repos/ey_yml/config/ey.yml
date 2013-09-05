@@ -7,6 +7,7 @@ defaults:
   bundle_without: only test development
   maintenance_on_migrate: false
   maintenance_on_restart: false
+  bundler: true
 environments:
   env:
     branch: branch_from_ey_yml

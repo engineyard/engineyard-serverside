@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Supports new ey.yml options: `bundler`, `composer`, and `npm` which can be set to true or false to enable or disable each dependency manager.
 
 ## v2.3.0 (2013-08-07)
 
