@@ -71,24 +71,31 @@ module EY
       def_required_option :instance_roles
       def_required_option :instance_names
 
-      def_option(:git)               { fetch(:repo, nil) } # repo is deprecated
-      def_option :archive,           nil
-      def_option :migrate,           nil
-      def_option :precompile_assets, 'detect'
+      def_option(:git)                    { fetch(:repo, nil) } # repo is deprecated
+      def_option :archive,                nil
+      def_option :migrate,                nil
+
+      def_option :precompile_assets,      'detect'
       def_option :precompile_assets_task, 'assets:precompile'
-      def_option :asset_strategy,    'shifting'
-      def_option :asset_dependencies, %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb config/application.rb]
-      def_option :stack,             nil
-      def_option(:source_class)      { fetch_deprecated(:strategy, :source_class, nil) } # strategy is deprecated
-      def_option :branch,            'master'
-      def_option :current_roles,     []
-      def_option :current_name,      nil
-      def_option :asset_roles,       [:app_master, :app, :solo]
-      def_option :copy_exclude,      []
-      def_option :bundle_options,    nil
-      def_option(:bundle_without)    { %w[test development] - [framework_env] }
-      def_option(:user)              { ENV['USER'] }
-      def_option(:group)             { user }
+      def_option :asset_strategy,         'shifting'
+      def_option :asset_dependencies,     %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb config/application.rb]
+      def_option :asset_roles,            [:app_master, :app, :solo]
+
+      def_option :stack,                  nil
+      def_option(:source_class)           { fetch_deprecated(:strategy, :source_class, nil) } # strategy is deprecated
+      def_option :branch,                 'master'
+      def_option :current_roles,          []
+      def_option :current_name,           nil
+      def_option :copy_exclude,           []
+
+      def_option :bundler,                'detect'
+      def_option :composer,               'detect'
+      def_option :npm,                    'detect'
+      def_option :bundle_options,         nil
+      def_option(:bundle_without)         { %w[test development] - [framework_env] }
+
+      def_option(:user)                   { ENV['USER'] }
+      def_option(:group)                  { user }
       def_option :services_check_command, "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
       def_option(:services_setup_command) { "/usr/local/ey_resin/ruby/bin/ey-services-setup #{app}" }
 

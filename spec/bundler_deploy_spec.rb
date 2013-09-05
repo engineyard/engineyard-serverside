@@ -44,6 +44,22 @@ describe "Deploying an application that uses Bundler" do
     end
   end
 
+  context "with bundler disabled in ey.yml" do
+    before(:all) do
+      deploy_test_application('bundler_disabled')
+    end
+
+    it "does not run bundler commands" do
+      @deployer.commands.grep(/gem install bundler/).should be_empty
+      @deployer.commands.grep(/bundle _.*_ install/).should be_empty
+    end
+
+    it "still runs the hooks" do
+      deploy_dir.join('current', 'before_bundle.ran' ).should exist
+      deploy_dir.join('current', 'after_bundle.ran' ).should exist
+    end
+  end
+
   context "without a Gemfile.lock" do
     before(:all) do
       deploy_test_application('no_gemfile_lock')

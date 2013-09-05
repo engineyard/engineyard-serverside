@@ -4,6 +4,11 @@ module EY
       class Base
         attr_reader :servers, :config, :shell, :runner
 
+        def self.detect(*args)
+          manager = new(*args)
+          manager.detected? ? manager : nil
+        end
+
         def initialize(servers, config, shell, runner)
           @servers, @config, @shell, @runner = servers, config, shell, runner
         end
