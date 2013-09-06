@@ -99,6 +99,8 @@ module EY
       def_option :services_check_command, "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
       def_option(:services_setup_command) { "/usr/local/ey_resin/ruby/bin/ey-services-setup #{app}" }
 
+      def_option :restart_groups,         1
+
       def_boolean_option :verbose,                         false
       def_boolean_option :precompile_unchanged_assets,     false
       def_boolean_option :ignore_database_adapter_warning, false

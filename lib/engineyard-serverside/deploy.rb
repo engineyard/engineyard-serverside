@@ -130,10 +130,18 @@ module EY
       # task
       def restart
         @restart_failed = true
-        shell.status "Restarting app servers"
-        roles :app_master, :app, :solo do
-          run(restart_command)
+        if config.restart_groups.to_i > 1
+          shell.status "Restarting app servers in #{config.restart_groups.to_i} groups"
+        else
+          shell.status "Restarting app servers"
         end
+
+        servers.roles(:app_master, :app, :solo).in_groups(config.restart_groups.to_i) do |group|
+          shell.substatus "Restarting #{group.size} server#{group.size == 1 ? '' : 's'}"
+          group.run(restart_command)
+        end
+
+        shell.status "Finished restarting app servers"
         @restart_failed = false
       end
 

@@ -47,6 +47,16 @@ module EY
         reject { |server| server.local? }
       end
 
+      def in_groups(number)
+        div, mod = size.divmod number
+        start = 0
+        number.times do |index|
+          length = div + (mod > 0 && mod > index ? 1 : 0)
+          yield self.class.new(@servers.slice(start, length), @shell)
+          start += length
+        end
+      end
+
       # We look up the same set of servers over and over.
       # Cache them so we don't have to find them every time
       # Accepts a block (because it's confusing when you send a block to this

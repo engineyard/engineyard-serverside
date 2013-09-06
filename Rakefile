@@ -62,21 +62,42 @@ task :install_on, [:environment] do |t, args|
     raise "Couldn't find api_token in ~/.eyrc. Use engineyard gem to login."
   end
 
-  client = EY::CloudClient.new(:token => api_token)
-  result = client.resolve_environments({
+  client = EY::CloudClient.new(:endpoint => ENV['CLOUD_URL'], :token => api_token)
+  resolver = client.resolve_environments({
     :account_name     => account_name,
     :environment_name => environment_name,
   })
 
-  result.one_match do |env|
-    puts "Environment found: #{env.account.name}/#{env.name}"
-    env.deploy_to_instances.each do |instance|
-      user_host = "#{env.username}@#{instance.hostname}"
-      puts "Installing #{gemname} to #{instance.hostname}"
-      system("scp -o CheckHostIP=no -o StrictHostKeyChecking=no #{gemname} #{user_host}: ")
-      system("ssh -o CheckHostIP=no -o StrictHostKeyChecking=no #{user_host} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gemname} --no-rdoc --no-ri'")
-    end
+  resolver.one_match do |env|
+    puts "Environment found: #{env.hierarchy_name}"
+   puts "Installing #{gemname} to:"
+    env.deploy_to_instances.map do |instance|
+      puts " * #{instance.hostname}"
+      Thread.new do
+        user_host = "#{env.username}@#{instance.hostname}"
+        system("scp -o CheckHostIP=no -o StrictHostKeyChecking=no #{gemname} #{user_host}: ")
+        system("ssh -o CheckHostIP=no -o StrictHostKeyChecking=no #{user_host} 'sudo /usr/local/ey_resin/ruby/bin/gem install ~/#{gemname} --no-rdoc --no-ri'")
+      end
+    end.each(&:join)
   end
+
+  resolver.no_matches do |errors, suggestions|
+    message = "We found the following suggestions:\n" if suggestions.any?
+    suggestions.each do |suggest|
+      message << "\tbundle exec rake install_on[#{suggest['account_name']}/#{suggest['env_name']}]\n"
+    end
+
+    puts [errors,message].compact.join("\n").strip
+  end
+
+  resolver.many_matches do |matches|
+    message = "Multiple environments possible, please be more specific:\n\n"
+    matches.each do |env|
+      message << "\tbundle exec rake install_on[#{env.account.name}/#{env.name}]\n"
+    end
+    puts message
+  end
+
 end
 
 def bump
