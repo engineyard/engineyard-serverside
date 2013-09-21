@@ -23,7 +23,15 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
   def update_repository_cache
     clean_cache
     in_source_cache do
-      fetch && checksum && unarchive
+      unless fetch && checksum
+        shell.fatal "archive fetch from #{URI.parse(uri).hostname} failed."
+        raise "archive fetch from #{URI.parse(uri).hostname} failed."
+      end
+
+      unless unarchive
+        shell.fatal "unarchive of #{filename} failed."
+        raise "unarchive of #{filename} failed."
+      end
     end
   end
 
@@ -38,7 +46,7 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
   end
 
   def fetch_command
-    "curl --location --silent --show-error -O --user-agent #{escape("EngineYardDeploy/#{EY::Serverside::VERSION}")} #{escape(uri)}"
+    "curl --location --silent --show-error --fail -o #{escape(filename)} --user-agent #{escape("EngineYardDeploy/#{EY::Serverside::VERSION}")} #{escape(uri)}"
   end
 
   def fetch
@@ -49,10 +57,8 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
     @filename ||= File.basename(URI.parse(uri).path)
   end
 
+  # TODO: configurable via flag
   def unarchive
-    case File.extname(filename)
-    when '.zip', '.war'
-      run "unzip #{filename} && rm #{filename}"
-    end
+    run_and_success? "unzip #{filename} && rm #{filename}"
   end
 end
