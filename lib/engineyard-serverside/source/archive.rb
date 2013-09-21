@@ -38,7 +38,7 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
   end
 
   def fetch_command
-    "curl --location --silent --show-error -o #{escape(filename)} --user-agent #{escape("EngineYardDeploy/#{EY::Serverside::VERSION}")} #{escape(uri)}"
+    "curl --location --silent --show-error --fail -o #{escape(filename)} --user-agent #{escape("EngineYardDeploy/#{EY::Serverside::VERSION}")} #{escape(uri)}"
   end
 
   def fetch
