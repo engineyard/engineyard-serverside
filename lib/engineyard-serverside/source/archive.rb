@@ -23,7 +23,15 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
   def update_repository_cache
     clean_cache
     in_source_cache do
-      fetch && checksum && unarchive
+      unless fetch && checksum
+        shell.fatal "archive fetch from #{URI.parse(uri).hostname} failed."
+        raise "archive fetch from #{URI.parse(uri).hostname} failed."
+      end
+
+      unless unarchive
+        shell.fatal "unarchive of #{filename} failed."
+        raise "unarchive of #{filename} failed."
+      end
     end
   end
 
@@ -51,6 +59,6 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
 
   # TODO: configurable via flag
   def unarchive
-    run "unzip #{filename} && rm #{filename}"
+    run_and_success? "unzip #{filename} && rm #{filename}"
   end
 end
