@@ -49,10 +49,8 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
     @filename ||= File.basename(URI.parse(uri).path)
   end
 
+  # TODO: configurable via flag
   def unarchive
-    case File.extname(filename)
-    when '.zip', '.war'
-      run "unzip #{filename} && rm #{filename}"
-    end
+    run "unzip #{filename} && rm #{filename}"
   end
 end
