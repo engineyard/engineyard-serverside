@@ -4,6 +4,7 @@
 
   * Add `--no-dev` and `--optimize-autoloader` to default composer install command.
   * Supports new ey.yml options: `bundler`, `composer`, and `npm` which can be set to true or false to enable or disable each dependency manager.
+  * Supports experimental ey.yml option: `restart_groups: n`. When set to a number `n` greater than 1, app servers are divided into `n` groups and each group is restarted serially.
 
 ## v2.3.0 (2013-08-07)
 
