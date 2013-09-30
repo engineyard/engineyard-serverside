@@ -114,12 +114,17 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
         def clean_bundle_on_system_version_change
           # diff exits with 0 for same and 1/2 for different/file not found.
-          check_ruby   = "#{config.ruby_version_command} | diff - #{paths.ruby_version} >/dev/null 2>&1"
-          check_system = "#{config.system_version_command} | diff - #{paths.system_version} >/dev/null 2>&1"
           clean_bundle = "rm -Rf #{paths.bundled_gems}"
 
-          shell.substatus "Checking for system version changes"
-          run "#{check_ruby} && #{check_system} || #{clean_bundle}"
+          if config.clean?
+            shell.substatus "Clean bundle forced (--clean)"
+            run clean_bundle
+          else
+            check_ruby   = "#{config.ruby_version_command} | diff - #{paths.ruby_version} >/dev/null 2>&1"
+            check_system = "#{config.system_version_command} | diff - #{paths.system_version} >/dev/null 2>&1"
+            shell.substatus "Checking for system version changes"
+            run "#{check_ruby} && #{check_system} || #{clean_bundle}"
+          end
         end
 
         def bundler_version

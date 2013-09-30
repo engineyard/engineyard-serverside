@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Support option --clean which will force gems to be reinstalled (eg. when making a server architecture change that isn't already caught)
 
 ## v2.3.1 (2013-10-02)
 

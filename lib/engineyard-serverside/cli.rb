@@ -33,6 +33,9 @@ module EY
       method_option :git,            :type     => :string,
                                      :desc     => "Remote git repo to deploy"
 
+      method_option :clean,          :type     => :boolean,
+                                     :desc     => "Run deploy without relying on existing files"
+
 
       account_app_env_options
       config_option
