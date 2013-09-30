@@ -134,7 +134,7 @@ describe EY::Serverside::Deploy::Configuration do
         'app' => 'app_name',
         'environment_name' => 'env_name',
         'account_name' => 'acc',
-        'migrate' => nil,
+        'migrate' => true,
         'branch' => 'branch_from_command_line',
         'config' => MultiJson.dump({'custom' => 'custom_from_extra_config', 'maintenance_on_migrate' => 'false'})
       })
@@ -142,15 +142,18 @@ describe EY::Serverside::Deploy::Configuration do
       @deploy = FullTestDeploy.new(test_servers, @config, test_shell)
 
       @yaml_data = {
+        'defaults' => {
+          'copy_exclude' => ['.git'],
+          'migrate' => false,
+          'migration_command' => 'rake base:migrate',
+          'branch' => 'branch_from_ey_yml',
+          'custom' => 'custom_from_ey_yml',
+          'bundle_without' => 'only test',
+          'maintenance_on_migrate' => true,
+        },
         'environments' => {
           'env_name' => {
-            'copy_exclude' => ['.git'],
-            'migrate' => true,
-            'migration_command' => 'uh oh',
-            'branch' => 'branch_from_ey_yml',
-            'custom' => 'custom_from_ey_yml',
-            'bundle_without' => 'only test',
-            'maintenance_on_migrate' => true,
+            'migration_command' => 'rake custom:migrate',
           }
         }
       }
@@ -181,7 +184,21 @@ describe EY::Serverside::Deploy::Configuration do
     it "loads at lower priority than command line options" do
       write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
-      expect(@deploy.config.migrate?).to eq(false)
+      @deploy.config.branch.should == 'branch_from_command_line'
+    end
+
+    it "loads the migration command from ey.yml if one is not set on the command line" do
+      write_ey_yml 'ey.yml', @yaml_data
+      @deploy.load_ey_yml
+      expect(@deploy.config.migrate?).tos be_truthy
+      expect(@deploy.config.migration_command).to eq('rake custom:migrate')
+    end
+
+    it "raises if migrate is enabled and no command is given" do
+      write_ey_yml 'ey.yml', { 'defaults' => {'migrate' => false} }
+      @deploy.load_ey_yml
+      expect(@deploy.config.migrate?).to be_truthy
+      expect(@deploy.config.migration_command).to eq('rake custom:migrate')
     end
 
     it "loads at lower priority than json config option" do

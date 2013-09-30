@@ -13,6 +13,7 @@ module EY
       extend CLIHelpers
 
       method_option :migrate,         :type     => :string,
+                                      :lazy_default => true,
                                       :desc     => "Run migrations with this deploy",
                                       :aliases  => ["-m"]
 

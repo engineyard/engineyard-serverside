@@ -74,6 +74,7 @@ module EY
       def_option(:git)                    { fetch(:repo, nil) } # repo is deprecated
       def_option :archive,                nil
       def_option :migrate,                nil
+      def_option :migration_command,      nil
 
       def_option :precompile_assets,      'detect'
       def_option :precompile_assets_task, 'assets:precompile'
@@ -122,7 +123,6 @@ module EY
 
       alias app_name app
       alias environment framework_env # legacy because it would be nice to have less confusion around "environment"
-      alias migration_command migrate
       alias repo git
       alias ref branch # ref is used for input to cli, so it should work here.
 
@@ -309,6 +309,18 @@ module EY
 
       def migrate?
         !!migration_command
+      end
+
+      def migration_command
+        if String === migrate
+          migrate
+        elsif ['true',true].include?(migrate)
+          fetch('migration_command') do
+            raise "migrate enabled but migration_command not set"
+          end
+        else
+          nil
+        end
       end
 
       def role
