@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.3.1 (2013-10-02)
+
   * Fix find maxdepth problem that causes shared/config files to by symlinked incorrectly.
   * Add `--no-dev` and `--optimize-autoloader` to default composer install command.
   * Supports new ey.yml options: `bundler`, `composer`, and `npm` which can be set to true or false to enable or disable each dependency manager.
