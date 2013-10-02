@@ -17,6 +17,7 @@ describe "Deploying a simple application" do
       args.archive = FIXTURES_DIR.join('retwisj.war')
       args.verbose = true
       args.instances = [{ :hostname => "localhost", :roles => ["solo"], :name => "single" }]
+      args.serverside_version = Gem::Version.create(EY::Serverside::VERSION.dup).release
       args.config = {
         "deploy_to" => deploy_dir,
         "release_path"     => release_path.to_s,

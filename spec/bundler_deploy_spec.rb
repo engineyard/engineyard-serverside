@@ -21,6 +21,8 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "removes bundled_gems directory if the ruby or system version changed" do
+      should_run_clear_bundle_cmd = @deployer.commands.grep(/diff/).first
+      should_run_clear_bundle_cmd.should_not be_nil
       clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
       clear_bundle_cmd.should_not be_nil
     end
@@ -42,6 +44,20 @@ describe "Deploying an application that uses Bundler" do
         deploy_dir.join('current', 'ey_bundler_binstubs', 'rake').should exist
       end
     end
+  end
+
+  context "with clean option" do
+    before(:all) do
+      deploy_test_application('ey_yml', 'clean' => true)
+    end
+
+    it "removes bundled_gems directory if the ruby or system version changed" do
+      should_run_clear_bundle_cmd = @deployer.commands.grep(/diff/).first
+      should_run_clear_bundle_cmd.should be_nil
+      clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
+      clear_bundle_cmd.should_not be_nil
+    end
+
   end
 
   context "with bundler disabled in ey.yml" do

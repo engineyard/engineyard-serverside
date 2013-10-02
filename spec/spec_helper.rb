@@ -251,13 +251,14 @@ exec "$@"
 
     # Create the command to send to CLI.start, even though most of the options are ignored
     @adapter = EY::Serverside::Adapter.new do |args|
-      args.app              = options['app']
-      args.environment_name = options['environment_name']
-      args.account_name     = options['account_name']
-      args.migrate          = options['migrate']
-      args.ref              = options['branch']
-      args.git              = options['git']
-      args.config           = {
+      args.app                = options['app']
+      args.environment_name   = options['environment_name']
+      args.account_name       = options['account_name']
+      args.migrate            = options['migrate']
+      args.ref                = options['branch']
+      args.git                = options['git']
+      args.serverside_version = Gem::Version.create(EY::Serverside::VERSION.dup).release
+      args.config             = {
         "services_check_command" => "which echo",
         "services_setup_command" => "echo 'services setup command'",
         "source_class"           => options["source_class"],
@@ -265,10 +266,11 @@ exec "$@"
         "release_path"           => options["release_path"],
         "group"                  => options["group"]
       }.merge(options['config'] || {})
-      args.framework_env    = options['framework_env']
-      args.stack            = options['stack']
-      args.verbose          = options['verbose']
-      args.instances        = test_servers.map {|s| {:hostname => s.hostname, :roles => s.roles.to_a, :name => s.name} }
+      args.framework_env      = options['framework_env']
+      args.stack              = options['stack']
+      args.verbose            = options['verbose']
+      args.clean              = options['clean']
+      args.instances          = test_servers.map {|s| {:hostname => s.hostname, :roles => s.roles.to_a, :name => s.name} }
     end
 
     @argv = @adapter.deploy.commands.last.to_argv[2..-1]
