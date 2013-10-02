@@ -38,7 +38,7 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
   protected
 
   def checksum
-    @checksum = run_and_output("shasum #{escape(File.join(source_cache, filename))}").strip
+    @checksum = run_and_output("shasum #{File.join(source_cache, escaped_filename)}").strip
   end
 
   def clean_cache
@@ -46,7 +46,7 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
   end
 
   def fetch_command
-    "curl --location --silent --show-error --fail -o #{escape(filename)} --user-agent #{escape("EngineYardDeploy/#{EY::Serverside::VERSION}")} #{escape(uri)}"
+    "curl --location --silent --show-error --fail -o #{escaped_filename} --user-agent #{escape("EngineYardDeploy/#{EY::Serverside::VERSION}")} #{escape(uri)}"
   end
 
   def fetch
@@ -59,6 +59,11 @@ class EY::Serverside::Source::Archive < EY::Serverside::Source
 
   # TODO: configurable via flag
   def unarchive
-    run_and_success? "unzip #{filename} && rm #{filename}"
+    run_and_success? "unzip #{escaped_filename} && rm #{escaped_filename}"
   end
+
+  def escaped_filename
+    escape(filename)
+  end
+
 end
