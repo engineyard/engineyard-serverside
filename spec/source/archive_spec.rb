@@ -26,8 +26,7 @@ describe EY::Serverside::Source::Archive do
     end
 
     it "updates the cache" do
-      last_output = subject.update_repository_cache.output
-      expect(last_output).to eq("unzip app.war && rm app.war")
+      subject.update_repository_cache
     end
 
   end
