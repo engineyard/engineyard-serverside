@@ -3,6 +3,7 @@
 ## NEXT
 
   * Support option --clean which will force gems to be reinstalled (eg. when making a server architecture change that isn't already caught)
+  * If dependncy manager options are set to blank, treat it like "detect".
 
 ## v2.3.1 (2013-10-02)
 

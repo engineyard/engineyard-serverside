@@ -40,7 +40,7 @@ module EY
           case enabled
           when 'false', false then nil
           when 'true',  true  then klass.new(servers, config, shell, runner)
-          when 'detect'       then klass.detect(servers, config, shell, runner)
+          when 'detect', nil  then klass.detect(servers, config, shell, runner)
           else
             raise "Unknown value #{enabled.inspect} for option #{name.inspect}. Expected [true, false, detect]"
           end
