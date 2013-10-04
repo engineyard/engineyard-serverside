@@ -26,6 +26,7 @@ module EY
 
         shell.status "Starting full deploy"
         copy_repository_cache
+        callback(:before_deploy)
         check_repository
 
         with_failed_release_cleanup do
@@ -49,6 +50,7 @@ module EY
 
         cleanup_old_releases
         gc_repository_cache
+        callback(:after_deploy)
         shell.status "Finished deploy at #{Time.now.asctime}"
       rescue Exception => e
         shell.status "Finished failing to deploy at #{Time.now.asctime}"
