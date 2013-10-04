@@ -111,6 +111,9 @@ module EY
         # we have to deploy the same SHA there as here
         integrate_options[:branch] = current_app_dir.join('REVISION').read.strip
 
+        # always rebundle gems on integrate to make sure the instance comes up correctly.
+        integrate_options[:clean] = true
+
         init_and_propagate(integrate_options, 'integrate') do |servers, config, shell|
 
           # We have to rsync the entire app dir, so we need all the permissions to be correct!
