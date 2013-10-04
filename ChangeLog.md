@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Add hooks `before_deploy` and `after_deploy` that happen near the beginning (after release directory is created) and at the end of the deploy task. 
   * Support option --clean which will force gems to be reinstalled (eg. when making a server architecture change that isn't already caught)
   * If dependncy manager options are set to blank, treat it like "detect".
 
