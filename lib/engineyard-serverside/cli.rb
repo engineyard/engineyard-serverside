@@ -117,7 +117,7 @@ module EY
         init_and_propagate(integrate_options, 'integrate') do |servers, config, shell|
 
           # We have to rsync the entire app dir, so we need all the permissions to be correct!
-          chown_command = "find #{app_dir} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
+          chown_command = "find #{app_dir} -not -user #{config.user} -or -not -group #{config.group} -exec chown -h #{config.user}:#{config.group} {} +"
           shell.logged_system("sudo sh -l -c '#{chown_command}'", servers.detect {|s| s.local?})
 
           servers.run_for_each! do |server|

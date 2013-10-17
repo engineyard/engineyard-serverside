@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Fixes a problem where symlinks were not chown'd correctly, causing invalid permissions for rsync.
 
 ## v2.3.2 (2013-10-09)
 
