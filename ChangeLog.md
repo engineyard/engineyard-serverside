@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * More specific find command for permissions problems.
 
 ## v2.3.3 (2013-10-16)
 

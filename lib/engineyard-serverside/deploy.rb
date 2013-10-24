@@ -363,7 +363,7 @@ YML
       end
 
       def ensure_ownership(*targets)
-        sudo "find #{targets.join(' ')} -not -user #{config.user} -or -not -group #{config.group} -exec chown #{config.user}:#{config.group} {} +"
+        sudo %|find #{targets.join(' ')} \\( -not -user #{config.user} -or -not -group #{config.group} \\) -exec chown #{config.user}:#{config.group} "{}" +|
       end
 
       # Move a symlink as atomically as we can.
