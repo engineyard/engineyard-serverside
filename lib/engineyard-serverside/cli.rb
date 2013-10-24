@@ -121,9 +121,10 @@ module EY
           shell.logged_system("sudo sh -l -c '#{chown_command}'", servers.detect {|s| s.local?})
 
           servers.run_for_each! do |server|
+            chown = server.command_on_server('sudo sh -l -c', chown_command)
             sync  = server.sync_directory_command(app_dir)
             clean = server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
-            "(#{sync}) && (#{clean})"
+            "(#{chown}) && (#{sync}) && (#{clean})"
           end
 
           # deploy local-ref to other instances into /data/$app/local-current
