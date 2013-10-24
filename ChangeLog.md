@@ -3,6 +3,7 @@
 ## NEXT
 
   * More specific find command for permissions problems.
+  * Fix file ownership on the integrate destination server before trying to rsync.
 
 ## v2.3.3 (2013-10-16)
 
