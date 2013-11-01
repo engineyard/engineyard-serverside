@@ -114,7 +114,9 @@ module EY
         # always rebundle gems on integrate to make sure the instance comes up correctly.
         integrate_options[:clean] = true
 
-        init_and_propagate(integrate_options, 'integrate') do |servers, config, shell|
+        logname = "integrate-#{options[:instances].join('-')}".gsub(/[^-.\w]/,'')
+
+        init_and_propagate(integrate_options, logname) do |servers, config, shell|
 
           # We have to rsync the entire app dir, so we need all the permissions to be correct!
           chown_command = %|find #{app_dir} \\( -not -user #{config.user} -or -not -group #{config.group} \\) -exec chown -h #{config.user}:#{config.group} "{}" +|

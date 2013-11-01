@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Put the hostname in the filename for integrate logs so that they aren't overwritten by other integrate actions, thus becoming undebuggable.
 
 ## v2.3.4 (2013-10-24)
 
