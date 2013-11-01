@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('engineyard-cloud-client', '~>1.0.14')
   s.add_development_dependency('engineyard-serverside-adapter', '~>2.2.0')
   s.add_development_dependency('sqlite3')
+  s.add_development_dependency('mime-types', '~>1.25')
 
   s.required_rubygems_version = %q{>= 1.3.6}
   s.test_files = Dir.glob("spec/**/*")
