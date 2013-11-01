@@ -64,7 +64,7 @@ module EY
       end
 
       def gc_repository_cache
-        source.gc_repository_cache
+        source.gc_repository_cache if config.gc?
       end
 
       def create_revision_file_command
