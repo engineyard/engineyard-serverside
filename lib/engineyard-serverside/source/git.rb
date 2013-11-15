@@ -69,7 +69,7 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
 
   def fetch_command
     if usable_repository?
-      "#{git} fetch -q origin 2>&1"
+      "#{git} fetch --tags --prune --quiet origin 2>&1"
     else
       "rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1"
     end
