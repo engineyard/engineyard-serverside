@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.3.6 (2013-11-15)
+
   * Fix a bug where force pushed tags and other branch changes are never fixed in the repository cache.
 
 ## v2.3.5 (2013-11-04)
