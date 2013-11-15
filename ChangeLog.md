@@ -2,10 +2,11 @@
 
 ## NEXT
 
-  *
+  * Fix a bug where force pushed tags and other branch changes are never fixed in the repository cache.
 
 ## v2.3.5 (2013-11-04)
 
+  * Disable automatic git garbage collection. To reenable, add gc: true to ey.yml.
   * Put the hostname in the filename for integrate logs so that they aren't overwritten by other integrate actions, thus becoming undebuggable.
 
 ## v2.3.4 (2013-10-24)
