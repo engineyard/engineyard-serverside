@@ -45,9 +45,9 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
   # Returns .
   def checkout
     shell.status "Deploying revision #{short_log_message(to_checkout)}"
-    q = opts[:verbose] ? '' : '-q'
+    q = opts[:verbose] ? '' : '--quiet'
     in_source_cache do
-      (run_and_success?("git checkout -f #{q} '#{to_checkout}'") ||
+      (run_and_success?("git checkout --force #{q} '#{to_checkout}'") ||
         run_and_success?("git reset --hard #{q} '#{to_checkout}'")) &&
         run_and_success?("git submodule sync") &&
         run_and_success?("git submodule update --init") &&
@@ -69,7 +69,8 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
 
   def fetch_command
     if usable_repository?
-      "#{git} fetch --tags --prune --quiet origin 2>&1"
+      q = opts[:verbose] ? '' : '--quiet'
+      "#{git} fetch --force --prune --update-head-ok #{q} origin 'refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
     else
       "rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1"
     end
