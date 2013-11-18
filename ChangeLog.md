@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.3.7 (2013-11-18)
+
   * Supports new ey.yml option `ignore_gemfile_lock_warning`. When set to true, will not warn when Gemfile.lock is missing.
 
 ## v2.3.6 (2013-11-15)
