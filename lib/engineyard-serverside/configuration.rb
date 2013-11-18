@@ -106,6 +106,7 @@ module EY
       def_boolean_option :gc,                              false
       def_boolean_option :precompile_unchanged_assets,     false
       def_boolean_option :ignore_database_adapter_warning, false
+      def_boolean_option :ignore_gemfile_lock_warning,     false
       def_boolean_option :eydeploy_rb,                     true
       def_boolean_option :maintenance_on_migrate,          true
       def_boolean_option(:maintenance_on_restart)          { required_downtime_stack? }

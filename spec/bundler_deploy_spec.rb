@@ -101,6 +101,25 @@ describe "Deploying an application that uses Bundler" do
       deploy_dir.join('shared', 'bundled_gems', 'RUBY_VERSION').should exist
       deploy_dir.join('shared', 'bundled_gems', 'SYSTEM_VERSION').should exist
     end
+
+    it "warns that using a lockfile is idiomatic" do
+      out = read_output
+      out.should =~ %r(WARNING: Gemfile found but Gemfile.lock is missing!)
+    end
+  end
+
+  context "without a Gemfile.lock and ignoring the warning" do
+    before(:all) do
+      deploy_test_application('no_gemfile_lock', 'config' => {'ignore_gemfile_lock_warning' => true})
+      @config.ignore_gemfile_lock_warning.should be_true
+      @install_bundler_command = @deployer.commands.grep(/gem install bundler/).first
+      @bundle_install_command  = @deployer.commands.grep(/bundle _#{version_pattern}_ install/).first
+    end
+
+    it "should not warn" do
+      out = read_output
+      out.should_not =~ %r(WARNING)
+    end
   end
 
   context "with a failing Gemfile" do

@@ -34,7 +34,7 @@ adding ignore_database_adapter_warning: true to the application's ey.yml file
 under the defaults: top level key and committing the file to the repository.
               WARN
             end
-          else
+          elsif ! config.ignore_gemfile_lock_warning
             shell.warning <<-WARN
 Gemfile found but Gemfile.lock is missing!
 You can get different versions of gems in production than what you tested with.
