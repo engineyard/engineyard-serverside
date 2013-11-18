@@ -7,6 +7,7 @@
 ## v2.3.7 (2013-11-18)
 
   * Supports new ey.yml option `ignore_gemfile_lock_warning`. When set to true, will not warn when Gemfile.lock is missing.
+  * Fixes a bug introduced by 2.3.6 that caused tags to be fetched, but not heads. This prevented deployment of all branches that weren't tags.
 
 ## v2.3.6 (2013-11-15)
 
