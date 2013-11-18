@@ -29,6 +29,7 @@ describe EY::Serverside::Deploy::Configuration do
       @config.verbose.should == false
       @config.copy_exclude.should == []
       @config.ignore_database_adapter_warning.should == false
+      @config.ignore_gemfile_lock_warning.should == false
       @config.bundle_without.should == %w[test development]
       @config.extra_bundle_install_options.should == %w[--without test development]
     end
