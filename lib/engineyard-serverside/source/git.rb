@@ -70,7 +70,7 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
   def fetch_command
     if usable_repository?
       q = opts[:verbose] ? '' : '--quiet'
-      "#{git} fetch --force --prune --update-head-ok #{q} origin 'refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
+      "#{git} fetch --force --prune --update-head-ok #{q} origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
     else
       "rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1"
     end
