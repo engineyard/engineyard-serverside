@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * When git fetch fails, destroy the repository cache and re-clone from remote.
   * Update git fetch command to use + for heads and not just tags. "If the optional plus + is used, the local ref is updated even if it does not result in a fast-forward update."
 
 ## v2.3.7 (2013-11-18)
