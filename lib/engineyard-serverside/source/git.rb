@@ -45,10 +45,9 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
   # Returns .
   def checkout
     shell.status "Deploying revision #{short_log_message(to_checkout)}"
-    q = opts[:verbose] ? '' : '--quiet'
     in_source_cache do
-      (run_and_success?("git checkout --force #{q} '#{to_checkout}'") ||
-        run_and_success?("git reset --hard #{q} '#{to_checkout}'")) &&
+      (run_and_success?("git checkout --force #{quiet} '#{to_checkout}'") ||
+        run_and_success?("git reset --hard #{quiet} '#{to_checkout}'")) &&
         run_and_success?("git submodule sync") &&
         run_and_success?("git submodule update --init") &&
         run_and_success?("git clean -dfq")
@@ -64,16 +63,22 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
 
   # Internal:
   def fetch
-    run_and_success?(fetch_command)
+    run_fetch || run_and_success?(reclone_command)
+  end
+
+  def run_fetch
+    usable_repository? && run_and_success?(fetch_command)
+  rescue EY::Serverside::RemoteFailure
+    shell.warning "git fetch failed; attempting a fresh git clone."
+    false
   end
 
   def fetch_command
-    if usable_repository?
-      q = opts[:verbose] ? '' : '--quiet'
-      "#{git} fetch --force --prune --update-head-ok #{q} origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
-    else
-      "rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1"
-    end
+    "#{git} fetch --force --prune --update-head-ok #{quiet} origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
+  end
+
+  def reclone_command
+    "rm -rf #{repository_cache} && git clone #{quiet} #{uri} #{repository_cache} 2>&1"
   end
 
   def git
@@ -100,6 +105,10 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
 
   def remote_branch?
     run_and_success?("#{git} show-branch origin/#{ref} > /dev/null 2>&1")
+  end
+
+  def quiet
+    @quiet ||= opts[:verbose] ? '' : '--quiet'
   end
 
 end
