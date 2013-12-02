@@ -54,21 +54,35 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
     end
   end
 
-  # Internal:
-  #
-  # Returns .
+  # Remove a local branch with the same name as a branch that is being
+  # checked out. If there is already a local branch with the same name,
+  # then git checkout will checkout the possibly out-of-date local branch
+  # instead of the most current remote.
   def clean_local_branch
     run_and_success?("#{git} show-branch #{ref} > /dev/null 2>&1 && #{git} branch -D #{ref} > /dev/null 2>&1")
   end
 
-  # Internal:
+  # Prune and then fetch origin
+  #
+  # OR, if origin has changed locations
+  #
+  # Remove and reclone the repository from url
   def fetch
     run_and_success?(fetch_command)
   end
 
+  # Pruning before fetching makes sure that branches removed from remote are
+  # removed locally. This hopefully prevents problems where a branch name
+  # collides with a branch directory name (among other problems).
+  #
+  # Note that --prune doesn't succeed at doing this, even though it seems like
+  # it should.
   def fetch_command
     if usable_repository?
-      "#{git} fetch --force --prune --update-head-ok #{quiet} origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
+      prune_c = "#{git} remote prune origin 2>&1"
+      fetch_c = "#{git} fetch --force --prune --update-head-ok #{quiet} origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
+
+      "#{prune_c} && #{fetch_c}"
     else
       "rm -rf #{repository_cache} && git clone #{quiet} #{uri} #{repository_cache} 2>&1"
     end
