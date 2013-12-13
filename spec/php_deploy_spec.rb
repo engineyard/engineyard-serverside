@@ -16,10 +16,10 @@ describe "Deploying an application that uses PHP and Composer" do
           install_cmd.should_not be_nil
         end
 
-        it "runs 'composer self-update' before 'composer install'" do
+        it "attempts to run 'composer self-update' before 'composer install'" do
           update_cmd = nil
           @deployer.commands.each do |cmd|
-            update_cmd ||= /composer self-update/.match(cmd)
+            update_cmd ||= /composer.*self-update/.match(cmd)
             if /composer install/.match(cmd)
               update_cmd.should_not be nil
             end
@@ -52,10 +52,10 @@ describe "Deploying an application that uses PHP and Composer" do
           install_cmd.should_not be_nil
         end
 
-        it "runs 'composer self-update' before 'composer install'" do
+        it "attempts to run 'composer self-update' before 'composer install'" do
           update_cmd = nil
           @deployer.commands.each do |cmd|
-            update_cmd ||= /composer self-update/.match(cmd)
+            update_cmd ||= /composer.*self-update/.match(cmd)
             if /composer install/.match(cmd)
               update_cmd.should_not be nil
             end
@@ -66,13 +66,15 @@ describe "Deploying an application that uses PHP and Composer" do
 
     end
 
-    context "without composer available" do
+    unless $COMPOSER_INSTALLED
+      context "without composer available" do
 
-      it "fails to deploy" do
-        expect {deploy_test_application('php_composer_lock')}.to raise_error EY::Serverside::RemoteFailure
-        expect {deploy_test_application('php_no_composer_lock')}.to raise_error EY::Serverside::RemoteFailure
+        it "fails to deploy" do
+          expect {deploy_test_application('php_composer_lock')}.to raise_error EY::Serverside::RemoteFailure
+          expect {deploy_test_application('php_no_composer_lock')}.to raise_error EY::Serverside::RemoteFailure
+        end
+
       end
-
     end
   end
 end

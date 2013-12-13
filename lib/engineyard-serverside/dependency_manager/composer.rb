@@ -48,7 +48,7 @@ To fix this problem, commit your composer.lock to the repository and redeploy.
         end
 
         def composer_selfupdate
-          run "composer self-update"
+          run "command -v composer | xargs -I composer find composer -user #{config.user} -exec {} self-update \\;"
         end
 
         def composer_available?

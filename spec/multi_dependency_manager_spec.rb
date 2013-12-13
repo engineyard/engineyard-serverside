@@ -14,7 +14,7 @@ describe "Deploying an application that uses Node.js and NPM" do
         npm_cmd = @deployer.commands.grep(/npm install/).first
         npm_cmd.should_not be_nil
 
-        update_cmd = @deployer.commands.grep(/composer self-update/).first
+        update_cmd = @deployer.commands.grep(/composer.*self-update/).first
         update_cmd.should_not be_nil
 
         composer_cmd = @deployer.commands.grep(/composer install/).first
