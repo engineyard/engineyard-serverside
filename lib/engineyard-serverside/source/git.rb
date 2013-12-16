@@ -45,34 +45,46 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
   # Returns .
   def checkout
     shell.status "Deploying revision #{short_log_message(to_checkout)}"
-    q = opts[:verbose] ? '' : '--quiet'
     in_source_cache do
-      (run_and_success?("git checkout --force #{q} '#{to_checkout}'") ||
-        run_and_success?("git reset --hard #{q} '#{to_checkout}'")) &&
+      (run_and_success?("git checkout --force #{quiet} '#{to_checkout}'") ||
+        run_and_success?("git reset --hard #{quiet} '#{to_checkout}'")) &&
         run_and_success?("git submodule sync") &&
         run_and_success?("git submodule update --init") &&
         run_and_success?("git clean -dfq")
     end
   end
 
-  # Internal:
-  #
-  # Returns .
+  # Remove a local branch with the same name as a branch that is being
+  # checked out. If there is already a local branch with the same name,
+  # then git checkout will checkout the possibly out-of-date local branch
+  # instead of the most current remote.
   def clean_local_branch
     run_and_success?("#{git} show-branch #{ref} > /dev/null 2>&1 && #{git} branch -D #{ref} > /dev/null 2>&1")
   end
 
-  # Internal:
+  # Prune and then fetch origin
+  #
+  # OR, if origin has changed locations
+  #
+  # Remove and reclone the repository from url
   def fetch
     run_and_success?(fetch_command)
   end
 
+  # Pruning before fetching makes sure that branches removed from remote are
+  # removed locally. This hopefully prevents problems where a branch name
+  # collides with a branch directory name (among other problems).
+  #
+  # Note that --prune doesn't succeed at doing this, even though it seems like
+  # it should.
   def fetch_command
     if usable_repository?
-      q = opts[:verbose] ? '' : '--quiet'
-      "#{git} fetch --force --prune --update-head-ok #{q} origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
+      prune_c = "#{git} remote prune origin 2>&1"
+      fetch_c = "#{git} fetch --force --prune --update-head-ok #{quiet} origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*' 2>&1"
+
+      "#{prune_c} && #{fetch_c}"
     else
-      "rm -rf #{repository_cache} && git clone -q #{uri} #{repository_cache} 2>&1"
+      "rm -rf #{repository_cache} && git clone #{quiet} #{uri} #{repository_cache} 2>&1"
     end
   end
 
@@ -100,6 +112,10 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
 
   def remote_branch?
     run_and_success?("#{git} show-branch origin/#{ref} > /dev/null 2>&1")
+  end
+
+  def quiet
+    @quiet ||= opts[:verbose] ? '' : '--quiet'
   end
 
 end

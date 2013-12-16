@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Run `git remote prune origin` to remove possible branch name collisions before fetching.
   * Update git fetch command to use + for heads and not just tags. "If the optional plus + is used, the local ref is updated even if it does not result in a fast-forward update."
   * Deploy hook configuration `config.input_ref` and `config.deployed_by` now have defaults and won't NoMethodError when a value isn't set.
 
