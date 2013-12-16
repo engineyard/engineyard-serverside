@@ -84,6 +84,8 @@ module EY
       def_option :stack,                  nil
       def_option(:source_class)           { fetch_deprecated(:strategy, :source_class, nil) } # strategy is deprecated
       def_option :branch,                 'master'
+      def_option(:input_ref)              { branch }
+      def_option :deployed_by,            'Automation (User name not available)'
       def_option :current_roles,          []
       def_option :current_name,           nil
       def_option :copy_exclude,           []

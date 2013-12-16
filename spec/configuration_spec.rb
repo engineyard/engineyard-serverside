@@ -32,6 +32,8 @@ describe EY::Serverside::Deploy::Configuration do
       @config.ignore_gemfile_lock_warning.should == false
       @config.bundle_without.should == %w[test development]
       @config.extra_bundle_install_options.should == %w[--without test development]
+      @config.deployed_by.should == "Automation (User name not available)"
+      @config.input_ref.should == @config.branch
     end
 
     it "raises when required options are not given" do
@@ -44,9 +46,10 @@ describe EY::Serverside::Deploy::Configuration do
   end
 
   context "strategies" do
-    let(:options) {
+    let(:options) do
       { "app" => "serverside" }
-    }
+    end
+
     it "uses strategy if set" do
       @config = EY::Serverside::Deploy::Configuration.new(
         options.merge({'strategy' => 'IntegrationSpec', 'git' => 'git@github.com:engineyard/todo.git'})
@@ -90,7 +93,7 @@ describe EY::Serverside::Deploy::Configuration do
         'environment_name' => 'env_name',
         'account_name' => 'acc',
         'branch' => 'branch_from_command_line',
-        'config' => MultiJson.dump({'custom' => 'custom_from_extra_config', 'maintenance_on_migrate' => 'false', 'precompile_assets' => 'false'})
+        'config' => MultiJson.dump({'custom' => 'custom_from_extra_config', 'maintenance_on_migrate' => 'false', 'precompile_assets' => 'false', 'deployed_by' => 'Martin Emde', 'input_ref' => 'input_branch'})
       })
     end
 
@@ -112,6 +115,11 @@ describe EY::Serverside::Deploy::Configuration do
 
     it "doesn't bundle --without the framework_env" do
       @config.bundle_without.should == %w[test]
+    end
+
+    it "gets deployed_by and input_ref correct" do
+      @config.deployed_by.should == "Martin Emde"
+      @config.input_ref.should == "input_branch"
     end
   end
 
