@@ -140,18 +140,19 @@ module EY
             Dir.chdir(shared_assets_path)
 
             all_assets_on_disk = Dir.glob(shared_assets_path.join('**','*.*').to_s) - [manifest_path.to_s]
-            $stderr.puts "all_assets_on_disk #{all_assets_on_disk.inspect}"
+            # $stderr.puts "all_assets_on_disk #{all_assets_on_disk.inspect}"
             assets_on_disk     = all_assets_on_disk.reject {|a| a =~ /\.gz$/}.map {|a| a.sub(shared_assets_path.to_s, '')[1..-1]}
-            $stderr.puts "assets_on_disk #{assets_on_disk.inspect}"
+            # $stderr.puts "assets_on_disk #{assets_on_disk.inspect}"
             assets_in_manifest = YAML.load_file(manifest_path.to_s).to_a.flatten.uniq
-            $stderr.puts "assets_in_manifest #{assets_in_manifest.inspect}"
+            # $stderr.puts "assets_in_manifest #{assets_in_manifest.inspect}"
 
             remove_assets = []
             (assets_on_disk - assets_in_manifest).each do |asset|
               remove_assets << "'#{asset}'"
               remove_assets << "'#{asset}.gz'" if all_assets_on_disk.include?("#{asset}.gz")
             end
-            run("rm -rf #{remove_assets.join(' ')}")
+            $stderr.puts "remove_assets #{remove_assets.inspect}"
+            run("rm -rf #{remove_assets.join(' ')}") if remove_assets.size > 0
           end
 
           def manifest_path
