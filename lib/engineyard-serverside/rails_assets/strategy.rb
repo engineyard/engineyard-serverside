@@ -139,7 +139,7 @@ module EY
 
             Dir.chdir(shared_assets_path)
 
-            all_assets_on_disk = Dir.glob(shared_assets_path.join('**','*.*').to_s) - [manifest_path.to_s]
+            all_assets_on_disk = Dir.glob(shared_assets_path.join('**','*.*').to_s) - [manifest_path.to_s, shared_assets_path.join('sources_manifest.yml').to_s]
             # $stderr.puts "all_assets_on_disk #{all_assets_on_disk.inspect}"
             assets_on_disk     = all_assets_on_disk.reject {|a| a =~ /\.gz$/}.map {|a| a.sub(shared_assets_path.to_s, '')[1..-1]}
             # $stderr.puts "assets_on_disk #{assets_on_disk.inspect}"
