@@ -47,7 +47,7 @@ A typical application will not need most of these options.
       - config/routes.rb                        # default
       - config/application.rb                   # default
       - config/requirejs.yml                    # custom option (be sure to include defaults if you specify this option)
-      assets_strategy: shifting                 # choose an alternet asset management strategy. See rails_assets/strategy.rb for more info.
+      asset_strategy: shifting                  # choose an alternet asset management strategy. See rails_assets/strategy.rb for more info.
       asset_roles: :all                         # specify on which roles to compile assets (default: [:app, :app_master, :solo])
       ignore_database_adapter_warning: true     # hide database adapter warning if you don't use MySQL or PostgreSQL (default: false)
       ignore_gemfile_lock_warning: true         # hide warning when Gemfile is present but Gemfile.lock is missing. (default: false)
@@ -57,10 +57,10 @@ A typical application will not need most of these options.
     environments:
       env_production:
         precompile_unchanged_assets: true       # precompiles assets even if no changes would be detected (does not check for changes at all).
-        assets_strategy: shifting               # choose an alternet asset management strategy (shifting, cleaning, private, shared)
+        asset_strategy: shifting                # choose an alternet asset management strategy (shifting, cleaning, private, shared)
         asset_roles: :all                       # specify on which roles to compile assets (default: [:app, :app_master, :solo] - must be an Array)
       env_staging
-        assets_strategy: private                # Use an asset management that always refreshes, so staging enviroments don't get conflicts
+        asset_strategy: private                 # Use an asset management that always refreshes, so staging enviroments don't get conflicts
 
 These options in `ey.yml` will only work if the file is committed to your
 application repository. Make sure to commit this file. Different branches
