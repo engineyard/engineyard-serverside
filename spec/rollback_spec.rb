@@ -79,5 +79,9 @@ describe "Rolling back" do
       @bad_release.should_not exist
       @good_release.join('restart').should exist
     end
+
+    it "loads and uses ey.yml during rollback" do
+      read_output.should =~ /--without only test/
+    end
   end
 end

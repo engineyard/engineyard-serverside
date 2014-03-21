@@ -218,6 +218,8 @@ chmod 0700 #{path}
       def rollback
         if config.rollback_paths!
           begin
+            load_ey_yml
+            require_custom_tasks
             rolled_back_release = paths.latest_release
             shell.status "Rolling back to previous release: #{short_log_message(config.active_revision)}"
             abort_on_bad_paths_in_release_directory
