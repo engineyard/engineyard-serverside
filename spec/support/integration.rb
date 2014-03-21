@@ -56,7 +56,7 @@ class EY::Serverside::Source::IntegrationSpec < EY::Serverside::Source
 
   def initialize(*a)
     super
-    @source_repo = Pathname.new(uri)
+    @source_repo = Pathname.new(uri) if uri # doesn't exist for rollback
   end
 
   def update_repository_cache
