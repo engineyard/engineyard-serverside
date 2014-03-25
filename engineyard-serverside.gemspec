@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
 
   s.add_development_dependency('rspec', '~>2.12.0')
-  s.add_development_dependency('rake')
+  s.add_development_dependency('rake', '~>10.0.0')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('timecop', '0.6.1')
   s.add_development_dependency('simplecov')
