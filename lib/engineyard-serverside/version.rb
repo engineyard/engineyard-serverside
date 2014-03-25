@@ -1,5 +1,5 @@
 module EY
   module Serverside
-    VERSION = '2.3.8.pre'
+    VERSION = '2.3.8'
   end
 end
