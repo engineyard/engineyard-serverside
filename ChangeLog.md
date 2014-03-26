@@ -7,6 +7,7 @@
   * Deploy hook configuration `config.input_ref` and `config.deployed_by` now have defaults and won't NoMethodError when a value isn't set.
   * Sets ServerAliveInterval=60 on ssh connections between servers to avoid timeouts on slow processes (esp. assets).
   * Fix for rollback action ignoring ey.yml configurations. ey.yml is now loaded on rollback as intended.
+  * Explicitly use current ruby to syntax check deploy hooks.
 
 ## v2.3.8 (2014-03-25)
 

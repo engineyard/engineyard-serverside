@@ -1,4 +1,5 @@
 require 'engineyard-serverside/shell/helpers'
+require 'rbconfig'
 
 module EY
   module Serverside
@@ -57,8 +58,13 @@ Please fix this error before retrying.
         ERROR
       end
 
+      # Ideally we'd use RbConfig.ruby, but that doesn't work on 1.8.7.
+      def ruby_bin
+        File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name'])
+      end
+
       def syntax_error(file)
-        output = `ruby -c #{file} 2>&1`
+        output = `#{ruby_bin} -c #{file} 2>&1`
         output unless output =~ /Syntax OK/
       end
 
