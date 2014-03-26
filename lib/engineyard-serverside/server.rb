@@ -67,8 +67,10 @@ module EY
         yield local? ? command : remote_command(command)
       end
 
+      # Explicitly putting that space in helps us make sure we don't
+      # accidentally leave off the space on the end of ssh_command.
       def remote_command(command)
-        ssh_command + Escape.shell_command(["#{user}@#{hostname}", command])
+        ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command])
       end
 
       # Make a known hosts tempfile to absorb host fingerprints so we don't show
