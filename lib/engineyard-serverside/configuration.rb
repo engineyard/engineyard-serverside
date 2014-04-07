@@ -241,6 +241,11 @@ module EY
         )
       end
 
+      # Use [] to access attributes instead of calling methods so
+      # that we get nils instead of NoMethodError.
+      #
+      # Rollback doesn't know about the repository location (nor
+      # should it need to), but it would like to use #short_log_message.
       def paths
         @paths ||= Paths.new({
           :home             => configuration['home_path'],
