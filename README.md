@@ -36,7 +36,7 @@ A typical application will not need most of these options.
       - SOME_LARGE_DIR 
       maintenance_on_restart: false             # show maintenance page during app restart (default: false except for glassfish and mongrel)
       maintenance_on_migrate: true              # show maintenance page during migrations (default: true)
-      precompile_assets: true                   # enables rails assets precompilation (default: inferred using app/assets and config/application.rb)
+      precompile_assets: true                   # ensure rails assets precompilation (default: assets will be compiled if they are detected)
       precomplie_assets_task: assets:precompile # override the assets:precompile rake task
       precompile_unchanged_assets: false        # if true, does not check git for changes before precompiling assets.
       asset_dependencies:                       # a list of relative paths to search for asset changes during each deploy.
@@ -71,10 +71,16 @@ found in the deploying commit will be used for the current deploy.
 
 If `precompile_assets` is not set, asset compilation will be detected and
 failures may be ignored. Set `precompile_assets` to true or false to ensure
-proper behavior. When precopmile_assets is true, `git diff` will be used to
-detect changes to the path names specified in `asset_dependencies` since the
-revision of the last successful release. When `precompile_unchanged_assets` is
-true, assets will always be compiled and the `git diff` detection will not run.
+proper behavior.
+
+When precopmile_assets is true, `git diff` will be used to detect changes to
+the path names specified in `asset_dependencies` since the revision of the
+last successful release. If `precompile\_assets` is true, be sure to git
+ignore `public/assets` to avoid conflicts.
+
+When `precompile_unchanged_assets` is true, assets will always be compiled
+and the `git diff` detection will not run.
+
 
 #### Strategies
 
