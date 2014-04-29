@@ -124,7 +124,7 @@ module EY
 
           servers.run_for_each! do |server|
             chown = server.command_on_server('sudo sh -l -c', chown_command)
-            sync  = server.sync_directory_command(app_dir)
+            sync  = server.sync_directory_command(app_dir, true)
             clean = server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
             "(#{chown}) && (#{sync}) && (#{clean})"
           end
