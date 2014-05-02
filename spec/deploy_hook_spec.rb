@@ -28,6 +28,7 @@ describe "deploy hooks" do
         deploy_test_application('hook_fails', :verbose => false)
       rescue EY::Serverside::RemoteFailure
       end
+      @release_name = @config.paths.active_release.basename
     end
 
     it "prints the failure to the log even when non-verbose" do
@@ -38,8 +39,11 @@ describe "deploy hooks" do
     end
 
     it "retains the failed release" do
-      release_name = @config.paths.active_release.basename
-      deploy_dir.join('releases_failed', release_name).should be_directory
+      deploy_dir.join('releases_failed', @release_name).should be_directory
+    end
+
+    it "runs the after_failure deploy hook" do
+      deploy_dir.join('releases_failed', @release_name, 'after_failure.ran').should exist
     end
   end
 

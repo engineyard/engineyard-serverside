@@ -56,6 +56,12 @@ module EY
         shell.status "Finished failing to deploy at #{Time.now.asctime}"
         shell.error "Exception during deploy: #{e.inspect}\n#{e.backtrace}"
         puts_deploy_failure
+
+        if e.kind_of?(StandardError)
+          # don't run hooks for system errors because we might make it worse
+          callback(:after_failure)
+        end
+
         raise
       end
 
