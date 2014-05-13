@@ -93,6 +93,8 @@ module EY
         end
       end
 
+      method_option :ignore_existing, :type     => :boolean,
+                                      :desc     => "When syncing /data/app directory, don't overwrite destination files"
       account_app_env_options
       config_option
       framework_env_option
@@ -124,7 +126,7 @@ module EY
 
           servers.run_for_each! do |server|
             chown = server.command_on_server('sudo sh -l -c', chown_command)
-            sync  = server.sync_directory_command(app_dir, true)
+            sync  = server.sync_directory_command(app_dir, options[:ignore_existing])
             clean = server.command_on_server('sh -l -c', "rm -rf #{current_app_dir}")
             "(#{chown}) && (#{sync}) && (#{clean})"
           end
