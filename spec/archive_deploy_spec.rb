@@ -48,7 +48,7 @@ describe "Deploying a simple application" do
 
   it "restarts the app servers" do
     restart = deploy_dir.join('current', 'restart')
-    restart.should exist
+    expect(restart).to exist
     expect(restart.read.chomp).to eq(%|LANG="en_US.UTF-8" /engineyard/bin/app_application_name deploy|)
   end
 end

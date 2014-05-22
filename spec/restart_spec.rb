@@ -23,12 +23,12 @@ describe "EY::Serverside::Deploy#restart_with_maintenance_page" do
     config = EY::Serverside::Deploy::Configuration.new('deploy_to' => deploy_dir, 'app' => 'app_name')
     deployer = TestRestartWithMaintenancePage.realnew(test_servers, config, test_shell)
     deployer.restart_with_maintenance_page
-    deployer.call_order.should == %w(
+    expect(deployer.call_order).to eq(%w(
       require_custom_tasks
       enable_maintenance_page
       restart
       disable_maintenance_page
-    )
+    ))
   end
 end
 
@@ -38,6 +38,6 @@ describe "glassfish stack" do
     config = EY::Serverside::Deploy::Configuration.new('deploy_to' => deploy_dir, 'app' => 'app_name', 'stack' => 'glassfish')
     deployer = TestRestartDeploy.realnew(test_servers, config, test_shell)
     deployer.restart_with_maintenance_page
-    deployer.call_order.should include('enable_maintenance_page')
+    expect(deployer.call_order).to include('enable_maintenance_page')
   end
 end

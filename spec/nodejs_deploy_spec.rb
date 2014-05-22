@@ -13,7 +13,7 @@ describe "Deploying an application that uses Node.js and NPM" do
 
       it "runs 'npm install'" do
         install_cmd = @deployer.commands.grep(/npm install/).first
-        install_cmd.should_not be_nil
+        expect(install_cmd).not_to be_nil
       end
     end
 
@@ -23,7 +23,7 @@ describe "Deploying an application that uses Node.js and NPM" do
       end
 
       it "does not run 'npm install'" do
-        @deployer.commands.grep(/npm/).should be_empty
+        expect(@deployer.commands.grep(/npm/)).to be_empty
       end
     end
   end

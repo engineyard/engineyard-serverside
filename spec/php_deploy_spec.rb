@@ -13,7 +13,7 @@ describe "Deploying an application that uses PHP and Composer" do
 
         it "runs 'composer install'" do
           install_cmd = @deployer.commands.grep(/composer install/).first
-          install_cmd.should_not be_nil
+          expect(install_cmd).not_to be_nil
         end
 
         it "attempts to run 'composer self-update' before 'composer install'" do
@@ -21,7 +21,7 @@ describe "Deploying an application that uses PHP and Composer" do
           @deployer.commands.each do |cmd|
             update_cmd ||= /composer.*self-update/.match(cmd)
             if /composer install/.match(cmd)
-              update_cmd.should_not be nil
+              expect(update_cmd).not_to be nil
             end
           end
         end
@@ -33,7 +33,7 @@ describe "Deploying an application that uses PHP and Composer" do
         end
 
         it "does not run composer" do
-          @deployer.commands.grep(/composer/).should be_empty
+          expect(@deployer.commands.grep(/composer/)).to be_empty
         end
       end
 
@@ -43,13 +43,13 @@ describe "Deploying an application that uses PHP and Composer" do
         end
 
         it "outputs a warning about deploying without a .lock" do
-          warning_out = read_output.should include("WARNING: composer.json found but composer.lock missing!")
-          warning_out.should_not be_nil
+          warning_out = expect(read_output).to include("WARNING: composer.json found but composer.lock missing!")
+          expect(warning_out).not_to be_nil
         end
 
         it "runs 'composer install'" do
           install_cmd = @deployer.commands.grep(/composer install/).first
-          install_cmd.should_not be_nil
+          expect(install_cmd).not_to be_nil
         end
 
         it "attempts to run 'composer self-update' before 'composer install'" do
@@ -57,7 +57,7 @@ describe "Deploying an application that uses PHP and Composer" do
           @deployer.commands.each do |cmd|
             update_cmd ||= /composer.*self-update/.match(cmd)
             if /composer install/.match(cmd)
-              update_cmd.should_not be nil
+              expect(update_cmd).not_to be nil
             end
           end
         end

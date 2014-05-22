@@ -7,13 +7,13 @@ describe "Deploying a simple application" do
     end
 
     it "creates a REVISION file" do
-      deploy_dir.join('current', 'REVISION').should exist
+      expect(deploy_dir.join('current', 'REVISION')).to exist
     end
 
     it "restarts the app servers" do
       restart = deploy_dir.join('current', 'restart')
-      restart.should exist
-      restart.read.chomp.should == %|LANG="en_US.UTF-8" /engineyard/bin/app_rails31 deploy|
+      expect(restart).to exist
+      expect(restart.read.chomp).to eq(%|LANG="en_US.UTF-8" /engineyard/bin/app_rails31 deploy|)
     end
   end
 end

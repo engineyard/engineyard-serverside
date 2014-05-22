@@ -14,72 +14,72 @@ describe "the bundler version retrieved from the lockfile" do
   end
 
   it "raises an error with pre 0.9 bundler lockfiles" do
-    lambda { get_version('0.9-no-bundler')   }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
-    lambda { get_version('0.9-with-bundler') }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
+    expect { get_version('0.9-no-bundler')   }.to raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
+    expect { get_version('0.9-with-bundler') }.to raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
   end
 
   it "has a default version" do
-    EY::Serverside::DependencyManager::Bundler.default_version.should_not be_nil
-    EY::Serverside::DependencyManager::Bundler::DEFAULT_VERSION.should_not be_nil
+    expect(EY::Serverside::DependencyManager::Bundler.default_version).not_to be_nil
+    expect(EY::Serverside::DependencyManager::Bundler::DEFAULT_VERSION).not_to be_nil
   end
 
   it "returns the default version for a 1.0 lockfile without a bundler dependency" do
-    get_version('1.0-no-bundler').should == EY::Serverside::DependencyManager::Bundler.default_version
+    expect(get_version('1.0-no-bundler')).to eq(EY::Serverside::DependencyManager::Bundler.default_version)
   end
 
   it "gets the version from a 1.0.0.rc.1 lockfile w/dependency on 1.0.0.rc.1" do
-    get_version('1.0.0.rc.1-with-bundler').should == '1.0.0.rc.1'
+    expect(get_version('1.0.0.rc.1-with-bundler')).to eq('1.0.0.rc.1')
   end
 
   it "gets the version from a 1.0.6 lockfile w/dependency on 1.0.6" do
-    get_version('1.0.6-with-bundler').should == '1.0.6'
+    expect(get_version('1.0.6-with-bundler')).to eq('1.0.6')
   end
 
   it "gets the version from a 1.0.6 lockfile w/dependency on 1.0.6 (bundled ~> 1.0.0)" do
-    get_version('1.0.6-with-any-bundler').should == '1.0.6'
+    expect(get_version('1.0.6-with-any-bundler')).to eq('1.0.6')
   end
 
   it "gets the version from a 1.0.6 lockfile w/o dependency" do
-    get_version('1.0.6-no-bundler').should == '1.0.6'
+    expect(get_version('1.0.6-no-bundler')).to eq('1.0.6')
   end
 
   it "raises an error if it can't parse the file" do
-    lambda { get_version('not-a-lockfile') }.should raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
+    expect { get_version('not-a-lockfile') }.to raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
   end
 
   context "rails version" do
     it "retrieves rails version" do
-      get_parser('1.3.1-rails-3.2.13').rails_version.should == "3.2.13"
+      expect(get_parser('1.3.1-rails-3.2.13').rails_version).to eq("3.2.13")
     end
 
     it "finds no rails version" do
-      get_parser('1.0.18-mysql2').rails_version.should == nil
+      expect(get_parser('1.0.18-mysql2').rails_version).to eq(nil)
     end
   end
 
   context "checking for gems in the dependencies" do
     it "does not have any database adapters in a gemfile lock without them" do
-      get_parser('1.0.6-no-bundler').any_database_adapter?.should be_false
+      expect(get_parser('1.0.6-no-bundler').any_database_adapter?).to be_false
     end
 
     it "has a database adapter in a Gemfile.lock with do_mysql" do
-      get_parser('1.0.18-do_mysql').any_database_adapter?.should be_true
+      expect(get_parser('1.0.18-do_mysql').any_database_adapter?).to be_true
     end
 
     it "has a database adapter in a Gemfile.lock with mysql" do
-      get_parser('1.0.18-mysql').any_database_adapter?.should be_true
+      expect(get_parser('1.0.18-mysql').any_database_adapter?).to be_true
     end
 
     it "has a database adapter in a Gemfile.lock with mysql2" do
-      get_parser('1.0.18-mysql2').any_database_adapter?.should be_true
+      expect(get_parser('1.0.18-mysql2').any_database_adapter?).to be_true
     end
 
     it "has a database adapter in a Gemfile.lock with pg" do
-      get_parser('1.0.18-pg').any_database_adapter?.should be_true
+      expect(get_parser('1.0.18-pg').any_database_adapter?).to be_true
     end
 
     it "has a database adapter in a Gemfile.lock with do_postgres" do
-      get_parser('1.0.18-do_postgres').any_database_adapter?.should be_true
+      expect(get_parser('1.0.18-do_postgres').any_database_adapter?).to be_true
     end
   end
 
@@ -87,36 +87,36 @@ describe "the bundler version retrieved from the lockfile" do
     subject { get_parser('1.0.6-no-bundler') }
 
     it "uses the default version when there is no bundler version" do
-      subject.fetch_version(nil, nil).should == EY::Serverside::DependencyManager::Bundler.default_version
+      expect(subject.fetch_version(nil, nil)).to eq(EY::Serverside::DependencyManager::Bundler.default_version)
     end
 
     it "uses the given version when there is no operator" do
-      subject.fetch_version(nil, '1.0.1').should == '1.0.1'
+      expect(subject.fetch_version(nil, '1.0.1')).to eq('1.0.1')
     end
 
     it "uses the given version when the qualifier is `='" do
-      subject.fetch_version('=', '1.0.1').should == '1.0.1'
+      expect(subject.fetch_version('=', '1.0.1')).to eq('1.0.1')
     end
 
     it "uses the default version when we get a pessimistic qualifier and is lower than the default version" do
-      subject.fetch_version('~>', '1.3.1').should == EY::Serverside::DependencyManager::Bundler.default_version
+      expect(subject.fetch_version('~>', '1.3.1')).to eq(EY::Serverside::DependencyManager::Bundler.default_version)
     end
 
     it "uses the given version when we get a pessimistic qualifier that doesn't match the default version" do
-      subject.fetch_version('~>', '1.0.0').should == '1.0.0'
+      expect(subject.fetch_version('~>', '1.0.0')).to eq('1.0.0')
     end
 
     it "uses the given version when it's geater of equal than the default version" do
-      subject.fetch_version('>=', '1.100.0').should == '1.100.0'
+      expect(subject.fetch_version('>=', '1.100.0')).to eq('1.100.0')
     end
 
     it "uses the default version when the given version is lower" do
-      subject.fetch_version('>=', '1.0.1').should == EY::Serverside::DependencyManager::Bundler.default_version
+      expect(subject.fetch_version('>=', '1.0.1')).to eq(EY::Serverside::DependencyManager::Bundler.default_version)
     end
 
     it "selects only the first version expression" do
       scan = subject.scan_gem('bundler', 'bundler (>=1.0.1, <2.0.0)')
-      scan.last.should == '1.0.1'
+      expect(scan.last).to eq('1.0.1')
     end
   end
 end

@@ -11,37 +11,37 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "runs the right bundler command" do
-      @install_bundler_command.should_not be_nil
-      @install_bundler_command.should =~ /install bundler .* -v "#{VERSION_PATTERN}"/
+      expect(@install_bundler_command).not_to be_nil
+      expect(@install_bundler_command).to match(/install bundler .* -v "#{VERSION_PATTERN}"/)
     end
 
     it "runs 'bundle install' with --deployment" do
-      @bundle_install_command.should_not be_nil
-      @bundle_install_command.should include('--deployment')
+      expect(@bundle_install_command).not_to be_nil
+      expect(@bundle_install_command).to include('--deployment')
     end
 
     it "removes bundled_gems directory if the ruby or system version changed" do
       should_run_clear_bundle_cmd = @deployer.commands.grep(/diff/).first
-      should_run_clear_bundle_cmd.should_not be_nil
+      expect(should_run_clear_bundle_cmd).not_to be_nil
       clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
-      clear_bundle_cmd.should_not be_nil
+      expect(clear_bundle_cmd).not_to be_nil
     end
 
     it "has the binstubs in the path when migrating" do
-      deploy_dir.join('path-when-migrating').read.should include('ey_bundler_binstubs')
+      expect(deploy_dir.join('path-when-migrating').read).to include('ey_bundler_binstubs')
     end
 
     it "creates a ruby version file" do
-      deploy_dir.join('shared', 'bundled_gems', 'RUBY_VERSION').should exist
+      expect(deploy_dir.join('shared', 'bundled_gems', 'RUBY_VERSION')).to exist
     end
 
     it "creates a system version file" do
-      deploy_dir.join('shared', 'bundled_gems', 'SYSTEM_VERSION').should exist
+      expect(deploy_dir.join('shared', 'bundled_gems', 'SYSTEM_VERSION')).to exist
     end
 
     it "generates bundler binstubs" do
       pending "doesn't work with mocked bundler" do
-        deploy_dir.join('current', 'ey_bundler_binstubs', 'rake').should exist
+        expect(deploy_dir.join('current', 'ey_bundler_binstubs', 'rake')).to exist
       end
     end
   end
@@ -53,9 +53,9 @@ describe "Deploying an application that uses Bundler" do
 
     it "removes bundled_gems directory if the ruby or system version changed" do
       should_run_clear_bundle_cmd = @deployer.commands.grep(/diff/).first
-      should_run_clear_bundle_cmd.should be_nil
+      expect(should_run_clear_bundle_cmd).to be_nil
       clear_bundle_cmd = @deployer.commands.grep(/rm -Rf \S+\/bundled_gems/).first
-      clear_bundle_cmd.should_not be_nil
+      expect(clear_bundle_cmd).not_to be_nil
     end
 
   end
@@ -66,13 +66,13 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "does not run bundler commands" do
-      @deployer.commands.grep(/gem install bundler/).should be_empty
-      @deployer.commands.grep(/bundle _.*_ install/).should be_empty
+      expect(@deployer.commands.grep(/gem install bundler/)).to be_empty
+      expect(@deployer.commands.grep(/bundle _.*_ install/)).to be_empty
     end
 
     it "still runs the hooks" do
-      deploy_dir.join('current', 'before_bundle.ran' ).should exist
-      deploy_dir.join('current', 'after_bundle.ran' ).should exist
+      expect(deploy_dir.join('current', 'before_bundle.ran' )).to exist
+      expect(deploy_dir.join('current', 'after_bundle.ran' )).to exist
     end
   end
 
@@ -84,41 +84,41 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "installs the proper Bundler version" do
-      @install_bundler_command.should_not be_nil
-      @install_bundler_command.should =~ /unset RUBYOPT && gem list bundler | grep "bundler " | egrep -q "#{VERSION_PATTERN}[,)]" || gem install bundler -q --no-rdoc --no-ri -v "#{VERSION_PATTERN}"/
+      expect(@install_bundler_command).not_to be_nil
+      expect(@install_bundler_command).to match(/unset RUBYOPT && gem list bundler | grep "bundler " | egrep -q "#{VERSION_PATTERN}[,)]" || gem install bundler -q --no-rdoc --no-ri -v "#{VERSION_PATTERN}"/)
     end
 
     it "runs 'bundle install' without --deployment" do
-      @bundle_install_command.should_not be_nil
-      @bundle_install_command.should_not =~ /--deployment/
+      expect(@bundle_install_command).not_to be_nil
+      expect(@bundle_install_command).not_to match(/--deployment/)
     end
 
     it "exports GIT_SSH for the bundle install" do
-      @bundle_install_command.should =~ /export GIT_SSH/
+      expect(@bundle_install_command).to match(/export GIT_SSH/)
     end
 
     it "puts down RUBY_VERSION and SYSTEM_VERSION" do
-      deploy_dir.join('shared', 'bundled_gems', 'RUBY_VERSION').should exist
-      deploy_dir.join('shared', 'bundled_gems', 'SYSTEM_VERSION').should exist
+      expect(deploy_dir.join('shared', 'bundled_gems', 'RUBY_VERSION')).to exist
+      expect(deploy_dir.join('shared', 'bundled_gems', 'SYSTEM_VERSION')).to exist
     end
 
     it "warns that using a lockfile is idiomatic" do
       out = read_output
-      out.should =~ %r(WARNING: Gemfile found but Gemfile.lock is missing!)
+      expect(out).to match(/WARNING: Gemfile found but Gemfile.lock is missing!/)
     end
   end
 
   context "without a Gemfile.lock and ignoring the warning" do
     before(:all) do
       deploy_test_application('no_gemfile_lock', 'config' => {'ignore_gemfile_lock_warning' => true})
-      @config.ignore_gemfile_lock_warning.should be_true
+      expect(@config.ignore_gemfile_lock_warning).to be_true
       @install_bundler_command = @deployer.commands.grep(/gem install bundler/).first
       @bundle_install_command  = @deployer.commands.grep(/bundle _#{VERSION_PATTERN}_ install/).first
     end
 
     it "should not warn" do
       out = read_output
-      out.should_not =~ %r(WARNING)
+      expect(out).not_to match(/WARNING/)
     end
   end
 
@@ -132,8 +132,8 @@ describe "Deploying an application that uses Bundler" do
 
     it "prints the failure to the log" do
       out = read_output
-      out.should =~ %r|bundle install failure|
-      deploy_dir.join('current', 'after_bundle.ran' ).should_not exist
+      expect(out).to match(%r|bundle install failure|)
+      expect(deploy_dir.join('current', 'after_bundle.ran' )).not_to exist
     end
   end
 end

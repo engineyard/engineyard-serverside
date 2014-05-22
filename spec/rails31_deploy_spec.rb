@@ -4,73 +4,73 @@ describe "Deploying a Rails 3.1 application" do
   context "with default production settings" do
     it "precompiles assets when asset compilation is detected" do
       deploy_test_application('assets_detected')
-      deploy_dir.join('current', 'precompiled').should exist
-      deploy_dir.join('current', 'public', 'assets').should exist
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should include("Precompiling assets. ('app/assets' exists, 'public/assets' not found, not disabled in config.)")
+      expect(deploy_dir.join('current', 'precompiled')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(read_output).to include("Precompiling assets. ('app/assets' exists, 'public/assets' not found, not disabled in config.)")
     end
 
     it "precompiles assets, then reuses them on the next deploy if nothing has changed" do
       deploy_test_application('assets_enabled_in_ey_yml')
-      deploy_dir.join('current', 'precompiled').should exist
-      deploy_dir.join('current', 'public', 'assets').should exist
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
+      expect(deploy_dir.join('current', 'precompiled')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
 
       redeploy_test_application
-      deploy_dir.join('current', 'precompiled').should_not exist # doesn't run the task
-      deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should =~ %r#Reusing existing assets\. \(configured asset_dependencies unchanged from \w{7}..\w{7}\)#
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist # doesn't run the task
+      expect(deploy_dir.join('current', 'public', 'assets')).to exist # but the assets are there
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(read_output).to match(%r#Reusing existing assets\. \(configured asset_dependencies unchanged from \w{7}..\w{7}\)#)
 
       redeploy_test_application('config' => {'precompile_unchanged_assets' => 'true'})
-      deploy_dir.join('current', 'precompiled').should exist # doesn't run the task
-      deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should_not include("Reusing existing assets")
+      expect(deploy_dir.join('current', 'precompiled')).to exist # doesn't run the task
+      expect(deploy_dir.join('current', 'public', 'assets')).to exist # but the assets are there
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(read_output).not_to include("Reusing existing assets")
     end
 
     it "precompile assets again when redeploying a ref with changes" do
       deploy_test_application('assets_enabled_in_ey_yml')
-      deploy_dir.join('current', 'precompiled').should exist
-      deploy_dir.join('current', 'public', 'assets').should exist
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should include("Precompiling assets. (precompile_assets: true)")
+      expect(deploy_dir.join('current', 'precompiled')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(read_output).to include("Precompiling assets. (precompile_assets: true)")
 
       # changing the ref stands in for actually having assets change (see Strategies::IntegrationSpec#same?)
       redeploy_test_application('branch' => 'somenewref')
-      deploy_dir.join('current', 'precompiled').should exist # it does runs the task
-      deploy_dir.join('current', 'public', 'assets').should exist
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should_not =~ %r#Reusing existing assets#
+      expect(deploy_dir.join('current', 'precompiled')).to exist # it does runs the task
+      expect(deploy_dir.join('current', 'public', 'assets')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(read_output).not_to match(%r#Reusing existing assets#)
     end
 
     it "precompile assets when redeploying the same ref, but assets were turned off the first time" do
       deploy_test_application('assets_enabled_in_ey_yml', 'config' => {'precompile_assets' => 'false'})
-      deploy_dir.join('current', 'precompiled').should_not exist
-      deploy_dir.join('current', 'public', 'assets').should_not exist
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should_not exist
-      read_output.should_not include("Precompiling assets. (precompile_assets: true)")
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist
+      expect(deploy_dir.join('current', 'public', 'assets')).not_to exist
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).not_to exist
+      expect(read_output).not_to include("Precompiling assets. (precompile_assets: true)")
 
       # assets will show as unchanged, but it should compile them fresh anyway.
       redeploy_test_application('config' => {'precompile_assets' => 'true'})
-      deploy_dir.join('current', 'precompiled').should exist # it does runs the task
-      deploy_dir.join('current', 'public', 'assets').should exist
-      deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-      read_output.should_not =~ %r#Reusing existing assets#
+      expect(deploy_dir.join('current', 'precompiled')).to exist # it does runs the task
+      expect(deploy_dir.join('current', 'public', 'assets')).to exist
+      expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(read_output).not_to match(%r#Reusing existing assets#)
     end
 
     %w[cleaning shared private].each do |strategy|
       it "precompiles assets with asset_strategy '#{strategy}', then reuses them on the next deploy if nothing has changed" do
         deploy_test_application('assets_enabled_in_ey_yml', 'config' => {'asset_strategy' => strategy})
-        deploy_dir.join('current', 'precompiled').should exist
-        deploy_dir.join('current', 'public', 'assets').should exist
-        deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
+        expect(deploy_dir.join('current', 'precompiled')).to exist
+        expect(deploy_dir.join('current', 'public', 'assets')).to exist
+        expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
 
         redeploy_test_application
-        deploy_dir.join('current', 'precompiled').should_not exist # doesn't run the task
-        deploy_dir.join('current', 'public', 'assets').should exist # but the assets are there
-        deploy_dir.join('current', 'public', 'assets', 'compiled_asset').should exist
-        read_output.should =~ %r#Reusing existing assets\. \(configured asset_dependencies unchanged from \w{7}..\w{7}\)#
+        expect(deploy_dir.join('current', 'precompiled')).not_to exist # doesn't run the task
+        expect(deploy_dir.join('current', 'public', 'assets')).to exist # but the assets are there
+        expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+        expect(read_output).to match(%r#Reusing existing assets\. \(configured asset_dependencies unchanged from \w{7}..\w{7}\)#)
       end
     end
   end
@@ -81,8 +81,8 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "precompiles assets" do
-      deploy_dir.join('current', 'precompiled').should exist
-      read_output.should include("Precompiling assets. (precompile_assets: true)")
+      expect(deploy_dir.join('current', 'precompiled')).to exist
+      expect(read_output).to include("Precompiling assets. (precompile_assets: true)")
     end
   end
 
@@ -92,8 +92,8 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "precompiles assets" do
-      deploy_dir.join('current', 'precompiled').should_not exist
-      read_output.should include("Precompiling assets. (precompile_assets: true)")
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist
+      expect(read_output).to include("Precompiling assets. (precompile_assets: true)")
     end
   end
 
@@ -103,22 +103,22 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "precompiles assets" do
-      deploy_dir.join('current', 'precompiled').should exist
-      read_output.should include("Precompiling assets. (precompile_assets: true)")
+      expect(deploy_dir.join('current', 'precompiled')).to exist
+      expect(read_output).to include("Precompiling assets. (precompile_assets: true)")
     end
   end
 
   context "with asset support disabled in config/application.rb" do
     it "does not precompile assets" do
       deploy_test_application('assets_disabled')
-      deploy_dir.join('current', 'precompiled').should_not exist
-      read_output.should include("Skipping asset precompilation. ('config/application.rb' disables assets.)")
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist
+      expect(read_output).to include("Skipping asset precompilation. ('config/application.rb' disables assets.)")
     end
 
     it "deploys successfully when application.rb has utf-8 encoding" do
       deploy_test_application('assets_disabled_utf8')
-      deploy_dir.join('current', 'precompiled').should_not exist
-      read_output.should include("Skipping asset precompilation. ('config/application.rb' disables assets.)")
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist
+      expect(read_output).to include("Skipping asset precompilation. ('config/application.rb' disables assets.)")
     end
   end
 
@@ -128,8 +128,8 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "does not precompile assets" do
-      deploy_dir.join('current', 'precompiled').should_not exist
-      read_output.should include("Skipping asset precompilation. (precompile_assets: false)")
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist
+      expect(read_output).to include("Skipping asset precompilation. (precompile_assets: false)")
     end
   end
 
@@ -139,12 +139,12 @@ describe "Deploying a Rails 3.1 application" do
     end
 
     it "does not replace the public/assets directory" do
-      deploy_dir.join('current', 'custom_compiled').should exist
-      deploy_dir.join('current', 'precompiled').should_not exist
-      deploy_dir.join('current', 'public', 'assets').should be_directory
-      deploy_dir.join('current', 'public', 'assets').should_not be_symlink
-      deploy_dir.join('current', 'public', 'assets', 'custom_compiled_asset').should exist
-      read_output.should include("Skipping asset precompilation. ('public/assets' directory already exists.)")
+      expect(deploy_dir.join('current', 'custom_compiled')).to exist
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist
+      expect(deploy_dir.join('current', 'public', 'assets')).to be_directory
+      expect(deploy_dir.join('current', 'public', 'assets')).not_to be_symlink
+      expect(deploy_dir.join('current', 'public', 'assets', 'custom_compiled_asset')).to exist
+      expect(read_output).to include("Skipping asset precompilation. ('public/assets' directory already exists.)")
     end
   end
 end
