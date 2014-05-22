@@ -7,8 +7,9 @@ class EY::Serverside::Source::Archive
 end
 
 describe "Deploying a simple application" do
-  let(:adapter) {
-    EY::Serverside::Adapter.new do |args|
+
+  before(:all) do
+    adapter = EY::Serverside::Adapter.new do |args|
       args.account_name = "account"
       args.app = "application_name"
       args.stack = "nginx_unicorn"
@@ -24,13 +25,6 @@ describe "Deploying a simple application" do
         "group"            => GROUP
       }
     end
-  }
-
-  let(:binpath) {
-    File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
-  }
-
-  before(:all) do
     argv = adapter.deploy.commands.last.to_argv[2..-1]
     with_mocked_commands do
       capture do

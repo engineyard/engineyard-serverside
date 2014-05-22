@@ -1,18 +1,18 @@
 require 'spec_helper'
 
 describe "Deploying an application that uses Bundler" do
-  let(:version_pattern) { Regexp.quote(::EY::Serverside::DependencyManager::Bundler.default_version) }
+  VERSION_PATTERN = Regexp.quote(::EY::Serverside::DependencyManager::Bundler.default_version)
 
   context "with a Gemfile.lock" do
     before(:all) do
       deploy_test_application('ey_yml')
       @install_bundler_command = @deployer.commands.grep(/gem install bundler/).first
-      @bundle_install_command  = @deployer.commands.grep(/bundle _#{version_pattern}_ install/).first
+      @bundle_install_command  = @deployer.commands.grep(/bundle _#{VERSION_PATTERN}_ install/).first
     end
 
     it "runs the right bundler command" do
       @install_bundler_command.should_not be_nil
-      @install_bundler_command.should =~ /install bundler .* -v "#{version_pattern}"/
+      @install_bundler_command.should =~ /install bundler .* -v "#{VERSION_PATTERN}"/
     end
 
     it "runs 'bundle install' with --deployment" do
@@ -80,12 +80,12 @@ describe "Deploying an application that uses Bundler" do
     before(:all) do
       deploy_test_application('no_gemfile_lock')
       @install_bundler_command = @deployer.commands.grep(/gem install bundler/).first
-      @bundle_install_command  = @deployer.commands.grep(/bundle _#{version_pattern}_ install/).first
+      @bundle_install_command  = @deployer.commands.grep(/bundle _#{VERSION_PATTERN}_ install/).first
     end
 
     it "installs the proper Bundler version" do
       @install_bundler_command.should_not be_nil
-      @install_bundler_command.should =~ /unset RUBYOPT && gem list bundler | grep "bundler " | egrep -q "#{version_pattern}[,)]" || gem install bundler -q --no-rdoc --no-ri -v "#{version_pattern}"/
+      @install_bundler_command.should =~ /unset RUBYOPT && gem list bundler | grep "bundler " | egrep -q "#{VERSION_PATTERN}[,)]" || gem install bundler -q --no-rdoc --no-ri -v "#{VERSION_PATTERN}"/
     end
 
     it "runs 'bundle install' without --deployment" do
@@ -113,7 +113,7 @@ describe "Deploying an application that uses Bundler" do
       deploy_test_application('no_gemfile_lock', 'config' => {'ignore_gemfile_lock_warning' => true})
       @config.ignore_gemfile_lock_warning.should be_true
       @install_bundler_command = @deployer.commands.grep(/gem install bundler/).first
-      @bundle_install_command  = @deployer.commands.grep(/bundle _#{version_pattern}_ install/).first
+      @bundle_install_command  = @deployer.commands.grep(/bundle _#{VERSION_PATTERN}_ install/).first
     end
 
     it "should not warn" do

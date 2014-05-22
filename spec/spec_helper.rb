@@ -275,7 +275,6 @@ exec "$@"
 
     @argv = @adapter.deploy.commands.last.to_argv[2..-1]
 
-    @binpath = File.expand_path(File.join(File.dirname(__FILE__), '..', 'bin', 'engineyard-serverside'))
     FullTestDeploy.on_create_callback = block
 
     mock_bundler(options['bundle_install_fails'])
