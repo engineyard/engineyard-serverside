@@ -1,0 +1,3 @@
+This file should not be removed by serverside during a deploy.
+
+If public/system exists in the repository, leave it alone and warn.
