@@ -337,12 +337,13 @@ YML
       def symlink_tasks
         [
           ["Set group write permissions",           "chmod -R g+w #{paths.active_release}"],
-          ["Remove symlinked shared directories",   "rm -rf #{paths.active_log} #{paths.public_system} #{paths.active_release}/tmp/pids"],
+          ["Remove public/system if symlinked",     "if [ -L \"#{paths.public_system}\" ]; then rm -rf #{paths.public_system}; fi"],
+          ["Remove symlinked shared directories",   "rm -rf #{paths.active_log} #{paths.active_release}/tmp/pids"],
           ["Create tmp directory",                  "mkdir -p #{paths.active_release}/tmp"],
           ["Create public directory",               "mkdir -p #{paths.public}"],
           ["Create config directory",               "mkdir -p #{paths.active_release_config}"],
           ["Symlink shared log directory",          "ln -nfs #{paths.shared_log} #{paths.active_log}"],
-          ["Symlink public system directory",       "ln -nfs #{paths.shared_system} #{paths.public_system}"],
+          ["Symlink public system directory",       "if [ ! -e \"#{paths.public_system}\" ]; then ln -ns #{paths.shared_system} #{paths.public_system}; fi"],
           ["Symlink shared pids directory",         "ln -nfs #{paths.shared}/pids #{paths.active_release}/tmp/pids"],
           ["Symlink other shared config files",     "find #{paths.shared_config} -maxdepth 1 -type f -not -name 'database.yml' -exec ln -s {} #{paths.active_release_config} \\;"],
           ["Symlink database.yml if needed",        "if [ -f \"#{paths.shared_config}/database.yml\" ]; then ln -nfs #{paths.shared_config}/database.yml #{paths.active_release_config}/database.yml; fi"],

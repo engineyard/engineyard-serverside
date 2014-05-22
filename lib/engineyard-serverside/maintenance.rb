@@ -58,8 +58,9 @@ module EY
 
       def enable
         shell.status "Enabling maintenance page."
-        @up = true
         run "mkdir -p #{maintenance_page_dirname}"
+        public_system_symlink_warning
+        @up = true
         run "cp #{source_path} #{enabled_maintenance_page_pathname}"
       end
 
@@ -107,6 +108,18 @@ This application stack does not support no-downtime restarts.
         end
       end
 
+      def public_system_symlink_warning
+        if paths.public_system.realpath != maintenance_page_dirname.realpath
+          shell.warning <<-WARN
+Current repository layout does not allow for maintenance pages!
+Web traffic may still be served to your application.
+
+Expected a symlink at #{paths.public_system}
+
+To use maintenance pages, remove 'public/system' from your repository.
+          WARN
+        end
+      end
     end
   end
 end

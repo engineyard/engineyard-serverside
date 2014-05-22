@@ -1,0 +1,3 @@
+environments:
+  env:
+    ignore_database_adapter_warning: true
