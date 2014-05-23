@@ -4,14 +4,14 @@ describe "Rolling back" do
   def setup_good_and_bad_deploy(repo)
     deploy_test_application(repo, 'migrate' => nil)
     @good_revision = deploy_dir.join('current', 'REVISION').read.strip
-    deploy_dir.join('current', 'REVISION').should exist
+    expect(deploy_dir.join('current', 'REVISION')).to exist
     deploy_dir.join('current', 'restart').delete
     deploy_test_application(repo, 'migrate' => nil)
-    deploy_dir.join('current', 'REVISION').should exist
+    expect(deploy_dir.join('current', 'REVISION')).to exist
     deploy_dir.join('current', 'restart').delete
 
     releases = @deployer.config.paths.all_releases
-    releases.size.should == 2
+    expect(releases.size).to eq(2)
     @good_release = releases.first
     @bad_release = releases.last
   end
@@ -33,13 +33,13 @@ describe "Rolling back" do
 
     it "rolls back to the older deploy" do
       out = read_output
-      out.should =~ /Rolling back to previous release.*#{@good_revision}/
-      out.should =~ /Restarting with previous release./
-      out.should =~ /Finished rollback/
+      expect(out).to match(/Rolling back to previous release.*#{@good_revision}/)
+      expect(out).to match(/Restarting with previous release./)
+      expect(out).to match(/Finished rollback/)
 
-      deploy_dir.join('current', 'restart').should exist
-      @bad_release.should_not exist
-      @good_release.join('restart').should exist
+      expect(deploy_dir.join('current', 'restart')).to exist
+      expect(@bad_release).not_to exist
+      expect(@good_release.join('restart')).to exist
     end
   end
 
@@ -57,9 +57,9 @@ describe "Rolling back" do
       expect(out).to include("Storing files in this directory will disrupt latest_release, diff detection, rollback, and possibly other features.")
       expect(out).to_not include("Restarting with previous release.")
 
-      deploy_dir.join('current', 'restart').should_not exist
-      @bad_release.should exist
-      @good_release.should exist
+      expect(deploy_dir.join('current', 'restart')).not_to exist
+      expect(@bad_release).to exist
+      expect(@good_release).to exist
     end
   end
 
@@ -71,17 +71,17 @@ describe "Rolling back" do
 
     it "rolls back to the older deploy" do
       out = read_output
-      out.should =~ /Rolling back to previous release.*#{@good_revision}/
-      out.should =~ /Restarting with previous release./
-      out.should =~ /Finished rollback/
+      expect(out).to match(/Rolling back to previous release.*#{@good_revision}/)
+      expect(out).to match(/Restarting with previous release./)
+      expect(out).to match(/Finished rollback/)
 
-      deploy_dir.join('current', 'restart').should exist
-      @bad_release.should_not exist
-      @good_release.join('restart').should exist
+      expect(deploy_dir.join('current', 'restart')).to exist
+      expect(@bad_release).not_to exist
+      expect(@good_release.join('restart')).to exist
     end
 
     it "loads and uses ey.yml during rollback" do
-      read_output.should =~ /--without only test/
+      expect(read_output).to match(/--without only test/)
     end
   end
 end

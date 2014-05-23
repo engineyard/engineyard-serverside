@@ -37,7 +37,7 @@ describe EY::Serverside::Shell do
     tstp_3 = "+10m 25s "
     notstp = "         "
     output.rewind
-    output.read.should == <<-OUTPUT
+    expect(output.read).to eq <<-OUTPUT
 #{notstp} debug
 
 \e[1m\e[33m#{tstp_1} !> notice

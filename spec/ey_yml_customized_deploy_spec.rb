@@ -7,11 +7,11 @@ describe "Deploying an app with ey.yml" do
     end
 
     it "does not migrate even though ey.yml says migrate: true" do
-      read_output.should_not =~ /Migrating/
+      expect(read_output).not_to match(/Migrating/)
     end
 
     it "does not enable the maintenance page at all" do
-      deploy_dir.join('current','maintenance_disabled').should exist
+      expect(deploy_dir.join('current','maintenance_disabled')).to exist
     end
   end
 
@@ -23,45 +23,45 @@ describe "Deploying an app with ey.yml" do
 
     it "excludes copy_excludes from releases" do
       cmd = @deployer.commands.grep(/rsync -aq/).first
-      cmd.should include('rsync -aq --exclude=".git" --exclude="README"')
-      deploy_dir.join('current', '.git').should_not exist
-      deploy_dir.join('current', 'README').should_not exist
+      expect(cmd).to include('rsync -aq --exclude=".git" --exclude="README"')
+      expect(deploy_dir.join('current', '.git')).not_to exist
+      expect(deploy_dir.join('current', 'README')).not_to exist
     end
 
     it "loads ey.yml at lower priority than command line options" do
-      deploy_dir.join('current', 'REVISION').read.should == "somebranch\n"
+      expect(deploy_dir.join('current', 'REVISION').read).to eq("somebranch\n")
     end
 
     it "loads bundle_without from the config, which overrides the default (and 'defaults:' in ey.yml)" do
       cmd = @deployer.commands.grep(/bundle _\S*_ install/).first
-      cmd.should include('--without only test')
+      expect(cmd).to include('--without only test')
     end
 
     it "does not enable the maintenance page during migrations" do
-      deploy_dir.join('current','maintenance_disabled').should exist
-      deploy_dir.join('current','maintenance_enabled').should_not exist
+      expect(deploy_dir.join('current','maintenance_disabled')).to exist
+      expect(deploy_dir.join('current','maintenance_enabled')).not_to exist
     end
 
     it "does not remove an existing maintenance page" do
       maintenance = EY::Serverside::Maintenance.new(test_servers, @config, test_shell)
       deploy_dir.join('current','maintenance_disabled').delete
       maintenance.manually_enable
-      deploy_dir.join('shared','system','maintenance.html').should exist
+      expect(deploy_dir.join('shared','system','maintenance.html')).to exist
       redeploy_test_application
-      read_output.should =~ /Maintenance page is still up./
-      deploy_dir.join('shared','system','maintenance.html').should exist
-      deploy_dir.join('current','maintenance_disabled').should_not exist
-      deploy_dir.join('current','maintenance_enabled').should exist
+      expect(read_output).to match(/Maintenance page is still up./)
+      expect(deploy_dir.join('shared','system','maintenance.html')).to exist
+      expect(deploy_dir.join('current','maintenance_disabled')).not_to exist
+      expect(deploy_dir.join('current','maintenance_enabled')).to exist
       maintenance.manually_disable
-      deploy_dir.join('shared','system','maintenance.html').should_not exist
+      expect(deploy_dir.join('shared','system','maintenance.html')).not_to exist
     end
 
     it "makes custom variables available to hooks" do
-      deploy_dir.join('current', 'custom_hook').read.should include("custom_from_ey_yml")
+      expect(deploy_dir.join('current', 'custom_hook').read).to include("custom_from_ey_yml")
     end
 
     it "doesn't display the database adapter warning with ignore_database_adapter_warning: true" do
-      read_output.should_not =~ /WARNING/
+      expect(read_output).not_to match(/WARNING/)
     end
   end
 
@@ -74,12 +74,12 @@ describe "Deploying an app with ey.yml" do
     end
 
     it "always installs maintenance pages" do
-      deploy_dir.join('current','maintenance_enabled').should exist
-      deploy_dir.join('current','maintenance_disabled').should_not exist
+      expect(deploy_dir.join('current','maintenance_enabled')).to exist
+      expect(deploy_dir.join('current','maintenance_disabled')).not_to exist
     end
 
     it "displays the database adapter warning without ignore_database_adapter_warning" do
-      read_output.should =~ /WARNING: Gemfile.lock does not contain a recognized database adapter./
+      expect(read_output).to match(/WARNING: Gemfile.lock does not contain a recognized database adapter./)
     end
   end
 
@@ -93,7 +93,7 @@ describe "Deploying an app with ey.yml" do
     end
 
     it "doesn't display the database adapter warning" do
-      read_output.should_not =~ /WARNING: Gemfile.lock does not contain a recognized database adapter./
+      expect(read_output).not_to match(/WARNING: Gemfile.lock does not contain a recognized database adapter./)
     end
   end
 end

@@ -9,31 +9,31 @@ describe EY::Serverside::Deploy::Configuration do
         'account_name' => 'acc',
         'framework_env' => 'production',
       })
-      @config.app_name.should == "app_name"
-      @config.environment_name.should == "env_name"
-      @config.account_name.should == "acc"
-      @config.migrate.should == nil
-      @config.migrate?.should == false
-      @config.branch.should == "master"
-      @config.maintenance_on_migrate.should == true
-      @config.maintenance_on_restart.should == true
-      @config.required_downtime_stack?.should == true
-      @config.framework_env.should == "production"
-      @config.precompile_assets.should == "detect"
-      @config.precompile_assets_inferred?.should == true
-      @config.skip_precompile_assets?.should == false
-      @config.precompile_assets?.should == false
-      @config.asset_roles.should == [:app_master, :app, :solo]
-      @config.user.should == ENV['USER']
-      @config.group.should == ENV['USER']
-      @config.verbose.should == false
-      @config.copy_exclude.should == []
-      @config.ignore_database_adapter_warning.should == false
-      @config.ignore_gemfile_lock_warning.should == false
-      @config.bundle_without.should == %w[test development]
-      @config.extra_bundle_install_options.should == %w[--without test development]
-      @config.deployed_by.should == "Automation (User name not available)"
-      @config.input_ref.should == @config.branch
+      expect(@config.app_name).to eq("app_name")
+      expect(@config.environment_name).to eq("env_name")
+      expect(@config.account_name).to eq("acc")
+      expect(@config.migrate).to eq(nil)
+      expect(@config.migrate?).to eq(false)
+      expect(@config.branch).to eq("master")
+      expect(@config.maintenance_on_migrate).to eq(true)
+      expect(@config.maintenance_on_restart).to eq(true)
+      expect(@config.required_downtime_stack?).to eq(true)
+      expect(@config.framework_env).to eq("production")
+      expect(@config.precompile_assets).to eq("detect")
+      expect(@config.precompile_assets_inferred?).to eq(true)
+      expect(@config.skip_precompile_assets?).to eq(false)
+      expect(@config.precompile_assets?).to eq(false)
+      expect(@config.asset_roles).to eq([:app_master, :app, :solo])
+      expect(@config.user).to eq(ENV['USER'])
+      expect(@config.group).to eq(ENV['USER'])
+      expect(@config.verbose).to eq(false)
+      expect(@config.copy_exclude).to eq([])
+      expect(@config.ignore_database_adapter_warning).to eq(false)
+      expect(@config.ignore_gemfile_lock_warning).to eq(false)
+      expect(@config.bundle_without).to eq(%w[test development])
+      expect(@config.extra_bundle_install_options).to eq(%w[--without test development])
+      expect(@config.deployed_by).to eq("Automation (User name not available)")
+      expect(@config.input_ref).to eq(@config.branch)
     end
 
     it "raises when required options are not given" do
@@ -57,7 +57,7 @@ describe EY::Serverside::Deploy::Configuration do
       capture do # deprecation warning
         expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::IntegrationSpec)
       end
-      read_output.should include("DEPRECATION WARNING: The configuration key 'strategy' is deprecated in favor of 'source_class'.")
+      expect(read_output).to include("DEPRECATION WARNING: The configuration key 'strategy' is deprecated in favor of 'source_class'.")
     end
 
     it "uses source_class if set" do
@@ -98,28 +98,28 @@ describe EY::Serverside::Deploy::Configuration do
     end
 
     it "underrides options with config (directly supplied options take precedence over 'config' options)" do
-      @config.maintenance_on_migrate.should == false
-      @config.branch.should == "branch_from_command_line"
+      expect(@config.maintenance_on_migrate).to eq(false)
+      expect(@config.branch).to eq("branch_from_command_line")
     end
 
     it "corrects command line supplied precompile_assets string (which relies on having a special not-set value of nil, so can't be a boolean)" do
-      @config.skip_precompile_assets?.should == true
-      @config.precompile_assets?.should == false
-      @config.precompile_assets_inferred?.should == false
+      expect(@config.skip_precompile_assets?).to eq(true)
+      expect(@config.precompile_assets?).to eq(false)
+      expect(@config.precompile_assets_inferred?).to eq(false)
     end
 
     it "doesn't require downtime on restart for nginx_passenger" do
-      @config.maintenance_on_migrate.should == false
-      @config.maintenance_on_restart.should == false
+      expect(@config.maintenance_on_migrate).to eq(false)
+      expect(@config.maintenance_on_restart).to eq(false)
     end
 
     it "doesn't bundle --without the framework_env" do
-      @config.bundle_without.should == %w[test]
+      expect(@config.bundle_without).to eq(%w[test])
     end
 
     it "gets deployed_by and input_ref correct" do
-      @config.deployed_by.should == "Martin Emde"
-      @config.input_ref.should == "input_branch"
+      expect(@config.deployed_by).to eq("Martin Emde")
+      expect(@config.input_ref).to eq("input_branch")
     end
   end
 
@@ -166,37 +166,37 @@ describe EY::Serverside::Deploy::Configuration do
     it "requires 'ey.yml' and adds any defined methods to the deploy" do
       write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
-      @deploy.config.copy_exclude.should == ['.git']
+      expect(@deploy.config.copy_exclude).to eq(['.git'])
     end
 
     it "falls back to 'config/ey.yml'" do
       write_ey_yml 'config/ey.yml', @yaml_data
       @deploy.load_ey_yml
-      @deploy.config.copy_exclude.should == ['.git']
+      expect(@deploy.config.copy_exclude).to eq(['.git'])
     end
 
     it "loads at lower priority than command line options" do
       write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
-      @deploy.config.migrate?.should == false
+      expect(@deploy.config.migrate?).to eq(false)
     end
 
     it "loads at lower priority than json config option" do
       write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
-      @deploy.config.branch.should == 'branch_from_command_line'
+      expect(@deploy.config.branch).to eq('branch_from_command_line')
     end
 
     it "loads bundle_without from the config, which overrides the default" do
       write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
-      @deploy.config.bundle_without.should == 'only test'
+      expect(@deploy.config.bundle_without).to eq('only test')
     end
 
     it "overrides boolean ey.yml only options with --conifg strings" do
       write_ey_yml 'ey.yml', @yaml_data
       @deploy.load_ey_yml
-      @deploy.config.should_not be_maintenance_on_migrate
+      expect(@deploy.config).not_to be_maintenance_on_migrate
     end
   end
 end

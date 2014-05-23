@@ -14,7 +14,7 @@ describe "Deploying an application with services" do
       end
 
       it "warns about missing ey_config" do
-        read_stderr.should include("WARNING: Gemfile.lock does not contain ey_config")
+        expect(read_stderr).to include("WARNING: Gemfile.lock does not contain ey_config")
       end
     end
 
@@ -24,7 +24,7 @@ describe "Deploying an application with services" do
       end
 
       it "works without warnings" do
-        read_output.should_not =~ /WARNING/
+        expect(read_output).not_to match(/WARNING/)
       end
     end
   end
@@ -38,15 +38,15 @@ describe "Deploying an application with services" do
     end
 
     it "works without warning" do
-      shared_services_file.should exist
-      shared_services_file.should_not be_symlink
-      shared_services_file.read.should == "#{@invalid_services_yml}\n"
+      expect(shared_services_file).to exist
+      expect(shared_services_file).not_to be_symlink
+      expect(shared_services_file.read).to eq("#{@invalid_services_yml}\n")
 
-      symlinked_services_file.should exist
-      symlinked_services_file.should be_symlink
-      shared_services_file.read.should == "#{@invalid_services_yml}\n"
+      expect(symlinked_services_file).to exist
+      expect(symlinked_services_file).to be_symlink
+      expect(shared_services_file.read).to eq("#{@invalid_services_yml}\n")
 
-      read_output.should_not =~ /WARNING/
+      expect(read_output).not_to match(/WARNING/)
     end
   end
 
@@ -58,15 +58,15 @@ describe "Deploying an application with services" do
     end
 
     it "creates and symlinks ey_services_config_deploy.yml" do
-      shared_services_file.should exist
-      shared_services_file.should_not be_symlink
-      shared_services_file.read.should == "#{services_yml}\n"
+      expect(shared_services_file).to exist
+      expect(shared_services_file).not_to be_symlink
+      expect(shared_services_file.read).to eq("#{services_yml}\n")
 
-      symlinked_services_file.should exist
-      symlinked_services_file.should be_symlink
-      shared_services_file.read.should == "#{services_yml}\n"
+      expect(symlinked_services_file).to exist
+      expect(symlinked_services_file).to be_symlink
+      expect(shared_services_file.read).to eq("#{services_yml}\n")
 
-      read_output.should_not =~ /WARNING/
+      expect(read_output).not_to match(/WARNING/)
     end
   end
 
@@ -81,15 +81,15 @@ describe "Deploying an application with services" do
     end
 
     it "silently fails" do
-      shared_services_file.should exist
-      shared_services_file.should_not be_symlink
-      shared_services_file.read.should == "#{services_yml}\n"
+      expect(shared_services_file).to exist
+      expect(shared_services_file).not_to be_symlink
+      expect(shared_services_file.read).to eq("#{services_yml}\n")
 
-      symlinked_services_file.should exist
-      symlinked_services_file.should be_symlink
-      shared_services_file.read.should == "#{services_yml}\n"
+      expect(symlinked_services_file).to exist
+      expect(symlinked_services_file).to be_symlink
+      expect(shared_services_file.read).to eq("#{services_yml}\n")
 
-      read_output.should_not =~ /WARNING/
+      expect(read_output).not_to match(/WARNING/)
     end
 
   end
@@ -101,15 +101,15 @@ describe "Deploying an application with services" do
       })
       redeploy_test_application('config' => {'services_setup_command' => 'false'})
 
-      shared_services_file.should exist
-      shared_services_file.should_not be_symlink
-      shared_services_file.read.should == "#{services_yml}\n"
+      expect(shared_services_file).to exist
+      expect(shared_services_file).not_to be_symlink
+      expect(shared_services_file.read).to eq("#{services_yml}\n")
 
-      symlinked_services_file.should exist
-      symlinked_services_file.should be_symlink
-      shared_services_file.read.should == "#{services_yml}\n"
+      expect(symlinked_services_file).to exist
+      expect(symlinked_services_file).to be_symlink
+      expect(shared_services_file.read).to eq("#{services_yml}\n")
 
-      read_output.should include('WARNING: External services configuration not updated')
+      expect(read_output).to include('WARNING: External services configuration not updated')
     end
 
     it "does not log a warning or symlink a config file when there is no existing services file" do
@@ -119,10 +119,10 @@ describe "Deploying an application with services" do
       shared_services_file.delete
       redeploy_test_application('config' => {'services_setup_command' => 'false'})
 
-      shared_services_file.should_not exist
-      symlinked_services_file.should_not exist
+      expect(shared_services_file).not_to exist
+      expect(symlinked_services_file).not_to exist
 
-      read_output.should_not =~ /WARNING/
+      expect(read_output).not_to match(/WARNING/)
     end
   end
 
@@ -138,15 +138,15 @@ describe "Deploying an application with services" do
     end
 
     it "replaces the config with the new one (and symlinks)" do
-      shared_services_file.should exist
-      shared_services_file.should_not be_symlink
-      shared_services_file.read.should == "#{@new_services_yml}\n"
+      expect(shared_services_file).to exist
+      expect(shared_services_file).not_to be_symlink
+      expect(shared_services_file.read).to eq("#{@new_services_yml}\n")
 
-      symlinked_services_file.should exist
-      symlinked_services_file.should be_symlink
-      shared_services_file.read.should == "#{@new_services_yml}\n"
+      expect(symlinked_services_file).to exist
+      expect(symlinked_services_file).to be_symlink
+      expect(shared_services_file.read).to eq("#{@new_services_yml}\n")
 
-      read_output.should_not =~ /WARNING/
+      expect(read_output).not_to match(/WARNING/)
     end
   end
 

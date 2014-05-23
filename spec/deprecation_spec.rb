@@ -13,11 +13,11 @@ describe EY::Serverside do
   end
 
   it "deprecates EY::Serverside::LoggedOutput for EY::Serverside::Shell::Helpers" do
-    EY::Serverside::LoggedOutput.should == EY::Serverside::Shell::Helpers
-    @warnings.string.should include("EY::Serverside::LoggedOutput")
+    expect(EY::Serverside::LoggedOutput).to eq(EY::Serverside::Shell::Helpers)
+    expect(@warnings.string).to include("EY::Serverside::LoggedOutput")
   end
 
   it "doesn't interfere with unrelated constants" do
-    lambda{ EY::Serverside::WTFNotDefined }.should raise_error(NameError, /uninitialized constant.*WTFNotDefined/)
+    expect{ EY::Serverside::WTFNotDefined }.to raise_error(NameError, /uninitialized constant.*WTFNotDefined/)
   end
 end

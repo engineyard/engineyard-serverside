@@ -12,13 +12,13 @@ describe "Deploying an application that uses Node.js and NPM" do
 
       it "runs 'npm install' and 'composer install'" do
         npm_cmd = @deployer.commands.grep(/npm install/).first
-        npm_cmd.should_not be_nil
+        expect(npm_cmd).not_to be_nil
 
         update_cmd = @deployer.commands.grep(/composer.*self-update/).first
-        update_cmd.should_not be_nil
+        expect(update_cmd).not_to be_nil
 
         composer_cmd = @deployer.commands.grep(/composer install/).first
-        composer_cmd.should_not be_nil
+        expect(composer_cmd).not_to be_nil
       end
     end
   end

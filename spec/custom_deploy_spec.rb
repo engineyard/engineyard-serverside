@@ -58,7 +58,7 @@ describe "the EY::Serverside::Deploy API" do
     # that are using eydeploy.rb and relying on this documentation.
     #
     ############################################################################
-    td.call_order.should == %w(
+    expect(td.call_order).to eq(%w(
       push_code
       copy_repository_cache
       create_revision_file
@@ -72,7 +72,7 @@ describe "the EY::Serverside::Deploy API" do
       restart
       disable_maintenance_page
       cleanup_old_releases
-      gc_repository_cache)
+      gc_repository_cache))
   end
 
   describe "task overrides" do
@@ -95,7 +95,7 @@ describe "the EY::Serverside::Deploy API" do
       it "doesn't load eydeploy_rb file" do
         write_eydeploy 'eydeploy.rb'
         @deploy.require_custom_tasks
-        @deploy.should_not respond_to(:got_new_methods)
+        expect(@deploy).not_to respond_to(:got_new_methods)
       end
     end
 
@@ -108,13 +108,13 @@ describe "the EY::Serverside::Deploy API" do
       it "requires 'eydeploy.rb' and adds any defined methods to the deploy" do
         write_eydeploy 'eydeploy.rb'
         @deploy.require_custom_tasks
-        @deploy.got_new_methods.should == 'from the file on disk'
+        expect(@deploy.got_new_methods).to eq('from the file on disk')
       end
 
       it "falls back to 'config/eydeploy.rb'" do
         write_eydeploy 'config/eydeploy.rb'
         @deploy.require_custom_tasks
-        @deploy.got_new_methods.should == 'from the file on disk'
+        expect(@deploy.got_new_methods).to eq('from the file on disk')
       end
 
       it "lets you super up from any defined methods" do
@@ -126,15 +126,15 @@ describe "the EY::Serverside::Deploy API" do
 
         deploy = TestDeploySuper.realnew(test_servers, @config, test_shell)
         deploy.require_custom_tasks
-        deploy.value.should == "base + derived"
+        expect(deploy.value).to eq("base + derived")
       end
 
       it "records exceptions raised from the instance eval in the log" do
         write_eydeploy 'eydeploy.rb', "raise 'Imma blow up'"
-        lambda { @deploy.require_custom_tasks }.should raise_error
+        expect { @deploy.require_custom_tasks }.to raise_error
         log = @log_path.read
-        log.should =~ /Exception while loading .*eydeploy\.rb/
-        log.should include('Imma blow up')
+        expect(log).to match(/Exception while loading .*eydeploy\.rb/)
+        expect(log).to include('Imma blow up')
       end
     end
   end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe EY::Serverside::Source::Archive do
   before do
-    described_class.any_instance.stub(:runner) { RunnerDouble }
+    allow_any_instance_of(described_class).to receive(:runner) { RunnerDouble }
   end
 
   context "source" do
