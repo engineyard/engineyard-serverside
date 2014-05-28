@@ -108,6 +108,10 @@ module EY
         path(:active_release, 'deploy', "#{hook_name}.rb")
       end
 
+      def executable_deploy_hook(hook_name)
+        path(:active_release, 'deploy', "#{hook_name}")
+      end
+
       def repository_cache
         @repository_cache ||= default_repository_cache
       end

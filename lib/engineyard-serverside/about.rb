@@ -32,6 +32,9 @@ module EY
         File.expand_path("../../../bin/#{gem_name}", __FILE__)
       end
 
+      def hook_executor
+        binary + "-execute-hook"
+      end
     end
   end
 end

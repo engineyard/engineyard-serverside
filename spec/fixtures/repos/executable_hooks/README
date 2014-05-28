@@ -1,0 +1,1 @@
+Use an executable file for a hook, not a ruby one that uses the hook API.

@@ -1,0 +1,31 @@
+#!/bin/sh
+
+#
+# This script is used to execute non-ruby deploy hooks. It's called from
+# EY::Serverside::Deploy#callback. If you'd like to call it directly you should
+# be careful to replicate everything done in EY::Serverside::Deploy or your
+# hook code may not execute as planned.
+#
+
+set -o nounset
+
+abort() {
+  echo "$*"
+  exit 1
+}
+
+HOOK=${1:-}
+[ -n "${HOOK}" ] || abort "No hook name provided."
+
+# We run all deploy hooks from the root directory of the current release of
+# their app.
+[ -n "${EY_DEPLOY_RELEASE_PATH:-}" ] || abort "EY_DEPLOY_RELEASE_PATH must be set."
+[ -d ${EY_DEPLOY_RELEASE_PATH} ] || abort "EY_DEPLOY_RELEASE_PATH must exist and be a directory"
+cd ${EY_DEPLOY_RELEASE_PATH}
+
+# Run the hook.
+_hook_path=deploy/${HOOK}
+if [ ! \( -f ${_hook_path} -a -x ${_hook_path} \) ]; then
+  abort "${_hook_path} must exist and be executable"
+fi
+exec ${_hook_path}
