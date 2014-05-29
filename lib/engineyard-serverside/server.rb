@@ -34,14 +34,15 @@ module EY
         hostname == 'localhost'
       end
 
-      def sync_directory_command(directory)
+      def sync_directory_command(directory, ignore_existing = false)
         return nil if local?
+        ignore_flag = ignore_existing ? ["--ignore-existing"] : []
         [
           remote_command("mkdir -p #{directory}"),
           # File mod times aren't important during deploy, and
           # -a (archive mode) sets --times which causes problems.
           # -a is equivalent to -rlptgoD. We remove the -t, and add -q.
-          Escape.shell_command(%w[rsync --delete -rlpgoDq -e] + [ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
+          Escape.shell_command(%w[rsync --delete -rlpgoDq] + ignore_flag + ["-e", ssh_command, "#{directory}/", "#{user}@#{hostname}:#{directory}"])
         ].join(' && ')
       end
 
