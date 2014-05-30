@@ -1,0 +1,72 @@
+#!/bin/sh
+
+_TEST_NUMBER=1
+_FAILED=0
+
+run_tests() {
+  local _env_var
+
+  expect_env EY_DEPLOY_ACCOUNT_NAME acc
+  expect_env EY_DEPLOY_APP rails31
+  expect_env EY_DEPLOY_ENVIRONMENT_NAME env
+  expect_env EY_DEPLOY_FRAMEWORK_ENV staging
+  expect_env MERB_ENV staging
+  expect_env NODE_ENV staging
+  expect_env RACK_ENV staging
+  expect_env RAILS_ENV staging
+  for _env_var in EY_DEPLOY_CONFIG EY_DEPLOY_RELEASE_PATH EY_DEPLOY_VERBOSE; do
+    expect_env ${_env_var}
+  done
+
+  check_working_directory ${EY_DEPLOY_RELEASE_PATH}
+}
+
+ok() {
+  echo "ok ${_TEST_NUMBER} $*"
+  _TEST_NUMBER=$((${_TEST_NUMBER} + 1))
+}
+
+not_ok() {
+  echo "not ok ${_TEST_NUMBER} $*"
+  _FAILED=1
+  _TEST_NUMBER=$((${_TEST_NUMBER} + 1))
+}
+
+check_working_directory() {
+  local _dir=$1
+
+  if [ $(pwd) = ${_dir} ]; then
+    ok "Working directory is correct"
+  else
+    not_ok "Working directory is correct"
+  fi
+}
+
+expect_env() {
+  local _name=$1
+  local _value=${2:-}
+  local _var
+  local _test_name
+
+  _test_name="ENV[${_name}]"
+  if [ -n "${_value}" ]; then
+    _test_name="${_test_name}=${_value}"
+  else
+    _test_name="${_test_name} should be set"
+  fi
+
+  eval "_var=\$${_name}"
+  if [ -n "${_var}" ]; then
+    if [ -n "${_value}" -a "${_var}" != "${_value}" ]; then
+      not_ok ${_test_name}
+    else
+      ok ${_test_name}
+    fi
+  else
+    not_ok ${_test_name}
+  fi
+}
+
+run_tests
+touch 'before_restart.ran'
+exit ${_FAILED}

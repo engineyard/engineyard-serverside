@@ -43,6 +43,16 @@ describe "deploy hooks" do
     end
   end
 
+  context "with an executable for a deploy hook" do
+    before(:all) do
+      deploy_test_application('executable_hooks')
+    end
+
+    it 'runs the hook' do
+      deploy_dir.join('current', 'before_restart.ran').should exist
+    end
+  end
+
   context "deploy hook API" do
 
     def deploy_hook(options={})
