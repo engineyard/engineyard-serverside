@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.4.0 (2014-06-01)
+
   * Do not remove `public/system` from the repository when it exists. Warn that maintenance pages may not work.
   * Add support for non-Ruby deploy hooks. These have the same names/locations as the ruby hooks but without the '.rb' suffix (e.g. deploy/before_symlink).
 
