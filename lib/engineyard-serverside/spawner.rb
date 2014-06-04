@@ -74,10 +74,11 @@ module EY
             pid, status = Process::waitpid2(-1, Process::WNOHANG)
             if pid.nil?
               possible_children = false
-            else
-              child = @child_by_pid.delete(pid)
+            elsif child = @child_by_pid.delete(pid)
               child.finished status
               just_reaped << child
+            else
+              raise "Unknown pid returned from Process::waitpid2 => #{pid.inpsect}, #{status.inspect}. Expected children: #{@child_by_pid.keys.inspect}"
             end
           rescue Errno::ECHILD
             possible_children = false
