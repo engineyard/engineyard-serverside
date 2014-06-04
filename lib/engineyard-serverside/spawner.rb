@@ -77,8 +77,12 @@ module EY
             elsif child = @child_by_pid.delete(pid)
               child.finished status
               just_reaped << child
+            elsif pid == -1
+              # waitpid encountered an error (as defined in linux waitpid manpage)
+              # apparently it can leak through ruby's waitpid abstraction
+              raise "Fatal error encountered while waiting for a child process to exit. waitpid2 returned: [#{pid.inpsect}, #{status.inspect}].\nExpected one of children: #{@child_by_pid.keys.inspect}"
             else
-              raise "Unknown pid returned from Process::waitpid2 => #{pid.inpsect}, #{status.inspect}. Expected children: #{@child_by_pid.keys.inspect}"
+              raise "Unknown pid returned from waitpid2 => #{pid.inpsect}, #{status.inspect}.\nExpected one of children: #{@child_by_pid.keys.inspect}"
             end
           rescue Errno::ECHILD
             possible_children = false
