@@ -57,6 +57,9 @@ module EY
       verbose_option
       desc "enable_maintenance", "Enable maintenance page (disables web access)"
       def enable_maintenance
+        options = self.options.dup
+        options[:release_path] = Pathname.new("/data/#{options[:app]}/current").realpath.to_s
+
         init_and_propagate(options, 'enable_maintenance') do |servers, config, shell|
           EY::Serverside::Maintenance.new(servers, config, shell).manually_enable
         end
@@ -68,6 +71,9 @@ module EY
       verbose_option
       desc "disable_maintenance", "Disable maintenance page (enables web access)"
       def disable_maintenance
+        options = self.options.dup
+        options[:release_path] = Pathname.new("/data/#{options[:app]}/current").realpath.to_s
+
         init_and_propagate(options, 'disable_maintenance') do |servers, config, shell|
           EY::Serverside::Maintenance.new(servers, config, shell).manually_disable
         end
@@ -142,6 +148,9 @@ module EY
       verbose_option
       desc "restart", "Restart app servers, conditionally enabling maintenance page"
       def restart
+        options = self.options.dup
+        options[:release_path] = Pathname.new("/data/#{options[:app]}/current").realpath.to_s
+
         init_and_propagate(options, 'restart') do |servers, config, shell|
           EY::Serverside::Deploy.new(servers, config, shell).restart_with_maintenance_page
         end
