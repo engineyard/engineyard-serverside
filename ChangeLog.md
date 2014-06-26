@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.4.1 (2014-06-25)
+
   * Make sure release_path is set correctly to the latest release for maintenance actions
 
 ## v2.4.0 (2014-06-01)
