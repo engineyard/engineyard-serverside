@@ -48,10 +48,20 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
 
         def install
           shell.status "Bundling gems..."
-          clean_bundle_on_system_version_change
-          install_bundler_gem
-          run "#{clean_environment} && cd #{paths.active_release} && #{bundle_install_command}"
-          write_system_version
+          with_shared_bundle_protection do
+            install_bundler_gem
+            run "#{clean_environment} && cd #{paths.active_release} && #{bundle_install_command}"
+          end
+        end
+
+        def with_shared_bundle_protection
+          if config.bundle_shared
+            clean_bundle_on_system_version_change
+            yield
+            write_system_version
+          else
+            yield
+          end
         end
 
         def uses_sqlite3?
@@ -100,9 +110,9 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         def bundle_install_options
           options = [
             "--gemfile",  "#{paths.gemfile}",
-            "--path",     "#{paths.bundled_gems}",
             "--binstubs", "#{paths.binstubs}",
           ]
+          options += ["--path", "#{paths.bundled_gems}"] if config.bundle_shared
           options += ["--deployment"] if lockfile
           options += config.extra_bundle_install_options
           options

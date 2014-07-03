@@ -1,0 +1,3 @@
+defaults:
+  bundle_shared: false
+  ignore_database_adapter_warning: true
