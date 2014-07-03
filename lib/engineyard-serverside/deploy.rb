@@ -177,7 +177,10 @@ mkdir -p #{path.dirname}
 [ -x #{path} ] || cat > #{path} <<'SSH'
 #!/bin/sh
 unset SSH_AUTH_SOCK
-ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=INFO -o IdentityFile=#{paths.deploy_key} -o IdentitiesOnly=yes $*
+
+# Filter command mangling by git when using `GIT_SSH` and the string `plink`
+command=$(echo "$*" | sed -e "s/^-batch //")
+ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=INFO -o IdentityFile=#{paths.deploy_key} -o IdentitiesOnly=yes ${command}
 SSH
 chmod 0700 #{path}
         SCRIPT
