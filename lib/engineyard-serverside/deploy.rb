@@ -188,14 +188,20 @@ chmod 0700 #{path}
 
       # task
       def cleanup_old_releases
-        clean_release_directory(paths.releases)
+        count = config.keep_releases.to_i
+        if count < 1
+          shell.error "Refusing to delete all releases! keep_releases must be >= 1 (got #{count})"
+          count = EY::Serverside::Deploy::Configuration::DEFAULT_KEEP_RELEASES
+          shell.warning "Running instead with default value for keep_releases: #{count}"
+        end
+        clean_release_directory(paths.releases, count)
       end
 
       # Remove all but the most-recent +count+ releases from the specified
       # release directory.
       # IMPORTANT: This expects the release directory naming convention to be
       # something with a sensible lexical order. Violate that at your peril.
-      def clean_release_directory(dir, count = 3)
+      def clean_release_directory(dir, count)
         @cleanup_failed = true
         ordinal = count.succ.to_s
         shell.status "Cleaning release directory: #{dir}"
@@ -470,7 +476,7 @@ YML
         run "mkdir -p #{paths.releases_failed}"
         ensure_ownership(paths.active_release, paths.releases_failed)
         run "mv #{paths.active_release} #{paths.releases_failed}"
-        clean_release_directory(paths.releases_failed)
+        clean_release_directory(paths.releases_failed, config.keep_failed_releases.to_i)
         raise e
       end
 

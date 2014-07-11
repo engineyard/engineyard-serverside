@@ -103,6 +103,11 @@ module EY
 
       def_option :restart_groups,         1
 
+      DEFAULT_KEEP_RELEASES = 3
+
+      def_option :keep_releases,          DEFAULT_KEEP_RELEASES
+      def_option :keep_failed_releases,   DEFAULT_KEEP_RELEASES
+
       def_boolean_option :clean,                           false
       def_boolean_option :verbose,                         false
       def_boolean_option :gc,                              false
