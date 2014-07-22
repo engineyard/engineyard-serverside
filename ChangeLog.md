@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Supports `ey.yml` option `keep_releases` and `keep_failed_releases` for how many releases to keep in the `releases` dir (default: 3)
 
 ## v2.4.1 (2014-06-25)
 

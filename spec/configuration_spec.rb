@@ -34,6 +34,8 @@ describe EY::Serverside::Deploy::Configuration do
       expect(@config.extra_bundle_install_options).to eq(%w[--without test development])
       expect(@config.deployed_by).to eq("Automation (User name not available)")
       expect(@config.input_ref).to eq(@config.branch)
+      expect(@config.keep_releases).to eq(3)
+      expect(@config.keep_failed_releases).to eq(3)
     end
 
     it "raises when required options are not given" do
