@@ -402,6 +402,8 @@ YML
               "#{k}=#{Escape.shell_command([v])}"
             }.join(' ') + ' ' + config.framework_envs + ' ' + cmd
           end
+        elsif paths.executable_deploy_hook(what).exist?
+          shell.status "Skipping possible deploy hook deploy/#{what} because it's not executable."
         end
       end
 

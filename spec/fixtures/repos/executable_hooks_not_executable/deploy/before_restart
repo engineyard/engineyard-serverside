@@ -1,0 +1,3 @@
+#!/bin/sh
+
+touch 'before_restart.ran'

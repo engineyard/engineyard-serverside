@@ -53,6 +53,20 @@ describe "deploy hooks" do
     end
   end
 
+  context "with a non-executable, but correctly named deploy hook" do
+    before(:all) do
+      deploy_test_application('executable_hooks_not_executable')
+    end
+
+    it 'does not run the hook' do
+      deploy_dir.join('current', 'before_restart.ran').should_not exist
+    end
+
+    it 'outputs a message about the hook not being executable' do
+      expect(read_output).to match(%r|Skipping.*deploy hook.*not executable|)
+    end
+  end
+
   context "deploy hook API" do
 
     def deploy_hook(options={})
