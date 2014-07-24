@@ -4,6 +4,7 @@
 
   * Supports `ey.yml` option `keep_releases` and `keep_failed_releases` for how many releases to keep in the `releases` dir (default: 3)
   * Warn when a file that looks like an executable deploy hook is skipped because it is not executable.
+  * Vendor `json_pure` to avoid warnings from MultiJson.
 
 ## v2.4.1 (2014-06-25)
 

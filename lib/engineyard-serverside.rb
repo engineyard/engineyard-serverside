@@ -15,6 +15,7 @@ end
 $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/systemu/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
+$LOAD_PATH.unshift File.expand_path('vendor/json_pure/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/multi_json/lib', File.dirname(__FILE__))
 
 require 'escape'
