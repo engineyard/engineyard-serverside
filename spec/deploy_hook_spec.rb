@@ -32,7 +32,7 @@ describe "deploy hooks" do
 
     it "prints the failure to the log even when non-verbose" do
       out = read_output
-      expect(out).to match(%r|FATAL: Exception raised in deploy hook .*/before_migrate.rb.|)
+      expect(out).to match(%r|FATAL: Exception raised in deploy hook .*/before_deploy.rb.|)
       expect(out).to match(%r|RuntimeError:.*Hook failing in \(eval\)|)
       expect(out).to match(%r|Please fix this error before retrying.|)
     end

@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Fixes release cleanup for `before_deploy` hook failures. Previously, hook failures would not trigger the cleanup of the release directory.
   * Supports `ey.yml` option `keep_releases` and `keep_failed_releases` for how many releases to keep in the `releases` dir (default: 3)
   * Warn when a file that looks like an executable deploy hook is skipped because it is not executable.
 

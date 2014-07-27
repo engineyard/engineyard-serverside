@@ -25,11 +25,10 @@ module EY
         push_code
 
         shell.status "Starting full deploy"
-        copy_repository_cache
-        callback(:before_deploy)
-        check_repository
 
-        with_failed_release_cleanup do
+        new_release do
+          callback(:before_deploy)
+          check_repository
           create_revision_file
           run_with_callbacks(:bundle)
           setup_services
@@ -262,14 +261,20 @@ chmod 0700 #{path}
         end
       end
 
+      def new_release(&block)
+        copy_repository_cache
+        with_failed_release_cleanup do
+          shell.status "Ensuring proper ownership."
+          ensure_ownership(paths.active_release)
+          block.call
+        end
+      end
+
       # task
       def copy_repository_cache
         shell.status "Copying to #{paths.active_release}"
         exclusions = Array(config.copy_exclude).map { |e| %|--exclude="#{e}"| }.join(' ')
         run("mkdir -p #{paths.active_release} #{paths.shared_config} && rsync -aq #{exclusions} #{paths.repository_cache}/ #{paths.active_release}")
-
-        shell.status "Ensuring proper ownership."
-        ensure_ownership(paths.active_release)
       end
 
       def create_revision_file
