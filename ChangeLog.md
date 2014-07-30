@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.4.2 (2014-07-30)
+
   * "Maintenance page still up" notices will be shown as status messages in the deploy log to prevent sticky notices on the dashboard that are not relevant.
   * Fixes release cleanup for `before_deploy` hook failures. Previously, hook failures would not trigger the cleanup of the release directory.
   * Supports `ey.yml` option `keep_releases` and `keep_failed_releases` for how many releases to keep in the `releases` dir (default: 3)
