@@ -5,6 +5,7 @@ require 'engineyard-serverside/rails_assets'
 require 'engineyard-serverside/maintenance'
 require 'engineyard-serverside/dependency_manager'
 require 'engineyard-serverside/dependency_manager/legacy_helpers'
+require 'engineyard-serverside/nginx_conf'
 
 module EY
   module Serverside
@@ -36,6 +37,7 @@ module EY
           setup_sqlite3_if_necessary
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
           enable_maintenance_page
+          process_custom_nginx_conf
           run_with_callbacks(:migrate)
           callback(:before_symlink)
           # We don't use run_with_callbacks for symlink because we need
@@ -112,6 +114,10 @@ module EY
 
       def disable_maintenance_page
         maintenance.conditionally_disable
+      end
+
+      def process_custom_nginx_conf
+        nginx_conf.conditionally_process
       end
 
       def run_with_callbacks(task)
@@ -237,6 +243,7 @@ chmod 0700 #{path}
             shell.status "Restarting with previous release."
             enable_maintenance_page
             run_with_callbacks(:restart)
+            process_custom_nginx_conf
             disable_maintenance_page
             shell.status "Finished rollback at #{Time.now.asctime}"
           rescue Exception
@@ -533,6 +540,10 @@ defaults:
       def dependency_manager
         ensure_git_ssh_wrapper
         @dependency_manager ||= DependencyManager.new(servers, config, shell, self)
+      end
+
+      def nginx_conf
+        @nginx_conf ||= NginxConf.new(servers, config, shell, self)
       end
 
       def compile_assets

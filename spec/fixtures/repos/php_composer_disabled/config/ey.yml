@@ -1,2 +1,3 @@
 defaults:
   composer: false
+  nginx_conf: false
