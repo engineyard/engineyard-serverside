@@ -8,7 +8,7 @@ end
 
 describe EY::Serverside::Source::Git do
   before do
-    @source_cache = tmpdir.join("gitrepo-#{Time.now.utc.strftime("%Y%m%d%H%M%S")}#{Time.now.tv_usec}-#{$$}")
+    @source_cache = tmpdir.join("gitrepo-#{Time.now.utc.strftime("%Y%m%d%H%M%S")}-#{$$}")
   end
 
 

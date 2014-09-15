@@ -17,6 +17,7 @@ require 'engineyard-serverside'
 require 'engineyard-serverside-adapter'
 require 'support/integration'
 require 'support/source_doubles'
+require 'support/timecop'
 
 FIXTURES_DIR = Pathname.new(__FILE__).dirname.join("fixtures")
 TMPDIR = Pathname.new(__FILE__).dirname.parent.join('tmp')
@@ -216,7 +217,7 @@ exec "$@"
   #
   # can't use %L n strftime because old ruby doesn't support it.
   def release_path
-    deploy_dir.join('releases', Time.now.utc.strftime("%Y%m%d%H%M%S#{Time.now.tv_usec}"))
+    deploy_dir.join('releases', Time.now.utc.strftime("%Y%m%d%H%M%S"))
   end
 
   # set up EY::Serverside::Server like we're on a solo
@@ -227,6 +228,7 @@ exec "$@"
   # When a repo fixture name is specified, the files found in the specified
   # spec/fixtures/repos dir are copied into the test github repository.
   def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
+    Timecop.travel(1)
     options = {
       "source_class"     => "IntegrationSpec",
       "deploy_to"        => deploy_dir.to_s,
@@ -289,6 +291,7 @@ exec "$@"
   end
 
   def redeploy_test_application(extra_config = {}, &block)
+    Timecop.travel(1)
     raise "Please deploy_test_application first" unless @argv
     bundle_install_fails = extra_config.delete('bundle_install_fails')
 
