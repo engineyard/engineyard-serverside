@@ -19,7 +19,8 @@ module EY
       def_delegators :config,
         :paths, :asset_dependencies, :asset_roles,
         :framework_envs, :precompile_assets?, :skip_precompile_assets?,
-        :precompile_unchanged_assets?, :precompile_assets_task
+        :precompile_unchanged_assets?, :precompile_assets_task,
+        :precompile_assets_command
 
       def detect_and_compile
         runner.roles asset_roles do
