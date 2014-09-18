@@ -19,9 +19,8 @@ module EY
 
         log_pathname = Pathname.new(options[:log_path])
         log_pathname.unlink if log_pathname.exist? # start fresh
-        @logger = Logger.new(log_pathname.to_s)
+        @logger = Logger.new($stdout)
         @logger.level = Logger::DEBUG # Always log to the file at debug, formatter hides debug for non-verbose
-        @logger.formatter = EY::Serverside::Shell::Formatter.new(@stdout, @stderr, start_time, @verbose)
       end
 
       def verbose?
@@ -58,9 +57,9 @@ module EY
       #   $ cmd blah do \
       #   > something more
       #   > end
-      def command_show(cmd) debug   cmd.gsub(/^/,'   > ').sub(/>/, '$') end
-      def command_out(msg)  debug   msg.gsub(/^/,'     ') end
-      def command_err(msg)  unknown msg.gsub(/^/,'     ') end
+      def command_show(cmd) $stderr << cmd.gsub(/^/,'   > ').sub(/>/, '$') end
+      def command_out(msg)  $stderr << msg.gsub(/^/,'     ') end
+      def command_err(msg)  $stderr << msg.gsub(/^/,'     ') end
 
       def logged_system(cmd, server = nil)
         EY::Serverside::Spawner.run(cmd, self, server)
