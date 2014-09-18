@@ -3,50 +3,37 @@ require 'spec_helper'
 describe "the EY::Serverside::Deploy API" do
   it "calls tasks in the right order" do
     class TestDeploy < FullTestDeploy
-      # This happens before require_custom_tasks, so it's not
-      # overrideable. That's why it's not in @call_order.
-      def update_repository_cache() end
-      def check_repository() end
-
-      # cheat a bit; we don't actually want to do these things
-      def require_custom_tasks() end
-      def callback(*_) end
-
       attr_reader :call_order
       def initialize(*a)
         super
         @call_order = []
       end
 
-      def run(*)
-      end
-
-      def sudo(*)
-      end
-
-      def push_code()                @call_order << 'push_code'                end
-      def copy_repository_cache()    @call_order << 'copy_repository_cache'    end
-      def create_revision_file()     @call_order << 'create_revision_file'     end
-      def bundle()                   @call_order << 'bundle'                   end
-      def setup_services()           @call_order << 'setup_services'           end
-      def symlink_configs()          @call_order << 'symlink_configs'          end
-      def migrate()                  @call_order << 'migrate'                  end
-      def compile_assets()           @call_order << 'compile_assets'           end
-      def symlink()                  @call_order << 'symlink'                  end
-      def restart()                  @call_order << 'restart'                  end
-      def cleanup_old_releases()     @call_order << 'cleanup_old_releases'     end
-      def enable_maintenance_page()  @call_order << 'enable_maintenance_page'  end
-      def disable_maintenance_page() @call_order << 'disable_maintenance_page' end
-      def gc_repository_cache()      @call_order << 'gc_repository_cache'      end
+      def push_code()                @call_order << 'push_code'               ; super end
+      def copy_repository_cache()    @call_order << 'copy_repository_cache'   ; super end
+      def create_revision_file()     @call_order << 'create_revision_file'    ; super end
+      def bundle()                   @call_order << 'bundle'                  ; super end
+      def setup_services()           @call_order << 'setup_services'          ; super end
+      def symlink_configs()          @call_order << 'symlink_configs'         ; super end
+      def migrate()                  @call_order << 'migrate'                 ; super end
+      def compile_assets()           @call_order << 'compile_assets'          ; super end
+      def symlink()                  @call_order << 'symlink'                 ; super end
+      def restart()                  @call_order << 'restart'                 ; super end
+      def cleanup_old_releases()     @call_order << 'cleanup_old_releases'    ; super end
+      def enable_maintenance_page()  @call_order << 'enable_maintenance_page' ; super end
+      def disable_maintenance_page() @call_order << 'disable_maintenance_page'; super end
+      def gc_repository_cache()      @call_order << 'gc_repository_cache'     ; super end
     end
 
-    config = EY::Serverside::Deploy::Configuration.new({
-      'app' => 'app_name',
-      'framework_env' => 'staging',
-    })
+    config = EY::Serverside::Deploy::Configuration.new(default_configuration)
 
     td = TestDeploy.realnew(test_servers, config, test_shell)
-    td.deploy
+    mock_bundler
+    with_mocked_commands do
+      capture do
+        td.deploy
+      end
+    end
 
     ############################# IMPORTANT ####################################
     #

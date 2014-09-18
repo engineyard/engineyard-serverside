@@ -21,7 +21,6 @@ describe "Deploying a simple application" do
       args.serverside_version = Gem::Version.create(EY::Serverside::VERSION.dup).release
       args.config = {
         "deploy_to" => deploy_dir,
-        "release_path"     => release_path.to_s,
         "group"            => GROUP
       }
     end

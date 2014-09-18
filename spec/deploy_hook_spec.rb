@@ -32,7 +32,7 @@ describe "deploy hooks" do
 
     it "prints the failure to the log even when non-verbose" do
       out = read_output
-      expect(out).to match(%r|FATAL: Exception raised in deploy hook .*/before_deploy.rb.|)
+      expect(out).to match(%r|FATAL: Exception raised in deploy hook .*/deploy/before_deploy.rb.|)
       expect(out).to match(%r|RuntimeError:.*Hook failing in \(eval\)|)
       expect(out).to match(%r|Please fix this error before retrying.|)
     end
@@ -68,13 +68,16 @@ describe "deploy hooks" do
   end
 
   context "deploy hook API" do
-
     def deploy_hook(options={})
       config = EY::Serverside::Deploy::Configuration.new({
         'app' => 'app_name',
         'framework_env' => 'staging',
         'current_roles' => ['solo'],
+        'deploy_to'     => deploy_dir.to_s,
       }.merge(options))
+      # setup to run hooks since a deploy hasn't happened
+      config.paths.new_release!
+      config.paths.active_release.mkpath
       EY::Serverside::DeployHook.new(config, test_shell, 'fake_test_hook')
     end
 
@@ -102,7 +105,7 @@ describe "deploy hooks" do
           deploy_hook.eval_hook('run!("false")')
         }.to raise_error(RuntimeError)
         out = read_output
-        expect(out).to match(%r|FATAL: Exception raised in deploy hook /data/app_name/releases/\d+/deploy/fake_test_hook.rb.|)
+        expect(out).to match(%r|FATAL: Exception raised in deploy hook .*/deploy/fake_test_hook.rb.|)
         expect(out).to match(%r|RuntimeError: .*run!.*Command failed. false|)
         expect(out).to match(%r|Please fix this error before retrying.|)
       end
@@ -128,7 +131,7 @@ describe "deploy hooks" do
           }.to raise_error(RuntimeError)
         end
         out = read_output
-        expect(out).to match(%r|FATAL: Exception raised in deploy hook /data/app_name/releases/\d+/deploy/fake_test_hook.rb.|)
+        expect(out).to match(%r|FATAL: Exception raised in deploy hook .*/deploy/fake_test_hook.rb.|)
         expect(out).to match(%r|RuntimeError: .*sudo!.*Command failed. false|)
         expect(out).to match(%r|Please fix this error before retrying.|)
       end
@@ -150,7 +153,7 @@ describe "deploy hooks" do
         expect(deploy_hook.eval_hook('shared_path.nil?')).to be_false
         out = read_output
         expect(out).to include("Use of `shared_path` (via method_missing) is deprecated in favor of `config.shared_path` for improved error messages and compatibility.")
-        expect(out).to match(%r|in /data/app_name/releases/\d+/deploy/fake_test_hook.rb|)
+        expect(out).to match(%r|in .*/deploy/fake_test_hook.rb|)
       end
     end
 
@@ -190,7 +193,7 @@ describe "deploy hooks" do
         out = read_output
         expect(out).to match(%r|Use of `@node` in deploy hooks is deprecated.|)
         expect(out).to match(%r|Please use `config.node`, which provides access to the same object.|)
-        expect(out).to match(%r|/data/app_name/releases/\d+/deploy/fake_test_hook.rb|)
+        expect(out).to match(%r|.*/deploy/fake_test_hook.rb|)
       end
 
       it "is available" do
@@ -219,7 +222,7 @@ describe "deploy hooks" do
         out = read_output
         expect(out).to match(%r|Use of `@configuration` in deploy hooks is deprecated.|)
         expect(out).to match(%r|Please use `config`, which provides access to the same object.|)
-        expect(out).to match(%r|/data/app_name/releases/\d+/deploy/fake_test_hook.rb|)
+        expect(out).to match(%r|.*/deploy/fake_test_hook.rb|)
       end
 
       it "has the configuration in it" do
@@ -336,7 +339,7 @@ describe "deploy hooks" do
           deploy_hook.eval_hook('methedo_no_existo')
         }.to raise_error(NameError)
         out = read_output
-        expect(out).to match(%r|FATAL: Exception raised in deploy hook /data/app_name/releases/\d+/deploy/fake_test_hook.rb.|)
+        expect(out).to match(%r|FATAL: Exception raised in deploy hook .*/deploy/fake_test_hook.rb.|)
         expect(out).to match(%r|NameError: undefined local variable or method `methedo_no_existo' for|)
         expect(out).to match(%r|Please fix this error before retrying.|)
       end

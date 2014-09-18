@@ -211,28 +211,19 @@ exec "$@"
     @deploy_dir ||= tmpdir.join("serverside-deploy-#{Time.now.to_f}-#{$$}")
   end
 
-  # This needs to be patched for the tests to succeed, but
-  # the chances of 2 real deploys colliding in the same second
-  # is very very low.
-  #
-  # can't use %L n strftime because old ruby doesn't support it.
-  def release_path
-    deploy_dir.join('releases', Time.now.utc.strftime("%Y%m%d%H%M%S"))
+  def whoami
+    ENV['USER']
   end
 
   # set up EY::Serverside::Server like we're on a solo
   def test_servers
-    @test_servers ||= EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => ENV['USER']}], test_shell)
+    @test_servers ||= EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => whoami}], test_shell)
   end
 
-  # When a repo fixture name is specified, the files found in the specified
-  # spec/fixtures/repos dir are copied into the test github repository.
-  def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
-    Timecop.travel(1)
-    options = {
+  def default_configuration
+    {
       "source_class"     => "IntegrationSpec",
       "deploy_to"        => deploy_dir.to_s,
-      "release_path"     => release_path.to_s,
       "group"            => GROUP,
       "stack"            => 'nginx_passenger',
       "migrate"          => "ruby -e 'puts ENV[\"PATH\"]' > #{deploy_dir}/path-when-migrating",
@@ -242,8 +233,12 @@ exec "$@"
       "framework_env"    => 'staging',
       "branch"           => 'somebranch',
       "verbose"          => true,
-      "git"              => FIXTURES_DIR.join('repos', repo_fixture_name),
-    }.merge(extra_config)
+      "git"              => FIXTURES_DIR.join('repos', 'default'),
+    }
+  end
+
+  def test_adapter(repo_fixture_name = 'default', extra_config = {}, &block)
+    options = default_configuration.merge({ "git" => FIXTURES_DIR.join('repos', repo_fixture_name)}).merge(extra_config)
 
     # pretend there is a shared bundled_gems directory
     deploy_dir.join('shared', 'bundled_gems').mkpath
@@ -251,8 +246,7 @@ exec "$@"
       deploy_dir.join('shared', 'bundled_gems', name).open("w") { |f| f.write("old\n") }
     end
 
-    # Create the command to send to CLI.start, even though most of the options are ignored
-    @adapter = EY::Serverside::Adapter.new do |args|
+    EY::Serverside::Adapter.new do |args|
       args.app                = options['app']
       args.environment_name   = options['environment_name']
       args.account_name       = options['account_name']
@@ -265,8 +259,7 @@ exec "$@"
         "services_setup_command" => "echo 'services setup command'",
         "source_class"           => options["source_class"],
         "deploy_to"              => options["deploy_to"],
-        "release_path"           => options["release_path"],
-        "group"                  => options["group"]
+        "group"                  => options["group"],
       }.merge(options['config'] || {})
       args.framework_env      = options['framework_env']
       args.stack              = options['stack']
@@ -274,12 +267,18 @@ exec "$@"
       args.clean              = options['clean']
       args.instances          = test_servers.map {|s| {:hostname => s.hostname, :roles => s.roles.to_a, :name => s.name} }
     end
+  end
 
+  # When a repo fixture name is specified, the files found in the specified
+  # spec/fixtures/repos dir are copied into the test github repository.
+  def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
+    Timecop.travel(1)
+    @adapter = test_adapter(repo_fixture_name, extra_config, &block)
     @argv = @adapter.deploy.commands.last.to_argv[2..-1]
 
     FullTestDeploy.on_create_callback = block
 
-    mock_bundler(options['bundle_install_fails'])
+    mock_bundler(extra_config['bundle_install_fails'])
     with_mocked_commands do
       capture do
         EY::Serverside::CLI.start(@argv)
@@ -296,9 +295,6 @@ exec "$@"
     bundle_install_fails = extra_config.delete('bundle_install_fails')
 
     @action = @adapter.deploy do |args|
-      # we must refresh the release path every deploy since we're setting it manually
-      args.config = args.config.merge({'release_path' => release_path})
-
       extra_config.each do |key,val|
         case key
         when 'branch' then args.ref    = val
@@ -323,4 +319,27 @@ exec "$@"
     @deployer = EY::Serverside::Deploy.deployer
     @config = EY::Serverside::Deploy.config
   end
+
+  def enable_maintenance(extra_config = {}, &block)
+    @adapter = test_adapter("default", extra_config, &block)
+    @argv = @adapter.enable_maintenance.commands.last.to_argv[2..-1]
+
+    with_mocked_commands do
+      capture do
+        EY::Serverside::CLI.start(@argv)
+      end
+    end
+  end
+
+  def disable_maintenance(extra_config = {}, &block)
+    @adapter = test_adapter("default", extra_config, &block)
+    @argv = @adapter.disable_maintenance.commands.last.to_argv[2..-1]
+
+    with_mocked_commands do
+      capture do
+        EY::Serverside::CLI.start(@argv)
+      end
+    end
+  end
+
 end

@@ -96,6 +96,19 @@ module EY
         @deploy_root      = Pathname.new(@opts[:deploy_root] || "/data/#{@app_name}")
       end
 
+      def release_dirname
+        Time.now.utc.strftime("%Y%m%d%H%M%S")
+      end
+
+      def new_release!
+        @active_release = path(:releases, release_dirname)
+      end
+
+      # If no active release is defined, use current
+      def active_release
+        @active_release || latest_release
+      end
+
       def deploy_key
         path(:home, '.ssh', "#{@app_name}-deploy-key")
       end
@@ -114,10 +127,6 @@ module EY
 
       def repository_cache
         @repository_cache ||= default_repository_cache
-      end
-
-      def active_release
-        @active_release ||= path(:releases, Time.now.utc.strftime("%Y%m%d%H%M%S"))
       end
 
       def all_releases
