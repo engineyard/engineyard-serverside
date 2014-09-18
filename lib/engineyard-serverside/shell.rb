@@ -13,7 +13,6 @@ module EY
         @start_time = options[:start_time]
         @verbose    = options[:verbose]
 
-
         @stdout = options[:stdout] || $stdout
         @stderr = options[:stderr] || $stderr
 

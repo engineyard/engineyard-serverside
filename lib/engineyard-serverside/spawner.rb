@@ -11,7 +11,7 @@ module EY
       end
 
       def initialize
-        @poll_period = 0.5
+        @poll_period = 0
         @children = []
       end
 
