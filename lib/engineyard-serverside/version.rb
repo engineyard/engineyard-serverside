@@ -1,5 +1,5 @@
 module EY
   module Serverside
-    VERSION = '2.4.3.pre'
+    VERSION = '2.5.0.compilesync'
   end
 end

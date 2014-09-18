@@ -53,7 +53,14 @@ module EY
         asset_strategy.prepare do
           cd   = "cd #{paths.active_release}"
           task = "PATH=#{paths.binstubs}:$PATH #{framework_envs} rake #{precompile_assets_task} RAILS_GROUPS=assets"
-          runner.run "#{cd} && #{task}"
+
+          shell.status "Compiling assets once"
+          shell.logged_system("#{cd} && #{task}")
+
+          shell.status "Syncing assets to remote servers"
+          runner.servers.remote.run_for_each do |server|
+            server.sync_directory_command(paths.public_assets)
+          end
         end
       end
 
