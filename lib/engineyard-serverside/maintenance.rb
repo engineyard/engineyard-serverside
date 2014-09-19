@@ -2,6 +2,8 @@ module EY
   module Serverside
     class Maintenance
 
+      attr_reader :config, :shell
+
       def initialize(servers, config, shell)
         @servers, @config, @shell = servers, config, shell
       end
@@ -49,8 +51,6 @@ module EY
       end
 
       protected
-
-      attr_reader :config, :shell
 
       def using_maintenance_page?
         config.maintenance_on_restart? || (config.migrate? && config.maintenance_on_migrate?)
@@ -109,7 +109,7 @@ This application stack does not support no-downtime restarts.
       end
 
       def public_system_symlink_warning
-        if paths.public_system.realpath != maintenance_page_dirname.realpath
+        if paths.active_release.join('public','system').realpath != maintenance_page_dirname.realpath
           shell.warning <<-WARN
 Current repository layout does not allow for maintenance pages!
 Web traffic may still be served to your application.

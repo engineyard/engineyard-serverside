@@ -272,6 +272,7 @@ chmod 0700 #{path}
 
       # task
       def copy_repository_cache
+        paths.new_release!
         shell.status "Copying to #{paths.active_release}"
         exclusions = Array(config.copy_exclude).map { |e| %|--exclude="#{e}"| }.join(' ')
         run("mkdir -p #{paths.active_release} #{paths.shared_config} && rsync -aq #{exclusions} #{paths.repository_cache}/ #{paths.active_release}")
