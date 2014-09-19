@@ -77,6 +77,7 @@ module EY
 
       def_option :precompile_assets,      'detect'
       def_option :precompile_assets_task, 'assets:precompile'
+      def_option(:precompile_assets_command) { "rake #{precompile_assets_task} RAILS_GROUPS=assets" }
       def_option :asset_strategy,         'shifting'
       def_option :asset_dependencies,     %w[app/assets lib/assets vendor/assets Gemfile.lock config/routes.rb config/application.rb]
       def_option :asset_roles,            [:app_master, :app, :solo]
