@@ -352,8 +352,8 @@ YML
         [
           ["Set group write permissions",           "chmod -R g+w #{paths.active_release}"],
           ["Remove public/system if symlinked",     "if [ -L \"#{paths.public_system}\" ]; then rm -rf #{paths.public_system}; fi"],
-          ["Remove symlinked shared directories",   "rm -rf #{paths.active_log} #{paths.active_release}/tmp/pids"],
-          ["Create tmp directory",                  "mkdir -p #{paths.active_release}/tmp"],
+          ["Remove symlinked shared directories",   "rm -rf #{paths.active_log} #{paths.active_release}/tmp"],
+          ["Create tmp directory",                  "mkdir -p #{paths.shared}/tmp && ln -nfs #{paths.shared}/tmp #{paths.active_release}/tmp"],
           ["Create public directory",               "mkdir -p #{paths.public}"],
           ["Create config directory",               "mkdir -p #{paths.active_release_config}"],
           ["Symlink shared log directory",          "ln -nfs #{paths.shared_log} #{paths.active_log}"],
