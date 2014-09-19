@@ -1,5 +1,5 @@
 module EY
   module Serverside
-    VERSION = '2.5.0.cs5'
+    VERSION = '2.5.0.cs6'
   end
 end
