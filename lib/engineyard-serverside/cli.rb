@@ -94,7 +94,7 @@ module EY
       verbose_option
       desc "hook [NAME]", "Run a particular deploy hook"
       def hook(hook_name)
-        init(options, "hook-#{hook_name}") do |config, shell|
+        init(options, "hook-#{hook_name}") do |servers, config, shell|
           EY::Serverside::DeployHook.new(config, shell, hook_name).call
         end
       end
@@ -159,8 +159,7 @@ module EY
       private
 
       def init_and_propagate(*args)
-        init(*args) do |config, shell|
-          servers = load_servers(config, shell)
+        init(*args) do |servers, config, shell|
           propagate(servers, shell)
           yield servers, config, shell
         end
@@ -173,8 +172,9 @@ module EY
           :log_path => File.join(ENV['HOME'], "#{config.app}-#{action}.log")
         )
         shell.debug "Initializing #{About.name_with_version}."
+        servers = load_servers(config, shell)
         begin
-          yield config, shell
+          yield servers, config, shell
         rescue EY::Serverside::RemoteFailure => e
           shell.exception "#{e.message}"
           raise
@@ -209,13 +209,17 @@ module EY
       end
 
       def assemble_instance_hashes(config)
-        options[:instances].collect { |hostname|
-          { :hostname => hostname,
-            :roles => options[:instance_roles][hostname].to_s.split(','),
-            :name => options[:instance_names][hostname],
-            :user => config.user,
+        if options[:instances]
+          options[:instances].collect { |hostname|
+            { :hostname => hostname,
+              :roles => options[:instance_roles][hostname].to_s.split(','),
+              :name => options[:instance_names][hostname],
+              :user => config.user,
+            }
           }
-        }
+        else
+          []
+        end
       end
 
     end
