@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Add `maintenance_status` option to the CLI that outputs "Maintenance status: down" or "Maintenance status: up" if the maintenance page is on the server
 
 ## v2.4.2 (2014-07-30)
 
