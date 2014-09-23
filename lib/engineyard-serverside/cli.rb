@@ -66,6 +66,17 @@ module EY
       config_option
       instances_options
       verbose_option
+      desc "maintenance_status", "Maintenance status"
+      def maintenance_status
+        init(options, "maintenance-status") do |servers, config, shell|
+          EY::Serverside::Maintenance.new(servers, config, shell).status
+        end
+      end
+
+      account_app_env_options
+      config_option
+      instances_options
+      verbose_option
       desc "disable_maintenance", "Disable maintenance page (enables web access)"
       def disable_maintenance
         init_and_propagate(options, 'disable_maintenance') do |servers, config, shell|

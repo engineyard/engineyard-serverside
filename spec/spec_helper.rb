@@ -237,7 +237,7 @@ exec "$@"
     }
   end
 
-  def test_adapter(repo_fixture_name = 'default', extra_config = {}, &block)
+  def test_adapter(repo_fixture_name = 'default', extra_config = {})
     options = default_configuration.merge({ "git" => FIXTURES_DIR.join('repos', repo_fixture_name)}).merge(extra_config)
 
     # pretend there is a shared bundled_gems directory
@@ -273,7 +273,7 @@ exec "$@"
   # spec/fixtures/repos dir are copied into the test github repository.
   def deploy_test_application(repo_fixture_name = 'default', extra_config = {}, &block)
     Timecop.travel(1)
-    @adapter = test_adapter(repo_fixture_name, extra_config, &block)
+    @adapter = test_adapter(repo_fixture_name, extra_config)
     @argv = @adapter.deploy.commands.last.to_argv[2..-1]
 
     FullTestDeploy.on_create_callback = block
@@ -320,8 +320,8 @@ exec "$@"
     @config = EY::Serverside::Deploy.config
   end
 
-  def enable_maintenance(extra_config = {}, &block)
-    @adapter = test_adapter("default", extra_config, &block)
+  def enable_maintenance(extra_adapter_config = {})
+    @adapter = test_adapter("default", extra_adapter_config)
     @argv = @adapter.enable_maintenance.commands.last.to_argv[2..-1]
 
     with_mocked_commands do
@@ -331,8 +331,8 @@ exec "$@"
     end
   end
 
-  def disable_maintenance(extra_config = {}, &block)
-    @adapter = test_adapter("default", extra_config, &block)
+  def disable_maintenance(extra_adapter_config = {})
+    @adapter = test_adapter("default", extra_adapter_config)
     @argv = @adapter.disable_maintenance.commands.last.to_argv[2..-1]
 
     with_mocked_commands do
@@ -342,4 +342,14 @@ exec "$@"
     end
   end
 
+  def maintenance_status(extra_adapter_config = {})
+    @adapter = test_adapter("default", extra_adapter_config)
+    @argv = @adapter.maintenance_status.commands.last.to_argv[2..-1]
+
+    with_mocked_commands do
+      capture do
+        EY::Serverside::CLI.start(@argv)
+      end
+    end
+  end
 end

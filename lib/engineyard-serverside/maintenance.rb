@@ -16,6 +16,15 @@ module EY
         @up
       end
 
+      def status
+        if exist?
+          shell.info "Maintenance page: up"
+        else
+          shell.info "Maintenance page: down"
+        end
+        exist?
+      end
+
       def manually_enable
         if paths.deployed?
           enable
