@@ -19,7 +19,8 @@ module EY
       def_delegators :config,
         :paths, :asset_dependencies, :asset_roles,
         :framework_envs, :precompile_assets?, :skip_precompile_assets?,
-        :precompile_unchanged_assets?, :precompile_assets_task
+        :precompile_unchanged_assets?, :precompile_assets_task,
+        :precompile_assets_command
 
       def detect_and_compile
         runner.roles asset_roles do
@@ -52,7 +53,7 @@ module EY
       def run_precompile_assets_task
         asset_strategy.prepare do
           cd   = "cd #{paths.active_release}"
-          task = "PATH=#{paths.binstubs}:$PATH #{framework_envs} rake #{precompile_assets_task} RAILS_GROUPS=assets"
+          task = "PATH=#{paths.binstubs}:$PATH #{framework_envs} #{precompile_assets_command}"
           runner.run "#{cd} && #{task}"
         end
       end

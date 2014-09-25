@@ -97,13 +97,13 @@ describe "Deploying a Rails 3.1 application" do
     end
   end
 
-  context "with asset compilation enabled in ey.yml, and asset_roles is set to :all" do
+  context "with asset compilation enabled in ey.yml, and asset_roles is set to :all, and a custom compile command" do
     before(:all) do
       deploy_test_application('assets_enabled_all')
     end
 
     it "precompiles assets" do
-      expect(deploy_dir.join('current', 'precompiled')).to exist
+      expect(deploy_dir.join('current', 'custom_compiled')).to exist
       expect(read_output).to include("Precompiling assets. (precompile_assets: true)")
     end
   end

@@ -38,6 +38,7 @@ A typical application will not need most of these options.
       maintenance_on_migrate: true              # show maintenance page during migrations (default: true)
       precompile_assets: true                   # ensure rails assets precompilation (default: assets will be compiled if they are detected)
       precomplie_assets_task: assets:precompile # override the assets:precompile rake task
+      precompile_assets_command: rake assets:precompile # override the entire precompile command (ignores precompile_assets_task)
       precompile_unchanged_assets: false        # if true, does not check git for changes before precompiling assets.
       asset_dependencies:                       # a list of relative paths to search for asset changes during each deploy.
       - app/assets                              # default
