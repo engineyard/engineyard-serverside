@@ -2,5 +2,5 @@ environments:
   env:
     precompile_assets: true
     asset_roles: :all
-    precompile_assets_command: touch custom_compiled
+    precompile_assets_command: script/assets
     ignore_database_adapter_warning: true

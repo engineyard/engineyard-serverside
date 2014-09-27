@@ -3,5 +3,6 @@ task 'assets:precompile' do
   sh "mkdir -p #{File.expand_path('../public/assets', __FILE__)}"
   sh "touch #{File.expand_path('../public/assets/compiled_asset', __FILE__)}"
   sh 'touch precompiled'
+  sh '[ -e tmp/cache ] && touch cache_compiled || touch tmp/cache' # mirror the behavior of compiling using asset caches in tmp
 end
 

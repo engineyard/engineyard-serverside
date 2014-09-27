@@ -34,6 +34,9 @@ describe "Deploying a Rails 3.1 application" do
       expect(deploy_dir.join('current', 'precompiled')).to exist
       expect(deploy_dir.join('current', 'public', 'assets')).to exist
       expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(deploy_dir.join('current', 'tmp', 'cache')).to exist
+      expect(deploy_dir.join('current', 'tmp')).to be_a_symlink
+      expect(deploy_dir.join('current', 'cache_compiled')).not_to exist
       expect(read_output).to include("Precompiling assets. (precompile_assets: true)")
 
       # changing the ref stands in for actually having assets change (see Strategies::IntegrationSpec#same?)
@@ -41,6 +44,9 @@ describe "Deploying a Rails 3.1 application" do
       expect(deploy_dir.join('current', 'precompiled')).to exist # it does runs the task
       expect(deploy_dir.join('current', 'public', 'assets')).to exist
       expect(deploy_dir.join('current', 'public', 'assets', 'compiled_asset')).to exist
+      expect(deploy_dir.join('current', 'tmp')).to be_a_symlink
+      expect(deploy_dir.join('current', 'tmp', 'cache')).to exist # preserves tmp dir
+      expect(deploy_dir.join('current', 'cache_compiled')).to exist # uses tmp/cache to compile assets faster
       expect(read_output).not_to match(%r#Reusing existing assets#)
     end
 
@@ -102,9 +108,17 @@ describe "Deploying a Rails 3.1 application" do
       deploy_test_application('assets_enabled_all')
     end
 
-    it "precompiles assets" do
+    it "precompiles assets but never shares the tmp cache because the repository has a committed tmp dir with contents" do
       expect(deploy_dir.join('current', 'custom_compiled')).to exist
+      expect(deploy_dir.join('current', 'cache_compiled')).not_to exist
+      expect(deploy_dir.join('current', 'tmp', 'cache')).to exist
+      expect(deploy_dir.join('current', 'tmp')).not_to be_a_symlink
       expect(read_output).to include("Precompiling assets. (precompile_assets: true)")
+
+      redeploy_test_application('config' => {'precompile_unchanged_assets' => 'true'})
+      expect(deploy_dir.join('current', 'tmp', 'cache')).to exist
+      expect(deploy_dir.join('current', 'cache_compiled')).not_to exist
+      expect(deploy_dir.join('current', 'tmp')).not_to be_a_symlink
     end
   end
 
