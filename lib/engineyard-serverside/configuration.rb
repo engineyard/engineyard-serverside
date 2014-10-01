@@ -123,6 +123,7 @@ module EY
       alias environment framework_env # legacy because it would be nice to have less confusion around "environment"
       alias migration_command migrate
       alias repo git
+      alias ref branch # ref is used for input to cli, so it should work here.
 
       def initialize(options)
         opts = string_keys(options)

@@ -2,6 +2,7 @@
 
 ## NEXT
 
+  * Supports `config.ref` in deploy hooks. Synonymous with `config.branch` but more correct because the `input_ref` is automatically resolved to a SHA before deploy.
   * Add new ey.yml option `precompile_assets_command`
     Setting `precompile_assets_command` overrides the asset precompile rake command. (default: `rake assets:precompile RAILS_GROUPS=assets`)
     Bundler binstubs are in PATH so gem binaries will load through bundler.
