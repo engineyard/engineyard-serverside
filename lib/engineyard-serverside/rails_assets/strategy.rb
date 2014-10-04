@@ -48,7 +48,7 @@ module EY
           #   deploy_root/current/public/last_assets/assets -> deploy_root/releases/<prev>/public/assets
           def prepare
             if previous_assets_path
-              last = paths.public.join('last_assets')
+              last = paths.path(:public,'last_assets')
               run "mkdir -p #{last} && ln -nfs #{previous_assets_path} #{last.join('assets')}"
             end
 

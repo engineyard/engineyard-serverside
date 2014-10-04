@@ -1,18 +1,26 @@
 require 'logger'
 require 'pathname'
-require 'open3'
 require 'engineyard-serverside/shell/formatter'
 require 'engineyard-serverside/shell/yieldio'
 
 module EY
   module Serverside
     class Shell
-      attr_reader :logger
+      STATUS_PREFIX    = '~> '.freeze
+      SUBSTATUS_PREFIX = ' ~ '.freeze
+      IMPORTANT_PREFIX = '!> '.freeze
+      CMD_PREFIX       = '   $ '.freeze
+      CMD_CONTINUE     = '   > '.freeze
+      CMD_INDENT       = '     '.freeze
+      BOL = /^/.freeze
+
+      include Logger::Severity
+
+      attr_reader :logger, :start_time
 
       def initialize(options)
-        @start_time = options[:start_time]
+        @start_time = options[:start_time] || Time.now
         @verbose    = options[:verbose]
-
 
         @stdout = options[:stdout] || $stdout
         @stderr = options[:stderr] || $stderr
@@ -28,39 +36,35 @@ module EY
         @verbose
       end
 
-      def start_time
-        @start_time ||= Time.now
-      end
-
       # a nice info outputter that prepends spermy operators for some reason.
       def status(msg)
         if msg.respond_to?(:force_encoding)
-          msg.force_encoding("UTF-8")
+          msg.force_encoding(Encoding::UTF_8)
         end
-        info msg.gsub(/^/, '~> ')
+        info msg.gsub(BOL, STATUS_PREFIX)
       end
 
       def substatus(msg)
-        debug msg.gsub(/^/, ' ~ ')
+        debug msg.gsub(BOL, SUBSTATUS_PREFIX)
       end
 
-      def fatal(msg)   logger.fatal   "FATAL: #{msg}"   end
-      def error(msg)   logger.error   "ERROR: #{msg}"   end
+      def fatal(msg)   logger.fatal   "FATAL: #{msg}" end
+      def error(msg)   logger.error   "ERROR: #{msg}" end
       def warning(msg) logger.warn    "WARNING: #{msg}" end
+      alias warn warning
       def notice(msg)  logger.warn    msg end
       def info(msg)    logger.info    msg end
       def debug(msg)   logger.debug   msg end
       def unknown(msg) logger.unknown msg end
 
-      def exception(msg) error msg end
       # a debug outputter that displays a command being run
       # Formatis like this:
       #   $ cmd blah do \
       #   > something more
       #   > end
-      def command_show(cmd) debug   cmd.gsub(/^/,'   > ').sub(/>/, '$') end
-      def command_out(msg)  debug   msg.gsub(/^/,'     ') end
-      def command_err(msg)  unknown msg.gsub(/^/,'     ') end
+      def command_show(cmd) debug   cmd.gsub(BOL,CMD_CONTINUE).sub(CMD_CONTINUE, CMD_PREFIX) end
+      def command_out(msg)  debug   msg.gsub(BOL,CMD_INDENT) end
+      def command_err(msg)  unknown msg.gsub(BOL,CMD_INDENT) end
 
       def logged_system(cmd, server = nil)
         EY::Serverside::Spawner.run(cmd, self, server)

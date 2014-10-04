@@ -51,8 +51,10 @@ module EY
       end
 
       # Load a path given a root and more parts
+      # Pathname#join is extremely inefficient.
+      # This implementation uses much less memory and way fewer objects.
       def path(root, *parts)
-        send(root).join(*parts)
+        Pathname.new(File.join(send(root).to_s, *parts))
       end
 
       attr_reader :home, :deploy_root
@@ -79,6 +81,7 @@ module EY
       def_path :gemfile,                  [:active_release, 'Gemfile']
       def_path :gemfile_lock,             [:active_release, 'Gemfile.lock']
       def_path :public,                   [:active_release, 'public']
+      def_path :deploy_hooks,             [:active_release, 'deploy']
       def_path :public_assets,            [:public, 'assets']
       def_path :public_system,            [:public, 'system']
       def_path :package_json,             [:active_release, 'package.json']
@@ -118,11 +121,11 @@ module EY
       end
 
       def deploy_hook(hook_name)
-        path(:active_release, 'deploy', "#{hook_name}.rb")
+        path(:deploy_hooks, "#{hook_name}.rb")
       end
 
       def executable_deploy_hook(hook_name)
-        path(:active_release, 'deploy', "#{hook_name}")
+        path(:deploy_hooks, "#{hook_name}")
       end
 
       def repository_cache
@@ -130,7 +133,7 @@ module EY
       end
 
       def all_releases
-        @all_releases ||= Pathname.glob(releases.join('*')).sort
+        @all_releases ||= Pathname.glob(path(:releases,'*')).sort
       end
 
       # deploy_root/releases/<release before argument release path>

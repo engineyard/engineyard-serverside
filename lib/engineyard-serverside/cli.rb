@@ -181,10 +181,10 @@ module EY
         begin
           yield servers, config, shell
         rescue EY::Serverside::RemoteFailure => e
-          shell.exception "#{e.message}"
+          shell.fatal e.message
           raise
         rescue Exception => e
-          shell.exception "#{e.backtrace[0]}: #{e.message} (#{e.class})"
+          shell.fatal "#{e.backtrace[0]}: #{e.message} (#{e.class})"
           raise
         end
       end

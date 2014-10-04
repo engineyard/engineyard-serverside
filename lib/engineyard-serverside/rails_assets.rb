@@ -140,11 +140,11 @@ ACTION REQUIRED: Add precompile_assets option to ey.yml.
       end
 
       def application_rb_path
-        paths.active_release.join('config','application.rb')
+        paths.path(:active_release,'config','application.rb')
       end
 
       def app_assets_path
-        paths.active_release.join('app', 'assets')
+        paths.path(:active_release,'app','assets')
       end
 
       def asset_strategy
