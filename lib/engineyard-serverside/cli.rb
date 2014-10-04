@@ -12,6 +12,13 @@ module EY
 
       extend CLIHelpers
 
+      def self.start(*args)
+        require 'memory_profiler'
+        MemoryProfiler.report{
+          super
+        }.pretty_print
+      end
+
       method_option :migrate,         :type     => :string,
                                       :desc     => "Run migrations with this deploy",
                                       :aliases  => ["-m"]
