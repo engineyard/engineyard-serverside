@@ -15,6 +15,7 @@ describe EY::Serverside::Deploy::Configuration do
       expect(@config.migrate).to eq(nil)
       expect(@config.migrate?).to eq(false)
       expect(@config.branch).to eq("master")
+      expect(@config.ref).to eq("master")
       expect(@config.maintenance_on_migrate).to eq(true)
       expect(@config.maintenance_on_restart).to eq(true)
       expect(@config.required_downtime_stack?).to eq(true)

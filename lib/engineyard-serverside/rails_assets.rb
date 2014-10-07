@@ -44,7 +44,7 @@ module EY
           elsif paths.public_assets.exist?
             shell.status "Skipping asset precompilation. ('public/assets' directory already exists.)"
           else
-            shell.status "Precompiling assets. ('#{app_assets}' exists, 'public/assets' not found, not disabled in config.)"
+            shell.status "Precompiling assets. ('app/assets' exists, 'public/assets' not found, not disabled in config.)"
             precompile_detected_assets
           end
         end
@@ -143,12 +143,8 @@ ACTION REQUIRED: Add precompile_assets option to ey.yml.
         paths.active_release.join('config','application.rb')
       end
 
-      def app_assets
-        File.join('app','assets')
-      end
-
       def app_assets_path
-        paths.active_release.join(app_assets)
+        paths.active_release.join('app', 'assets')
       end
 
       def asset_strategy
