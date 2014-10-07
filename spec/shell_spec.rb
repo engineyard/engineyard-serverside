@@ -35,24 +35,23 @@ describe EY::Serverside::Shell do
     tstp_1 = "+    00s "
     tstp_2 = "+ 3m 05s "
     tstp_3 = "+10m 25s "
-    notstp = "         "
     output.rewind
     expect(output.read).to eq <<-OUTPUT
-#{notstp} debug
+#{tstp_1} debug
 
 \e[1m\e[33m#{tstp_1} !> notice
 \e[0m
 \e[1m\e[37m#{tstp_2} ~> STATUS
-\e[0m#{notstp} multi
-#{notstp} line
-#{notstp} debug
+\e[0m#{tstp_2} multi
+#{tstp_2} line
+#{tstp_2} debug
 
 \e[1m\e[33m#{tstp_2} !> WARNING: multi
 #{tstp_2} !> line
 #{tstp_2} !> warning
-\e[0m#{notstp}  ~ multi
-#{notstp}  ~ line
-#{notstp}  ~ substatus
+\e[0m#{tstp_3}  ~ multi
+#{tstp_3}  ~ line
+#{tstp_3}  ~ substatus
     OUTPUT
   end
 end

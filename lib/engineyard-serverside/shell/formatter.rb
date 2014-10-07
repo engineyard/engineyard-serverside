@@ -2,6 +2,22 @@ module EY
   module Serverside
     class Shell
       class Formatter
+        FATAL = 'ERROR'.freeze
+        ERROR = 'ERROR'.freeze
+        WARN  = 'WARN'.freeze
+        INFO  = 'INFO'.freeze
+        DEBUG = 'DEBUG'.freeze
+        IMPORTANT = [WARN, ERROR, FATAL].freeze
+
+        SECONDS_FORMAT = '+    %02ds  '.freeze
+        MINUTES_FORMAT = '+%2dm %02ds  '.freeze
+
+        STATUS_PREFIX    = '~> '.freeze
+        SUBSTATUS_PREFIX = ' ~ '.freeze
+        IMPORTANT_PREFIX = '!> '.freeze
+
+        NL = "\n".freeze
+
         def initialize(stdout, stderr, start_time, verbose)
           @stdout, @stderr = stdout, stderr
           @start = start_time.to_i
@@ -15,35 +31,42 @@ module EY
         end
 
         def build_message(severity, stamp, message)
-          if %w[WARN ERROR FATAL].include?(severity)
-            prepend("#{stamp}!> ", "#{message}")
-          elsif severity == "INFO"
+          if IMPORTANT.include?(severity)
+            prepend("#{stamp}#{IMPORTANT_PREFIX}", message)
+          elsif INFO == severity
             prepend(stamp, message)
           else
-            prepend(' ' * stamp.size, message)
+            prepend(stamp, message)
           end
         end
 
         def prepend(pre, str)
-          str.gsub(/^/, pre).sub(/\n?\z/m,"\n")
+          str.gsub(/^/, pre).sub(/\n?\z/m,NL)
         end
 
         def put_to_io(severity, msg)
           case severity
-          when "DEBUG"
+          when DEBUG
             if @verbose
               @stdout << msg
               @stdout.flush
             end
-          when "INFO"
+          when INFO
             # Need to differentiate info messages more when we're running in verbose mode
-            @stdout << (@verbose && msg.index('~>') ? "\n#{thor_shell.set_color(msg, :white, true)}" : msg)
+            if @verbose && msg.index(STATUS_PREFIX)
+              @stdout.puts
+              @stdout << thor_shell.set_color(msg, :white, true)
+            else
+              @stdout << msg
+            end
             @stdout.flush
-          when "WARN"
-            @stderr << "\n" << thor_shell.set_color(msg, :yellow, true)
+          when WARN
+            @stderr.puts
+            @stderr << thor_shell.set_color(msg, :yellow, true)
             @stderr.flush
-          when "ERROR"
-            @stderr << "\n" << thor_shell.set_color(msg, :red, true)
+          when ERROR
+            @stderr.puts
+            @stderr << thor_shell.set_color(msg, :red, true)
             @stderr.flush
           else
             @stderr << msg
@@ -56,9 +79,9 @@ module EY
           diff = 0 if diff < 0
           div, mod = diff.divmod(60)
           if div.zero?
-            "+    %02ds  " % mod
+            SECONDS_FORMAT % mod
           else
-            "+%2dm %02ds  " % [div,mod]
+            MINUTES_FORMAT % [div,mod]
           end
         end
 

@@ -298,8 +298,8 @@ module EY
       # The nodatabase.yml file is dropped by server configuration when there is
       # no database in the cluster.
       def has_database?
-        paths.shared_config.join('database.yml').exist? &&
-          !paths.shared_config.join('nodatabase.yml').exist?
+        paths.path(:shared_config, 'database.yml').exist? &&
+          !paths.path(:shared_config, 'nodatabase.yml').exist?
       end
 
       def check_database_adapter?
