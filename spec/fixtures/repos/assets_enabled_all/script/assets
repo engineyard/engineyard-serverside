@@ -1,0 +1,5 @@
+#!/bin/sh
+touch public/assets/custom_compiled_asset
+touch custom_compiled
+# mirror the behavior of compiling using asset caches in tmp
+[ -e tmp/cache ] && touch cache_compiled || touch tmp/cache

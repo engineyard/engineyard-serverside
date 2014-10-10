@@ -66,6 +66,7 @@ module EY
       def_path :releases_failed,          [:deploy_root,    'releases_failed']
       def_path :shared,                   [:deploy_root,    'shared']
       def_path :shared_log,               [:shared,         'log']
+      def_path :shared_tmp,               [:shared,         'tmp']
       def_path :shared_config,            [:shared,         'config']
       def_path :shared_system,            [:shared,         'system']
       def_path :default_repository_cache, [:shared,         'cached-copy']
@@ -89,6 +90,7 @@ module EY
       def_path :composer_lock,            [:active_release, 'composer.lock']
       def_path :active_release_config,    [:active_release, 'config']
       def_path :active_log,               [:active_release, 'log']
+      def_path :active_tmp,               [:active_release, 'tmp']
 
       def initialize(opts)
         @opts             = opts
