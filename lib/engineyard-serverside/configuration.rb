@@ -96,6 +96,7 @@ module EY
       def_option :npm,                    'detect'
       def_option :bundle_options,         nil
       def_option(:bundle_without)         { %w[test development] - [framework_env] }
+      def_option :bundler_version,        nil
 
       def_option(:user)                   { ENV['USER'] }
       def_option(:group)                  { user }

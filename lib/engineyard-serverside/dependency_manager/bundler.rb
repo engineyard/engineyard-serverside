@@ -4,7 +4,7 @@ module EY
   module Serverside
     class DependencyManager
       class Bundler < Base
-        DEFAULT_VERSION = "1.3.5"
+        DEFAULT_VERSION = "1.6.2"
 
         def self.default_version
           DEFAULT_VERSION
@@ -128,7 +128,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         end
 
         def bundler_version
-          @bundler_version ||= lockfile && lockfile.bundler_version || self.class.default_version
+          @bundler_version ||= config.bundler_version || (lockfile && lockfile.bundler_version || self.class.default_version)
         end
 
         def lockfile
