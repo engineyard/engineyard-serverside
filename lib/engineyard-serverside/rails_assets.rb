@@ -54,7 +54,19 @@ module EY
         asset_strategy.prepare do
           cd   = "cd #{paths.active_release}"
           task = "PATH=#{paths.binstubs}:$PATH #{framework_envs} #{precompile_assets_command}"
-          runner.run "#{cd} && #{task}"
+
+          # This is a hack right now, but I haven't iterated over it enough for a good solution yet.
+          if config.experimental_sync_assets?
+            shell.status "Compiling assets once on localhost (experimental_sync_assets: true)"
+            shell.logged_system("sh -l -c '#{cd} && #{task}'")
+
+            shell.status "Syncing assets to other remote servers (experimental_sync_assets: true)"
+            runner.servers.remote.run_for_each do |server|
+              server.sync_directory_command(paths.public_assets)
+            end
+          else
+            runner.run "#{cd} && #{task}"
+          end
         end
       end
 
