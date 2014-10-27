@@ -31,7 +31,7 @@ module EY
           check_repository
           create_revision_file
           run_with_callbacks(:bundle)
-          setup_services
+          prepare
           symlink_configs
           setup_sqlite3_if_necessary
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
@@ -128,6 +128,16 @@ module EY
         end
       end
 
+      def prepare
+        setup_services
+        shell.status "Verifying and preparing for restart"
+        run(prepare_command)
+      end
+
+      def prepare_command
+        platform.prepare_command
+      end
+
       # task
       def restart
         @restart_failed = true
@@ -147,7 +157,7 @@ module EY
       end
 
       def restart_command
-        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} deploy}
+        platform.restart_command
       end
 
       def ensure_git_ssh_wrapper

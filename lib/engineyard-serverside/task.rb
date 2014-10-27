@@ -13,6 +13,10 @@ module EY
         @roles = :all
       end
 
+      def platform
+        config.platform
+      end
+
       def paths
         config.paths
       end

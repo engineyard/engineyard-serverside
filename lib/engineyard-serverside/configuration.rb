@@ -126,11 +126,14 @@ module EY
       alias repo git
       alias ref branch # ref is used for input to cli, so it should work here.
 
+      attr_reader :platform
+
       def initialize(options)
         opts = string_keys(options)
         config = MultiJson.load(opts.delete("config") || "{}")
         append_config_source opts # high priority
         append_config_source config # lower priority
+        @platform = Platform.new(self)
       end
 
       def string_keys(hsh)
