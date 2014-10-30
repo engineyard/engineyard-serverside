@@ -9,7 +9,7 @@ module EY
     # Other things that might belong here:
     # * GIT_SSH script
     # * git deploy ssh key for accessing the repository
-    # * directory where shared config files are written? (could also be passed to the prepare script)at
+    # * directory where shared config files are written? (could also be passed to the configure script)
 
     # Path name to install the maintenance page and trigger maintenance mode
     #
@@ -20,19 +20,20 @@ module EY
 
     # Ideally this script would receive the pathname of the new active release as an argument
     #
-    # Services should happen in the prepare step, like so:
+    # Services should happen in the configure step, like so:
     #
-    #     which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1 &&
+    #     if which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1; then
     #       /usr/local/ey_resin/ruby/bin/ey-services-setup #{app}
+    #     fi
     #
-    def prepare_command
-      ENV['SERVERSIDE_PREPARE_COMMAND'] ||
-        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} prepare #{config.paths.active_release}}
+    def configure_command
+      ENV['SERVERSIDE_CONFIGURE_COMMAND'] ||
+        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} configure #{config.paths.active_release}}
     end
 
     def restart_command
       ENV['SERVERSIDE_RESTART_COMMAND'] ||
-        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} deploy #{config.paths.current}}
+        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} deploy} # would be nice to tack on config.paths.current
     end
 
   end

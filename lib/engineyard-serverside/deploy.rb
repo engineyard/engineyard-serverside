@@ -31,7 +31,7 @@ module EY
           check_repository
           create_revision_file
           run_with_callbacks(:bundle)
-          prepare
+          configure
           symlink_configs
           setup_sqlite3_if_necessary
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
@@ -128,14 +128,14 @@ module EY
         end
       end
 
-      def prepare
+      def configure
         setup_services
-        shell.status "Verifying and preparing for restart"
-        run(prepare_command)
+        shell.status "Verifying system configuration for this application"
+        run(configure_command)
       end
 
-      def prepare_command
-        platform.prepare_command
+      def configure_command
+        platform.configure_command
       end
 
       # task
