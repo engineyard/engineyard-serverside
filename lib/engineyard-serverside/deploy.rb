@@ -34,6 +34,7 @@ module EY
           configure
           symlink_configs
           setup_sqlite3_if_necessary
+          # app's environment should be bootable ---
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
           enable_maintenance_page
           run_with_callbacks(:migrate)

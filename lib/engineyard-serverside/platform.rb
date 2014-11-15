@@ -18,6 +18,12 @@ module EY
       config.paths.enabled_maintenance_page
     end
 
+    def maintenance_on_restart
+    end
+
+    def check_configure
+    end
+
     # Ideally this script would receive the pathname of the new active release as an argument
     #
     # Services should happen in the configure step, like so:
@@ -27,13 +33,12 @@ module EY
     #     fi
     #
     def configure_command
-      ENV['SERVERSIDE_CONFIGURE_COMMAND'] ||
-        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} configure #{config.paths.active_release}}
+      configure_path = "/engineyard/bin/app_#{config.app}_configure"
+      %{if [ -f "#{configure_path}" ]; then #{configure_path} #{config.paths.active_release}; fi}
     end
 
     def restart_command
-      ENV['SERVERSIDE_RESTART_COMMAND'] ||
-        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} deploy} # would be nice to tack on config.paths.current
+      %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} deploy} # would be nice to tack on config.paths.current
     end
 
   end

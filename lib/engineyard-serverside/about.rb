@@ -28,8 +28,12 @@ module EY
         File.join(Gem.default_bindir, 'gem')
       end
 
+      def bin_path
+        File.expand_path("../../../bin", __FILE__)
+      end
+
       def binary
-        File.expand_path("../../../bin/#{gem_name}", __FILE__)
+        File.join(bin_path, gem_name)
       end
 
       def hook_executor

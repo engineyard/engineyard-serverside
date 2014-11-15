@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+: ${EY_SERVICES_COMMAND:="/usr/local/ey_resin/ruby/bin/ey-services-setup"}
+: ${EY_DEPLOY_APP:?"App name required."}
+
+if which "${EY_SERVICES_COMMAND}" >/dev/null 2>&1; then
+  ${EY_SERVICES_COMMAND} "$EY_DEPLOY_APP" || echo <<EOM >&2
+External services configuration not updated. Using previous version.
+Deploy again if your services configuration appears incomplete or out of date.
+EOM
+else
+  echo "Could not setup services. Upgrade your environment to load service configuration." >&2
+fi

@@ -361,7 +361,11 @@ module EY
 
       def configured_services
         services = YAML.load_file(paths.shared_services_yml.to_s)
-        services.respond_to?(:keys) && !services.empty? ? services.keys : nil
+        if services.respond_to?(:keys) && !services.empty?
+          services.keys
+        else
+          nil
+        end
       rescue
         nil
       end
