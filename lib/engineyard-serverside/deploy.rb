@@ -130,9 +130,11 @@ module EY
       end
 
       def configure
-        setup_services
+        #setup_services
         shell.status "Verifying system configuration for this application"
+        ENV['EY_SERVICES_COMMAND'] = config['services_setup_command'] if config['services_setup_command']
         run(configure_command)
+        ENV.delete('EY_SERVICES_COMMAND')
       end
 
       def configure_command

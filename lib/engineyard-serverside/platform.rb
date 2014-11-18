@@ -34,7 +34,8 @@ module EY
     #
     def configure_command
       configure_path = "/engineyard/bin/app_#{config.app}_configure"
-      %{if [ -f "#{configure_path}" ]; then #{configure_path} #{config.paths.active_release}; fi}
+      configure_fallback_path = File.join(EY::Serverside::About.bin_path, 'engineyard-serverside-services')
+      %{if [ -f "#{configure_path}" ]; then #{configure_path} #{config.paths.active_release}; else; EY_DEPLOY_APP=#{config.app} #{configure_fallback_path}; fi}
     end
 
     def restart_command
