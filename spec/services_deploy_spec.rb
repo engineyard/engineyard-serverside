@@ -8,9 +8,11 @@ describe "Deploying an application with services" do
   describe "without ey_config" do
     describe "with services" do
       before do
-        deploy_test_application('no_ey_config', 'config' => {
-          'services_setup_command' => "echo '#{services_yml}' > #{shared_services_file}"
-        })
+        mock_command('ey-services-setup', "echo '#{services_yml}' > #{shared_services_file}") do
+          deploy_test_application('no_ey_config', 'config' => {
+            'services_setup_command' => 'ey-services-setup'
+          })
+        end
       end
 
       it "warns about missing ey_config" do
@@ -32,9 +34,11 @@ describe "Deploying an application with services" do
   describe "deploy with invalid yaml ey_services_config_deploy" do
     before do
       @invalid_services_yml = "42"
-      deploy_test_application('default', 'config' => {
-        'services_setup_command' => "echo '#{@invalid_services_yml}' > #{shared_services_file}"
-      })
+      mock_command('ey-services-setup', "echo '#{@invalid_services_yml}' > #{shared_services_file}") do
+        deploy_test_application('default', 'config' => {
+          'services_setup_command' => 'ey-services-setup'
+        })
+      end
     end
 
     it "works without warning" do
@@ -52,9 +56,11 @@ describe "Deploying an application with services" do
 
   describe "a succesful deploy" do
     before do
-      deploy_test_application('default', 'config' => {
-        'services_setup_command' => "echo '#{services_yml}' > #{shared_services_file}"
-      })
+      mock_command('ey-services-setup', "echo '#{services_yml}' > #{shared_services_file}") do
+        deploy_test_application('default', 'config' => {
+          'services_setup_command' => 'ey-services-setup'
+        })
+      end
     end
 
     it "creates and symlinks ey_services_config_deploy.yml" do
@@ -72,12 +78,12 @@ describe "Deploying an application with services" do
 
   describe "a successful deploy followed by a deploy that can't find the command" do
     before do
-      deploy_test_application('default', 'config' => {
-        'services_setup_command' => "echo '#{services_yml}' > #{shared_services_file}"
-      })
-      redeploy_test_application('config' => {
-        'services_check_command' => 'false'
-      })
+      mock_command('ey-services-setup', "echo '#{services_yml}' > #{shared_services_file}") do
+        deploy_test_application('default', 'config' => {'services_setup_command' => 'ey-services-setup'})
+      end
+      mock_command('ey-services-setup', "false") do
+        redeploy_test_application('config' => {'services_check_command' => 'ey-services-setup'})
+      end
     end
 
     it "silently fails" do
@@ -96,10 +102,12 @@ describe "Deploying an application with services" do
 
   describe "a successful followed by a deploy that fails to fetch services" do
     it "logs a warning and symlinks the existing config file when there is existing services file" do
-      deploy_test_application('default', 'config' => {
-        'services_setup_command' => "echo '#{services_yml}' > #{shared_services_file}"
-      })
-      redeploy_test_application('config' => {'services_setup_command' => 'false'})
+      mock_command('ey-services-setup', "echo '#{services_yml}' > #{shared_services_file}") do
+        deploy_test_application('default', 'config' => {'services_setup_command' => 'ey-services-setup'})
+      end
+      mock_command('ey-services-setup', "false") do
+        redeploy_test_application('config' => {'services_setup_command' => 'ey-services-setup'})
+      end
 
       expect(shared_services_file).to exist
       expect(shared_services_file).not_to be_symlink
@@ -113,11 +121,13 @@ describe "Deploying an application with services" do
     end
 
     it "does not log a warning or symlink a config file when there is no existing services file" do
-      deploy_test_application('default', 'config' => {
-        'services_setup_command' => "echo '#{services_yml}' > #{shared_services_file}"
-      })
+      mock_command('ey-services-setup', "echo '#{services_yml}' > #{shared_services_file}") do
+        deploy_test_application('default', 'config' => {'services_setup_command' => 'ey-services-setup'})
+      end
       shared_services_file.delete
-      redeploy_test_application('config' => {'services_setup_command' => 'false'})
+      mock_command('ey-services-setup', "false") do
+        redeploy_test_application('config' => {'services_setup_command' => 'ey-services-setup'})
+      end
 
       expect(shared_services_file).not_to exist
       expect(symlinked_services_file).not_to exist
@@ -126,15 +136,15 @@ describe "Deploying an application with services" do
     end
   end
 
-  describe "a successful deploy followed by another successfull deploy" do
+  describe "a successful deploy followed by another successful deploy" do
     before do
-      deploy_test_application('default', 'config' => {
-        'services_setup_command' => "echo '#{services_yml}' > #{shared_services_file}"
-      })
+      mock_command('ey-services-setup', "echo '#{services_yml}' > #{shared_services_file}") do
+        deploy_test_application('default', 'config' => {'services_setup_command' => 'ey-services-setup'})
+      end
       @new_services_yml = {"servicio" => {"foo" => "bar2"}}.to_yaml
-      redeploy_test_application('config' => {
-        'services_setup_command' => "echo '#{@new_services_yml}' > #{shared_services_file}"
-      })
+      mock_command('ey-services-setup', "echo '#{@new_services_yml}' > #{shared_services_file}") do
+        redeploy_test_application('config' => {'services_setup_command' => 'ey-services-setup'})
+      end
     end
 
     it "replaces the config with the new one (and symlinks)" do
