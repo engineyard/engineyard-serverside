@@ -286,24 +286,11 @@ chmod 0700 #{path}
         shell.status "Setting up external services."
         previously_configured_services = config.configured_services
 
-        begin
-          sudo(config.services_check_command)
-        rescue EY::Serverside::RemoteFailure
-          shell.info "Could not setup services. Upgrade your environment to get services configuration."
-          return
+        if config.services_setup_command
+          ENV['EY_SERVICES_COMMAND'] = config.services_setup_command
         end
-
-        begin
-          sudo(config.services_setup_command)
-        rescue EY::Serverside::RemoteFailure => e
-          if previously_configured_services
-            shell.warning <<-WARNING
-External services configuration not updated. Using previous version.
-Deploy again if your services configuration appears incomplete or out of date.
-#{e}
-            WARNING
-          end
-        end
+        ENV['EY_DEPLOY_APP'] = config.app
+        run(File.dirname(About.binary) + "/engineyard-serverside-services")
 
         if services = config.configured_services
           shell.status "Services configured: #{services.join(', ')}"
