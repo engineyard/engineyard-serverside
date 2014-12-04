@@ -49,7 +49,7 @@ describe "deploy hooks" do
     end
 
     it 'runs the hook' do
-      deploy_dir.join('current', 'before_restart.ran').should exist
+      expect(deploy_dir.join('current', 'before_restart.ran')).to exist
     end
   end
 
@@ -59,7 +59,7 @@ describe "deploy hooks" do
     end
 
     it 'does not run the hook' do
-      deploy_dir.join('current', 'before_restart.ran').should_not exist
+      expect(deploy_dir.join('current', 'before_restart.ran')).not_to exist
     end
 
     it 'outputs a message about the hook not being executable' do
@@ -83,7 +83,7 @@ describe "deploy hooks" do
 
     context "#run" do
       it "is available" do
-        expect(deploy_hook.eval_hook('respond_to?(:run)')).to be_true
+        expect(deploy_hook.eval_hook('respond_to?(:run)')).to be_truthy
       end
 
       it "runs commands like the shell does" do
@@ -96,8 +96,8 @@ describe "deploy hooks" do
       end
 
       it "returns true/false to indicate the command's success" do
-        expect(deploy_hook.eval_hook('run("true")')).to be_true
-        expect(deploy_hook.eval_hook('run("false")')).to be_false
+        expect(deploy_hook.eval_hook('run("true")')).to be_truthy
+        expect(deploy_hook.eval_hook('run("false")')).to be_falsey
       end
 
       it "raises when the bang method alternative is used" do
@@ -113,7 +113,7 @@ describe "deploy hooks" do
 
     context "#sudo" do
       it "is available" do
-        expect(deploy_hook.eval_hook('respond_to?(:sudo)')).to be_true
+        expect(deploy_hook.eval_hook('respond_to?(:sudo)')).to be_truthy
       end
 
       it "runs things with sudo" do
@@ -139,18 +139,18 @@ describe "deploy hooks" do
 
     context "capistrano-ish methods" do
       it "has them" do
-        expect(deploy_hook.eval_hook('respond_to?(:latest_release)    ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:previous_release)  ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:all_releases)      ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:current_path)      ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:shared_path)       ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:release_dir)       ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:failed_release_dir)')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:release_path)      ')).to be_true
+        expect(deploy_hook.eval_hook('respond_to?(:latest_release)    ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:previous_release)  ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:all_releases)      ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:current_path)      ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:shared_path)       ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:release_dir)       ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:failed_release_dir)')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:release_path)      ')).to be_truthy
       end
 
       it "shows a deprecation warning that asks you to use config to access these variables" do
-        expect(deploy_hook.eval_hook('shared_path.nil?')).to be_false
+        expect(deploy_hook.eval_hook('shared_path.nil?')).to be_falsey
         out = read_output
         expect(out).to include("Use of `shared_path` (via method_missing) is deprecated in favor of `config.shared_path` for improved error messages and compatibility.")
         expect(out).to match(%r|in .*/deploy/fake_test_hook.rb|)
@@ -189,7 +189,7 @@ describe "deploy hooks" do
       end
 
       it "is deprecated through the @node ivar" do
-        expect(deploy_hook.eval_hook('@node.nil?')).to be_false
+        expect(deploy_hook.eval_hook('@node.nil?')).to be_falsey
         out = read_output
         expect(out).to match(%r|Use of `@node` in deploy hooks is deprecated.|)
         expect(out).to match(%r|Please use `config.node`, which provides access to the same object.|)
@@ -197,7 +197,7 @@ describe "deploy hooks" do
       end
 
       it "is available" do
-        expect(deploy_hook.eval_hook('config.node.nil?')).to be_false
+        expect(deploy_hook.eval_hook('config.node.nil?')).to be_falsey
       end
 
       it "has indifferent access" do
@@ -214,11 +214,11 @@ describe "deploy hooks" do
 
     context "config" do
       it "is available" do
-        expect(deploy_hook.eval_hook('config.nil?')).to be_false
+        expect(deploy_hook.eval_hook('config.nil?')).to be_falsey
       end
 
       it "is deprecated through the @configuration ivar" do
-        expect(deploy_hook.eval_hook('@configuration.nil?')).to be_false
+        expect(deploy_hook.eval_hook('@configuration.nil?')).to be_falsey
         out = read_output
         expect(out).to match(%r|Use of `@configuration` in deploy hooks is deprecated.|)
         expect(out).to match(%r|Please use `config`, which provides access to the same object.|)
@@ -244,7 +244,7 @@ describe "deploy hooks" do
         :revision,
         :environment].each do |attribute|
         it "has the #{attribute.inspect} attribute for compatibility with chef-deploy" do
-          expect(deploy_hook.eval_hook("config.has_key?(#{attribute.inspect})")).to be_true
+          expect(deploy_hook.eval_hook("config.has_key?(#{attribute.inspect})")).to be_truthy
         end
       end
     end
@@ -351,11 +351,11 @@ describe "deploy hooks" do
       end
 
       it "has info, warning, debug, logged_system, and access to shell" do
-        expect(deploy_hook.eval_hook('respond_to?(:info)         ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:warning)      ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:debug)        ')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:logged_system)')).to be_true
-        expect(deploy_hook.eval_hook('respond_to?(:shell)        ')).to be_true
+        expect(deploy_hook.eval_hook('respond_to?(:info)         ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:warning)      ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:debug)        ')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:logged_system)')).to be_truthy
+        expect(deploy_hook.eval_hook('respond_to?(:shell)        ')).to be_truthy
       end
     end
   end

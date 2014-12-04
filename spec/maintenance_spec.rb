@@ -23,22 +23,22 @@ describe EY::Serverside::Maintenance do
     it "lets you know if the app is in maintenance mode" do
       maintenance_status
       maintenance_output = read_output.split("\n").select{|l| l.match("Maintenance")}
-      maintenance_output.count.should == 1
-      maintenance_output.first.should match(/Maintenance page: down$/)
+      expect(maintenance_output.count).to eq(1)
+      expect(maintenance_output.first).to match(/Maintenance page: down$/)
 
       enable_maintenance
 
       maintenance_status
       maintenance_output = read_output.split("\n").select{|l| l.match("Maintenance")}
-      maintenance_output.count.should == 1
-      maintenance_output.first.should match(/Maintenance page: up$/)
+      expect(maintenance_output.count).to eq(1)
+      expect(maintenance_output.first).to match(/Maintenance page: up$/)
 
       disable_maintenance
 
       maintenance_status
       maintenance_output = read_output.split("\n").select{|l| l.match("Maintenance")}
-      maintenance_output.count.should == 1
-      maintenance_output.first.should match(/Maintenance page: down$/)
+      expect(maintenance_output.count).to eq(1)
+      expect(maintenance_output.first).to match(/Maintenance page: down$/)
     end
   end
 end

@@ -20,7 +20,7 @@ describe "Deploying a simple application" do
       args.instances = [{ :hostname => "localhost", :roles => ["solo"], :name => "single" }]
       args.serverside_version = Gem::Version.create(EY::Serverside::VERSION.dup).release
       args.config = {
-        "deploy_to" => deploy_dir,
+        "deploy_to" => deploy_dir.to_s,
         "group"            => GROUP
       }
     end
