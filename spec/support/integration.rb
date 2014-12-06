@@ -25,6 +25,10 @@ class FullTestDeploy < EY::Serverside::Deploy
     super
   end
 
+  def configure_command
+    Escape.shell_command(["echo", super]) + "> #{config.paths.active_release}/configure"
+  end
+
   def restart_command
     Escape.shell_command(["echo", super]) + "> #{config.paths.active_release}/restart"
   end

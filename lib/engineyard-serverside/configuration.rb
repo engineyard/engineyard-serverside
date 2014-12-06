@@ -3,6 +3,7 @@ require 'thor'
 require 'pp'
 require 'yaml'
 require 'engineyard-serverside/paths'
+require 'engineyard-serverside/platform'
 require 'engineyard-serverside/source'
 require 'engineyard-serverside/source/git'
 require 'engineyard-serverside/source/archive'
@@ -126,11 +127,14 @@ module EY
       alias repo git
       alias ref branch # ref is used for input to cli, so it should work here.
 
+      attr_reader :platform
+
       def initialize(options)
         opts = string_keys(options)
         config = MultiJson.load(opts.delete("config") || "{}")
         append_config_source opts # high priority
         append_config_source config # lower priority
+        @platform = Platform.new(self)
       end
 
       def string_keys(hsh)
@@ -357,7 +361,11 @@ module EY
 
       def configured_services
         services = YAML.load_file(paths.shared_services_yml.to_s)
-        services.respond_to?(:keys) && !services.empty? ? services.keys : nil
+        if services.respond_to?(:keys) && !services.empty?
+          services.keys
+        else
+          nil
+        end
       rescue
         nil
       end

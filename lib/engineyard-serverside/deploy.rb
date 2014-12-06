@@ -31,9 +31,10 @@ module EY
           check_repository
           create_revision_file
           run_with_callbacks(:bundle)
-          setup_services
+          configure
           symlink_configs
           setup_sqlite3_if_necessary
+          # app's environment should be bootable ---
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
           enable_maintenance_page
           run_with_callbacks(:migrate)
@@ -128,6 +129,18 @@ module EY
         end
       end
 
+      def configure
+        #setup_services
+        shell.status "Verifying system configuration for this application"
+        ENV['EY_SERVICES_COMMAND'] = config['services_setup_command'] if config['services_setup_command']
+        run(configure_command)
+        ENV.delete('EY_SERVICES_COMMAND')
+      end
+
+      def configure_command
+        platform.configure_command
+      end
+
       # task
       def restart
         @restart_failed = true
@@ -147,7 +160,7 @@ module EY
       end
 
       def restart_command
-        %{LANG="en_US.UTF-8" /engineyard/bin/app_#{config.app} deploy}
+        platform.restart_command
       end
 
       def ensure_git_ssh_wrapper
