@@ -40,9 +40,8 @@ describe "Deploying an application that uses Bundler" do
     end
 
     it "generates bundler binstubs" do
-      pending "doesn't work with mocked bundler" do
-        expect(deploy_dir.join('current', 'ey_bundler_binstubs', 'rake')).to exist
-      end
+      pending "doesn't work with mocked bundler"
+      expect(deploy_dir.join('current', 'ey_bundler_binstubs', 'rake')).to exist
     end
   end
 
@@ -111,7 +110,7 @@ describe "Deploying an application that uses Bundler" do
   context "without a Gemfile.lock and ignoring the warning" do
     before(:all) do
       deploy_test_application('no_gemfile_lock', 'config' => {'ignore_gemfile_lock_warning' => true})
-      expect(@config.ignore_gemfile_lock_warning).to be_true
+      expect(@config.ignore_gemfile_lock_warning).to be_truthy
       @install_bundler_command = @deployer.commands.grep(/gem install bundler/).first
       @bundle_install_command  = @deployer.commands.grep(/bundle _#{VERSION_PATTERN}_ install/).first
     end

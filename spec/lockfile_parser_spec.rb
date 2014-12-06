@@ -59,27 +59,27 @@ describe "the bundler version retrieved from the lockfile" do
 
   context "checking for gems in the dependencies" do
     it "does not have any database adapters in a gemfile lock without them" do
-      expect(get_parser('1.0.6-no-bundler').any_database_adapter?).to be_false
+      expect(get_parser('1.0.6-no-bundler').any_database_adapter?).to be_falsey
     end
 
     it "has a database adapter in a Gemfile.lock with do_mysql" do
-      expect(get_parser('1.0.18-do_mysql').any_database_adapter?).to be_true
+      expect(get_parser('1.0.18-do_mysql').any_database_adapter?).to be_truthy
     end
 
     it "has a database adapter in a Gemfile.lock with mysql" do
-      expect(get_parser('1.0.18-mysql').any_database_adapter?).to be_true
+      expect(get_parser('1.0.18-mysql').any_database_adapter?).to be_truthy
     end
 
     it "has a database adapter in a Gemfile.lock with mysql2" do
-      expect(get_parser('1.0.18-mysql2').any_database_adapter?).to be_true
+      expect(get_parser('1.0.18-mysql2').any_database_adapter?).to be_truthy
     end
 
     it "has a database adapter in a Gemfile.lock with pg" do
-      expect(get_parser('1.0.18-pg').any_database_adapter?).to be_true
+      expect(get_parser('1.0.18-pg').any_database_adapter?).to be_truthy
     end
 
     it "has a database adapter in a Gemfile.lock with do_postgres" do
-      expect(get_parser('1.0.18-do_postgres').any_database_adapter?).to be_true
+      expect(get_parser('1.0.18-do_postgres').any_database_adapter?).to be_truthy
     end
   end
 
