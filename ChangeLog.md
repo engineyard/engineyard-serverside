@@ -6,6 +6,9 @@
   * Add new ey.yml option `precompile_assets_command`
     Setting `precompile_assets_command` overrides the asset precompile rake command. (default: `rake assets:precompile RAILS_GROUPS=assets`)
     Bundler binstubs are in PATH so gem binaries will load through bundler.
+  * Supports the optional execution of a server defined configure script.
+    If found, the script can modify or load app settings to customize the server before deploy and abort if problems are encountered.
+    If the script does not exist, this step will be skipped and deploy will continue as usual.
   * In order to speed up asset compilation in Rails, the directory `/data/app/current/tmp` is now preserved between deploys to maintain assets cache.
     To disable this feature, set `shared_tmp: false` in `ey.yml`.
 

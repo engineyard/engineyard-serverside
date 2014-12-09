@@ -32,6 +32,7 @@ module EY
           create_revision_file
           run_with_callbacks(:bundle)
           setup_services
+          configure_platform
           symlink_configs
           setup_sqlite3_if_necessary
           run_with_callbacks(:compile_assets) # defined in RailsAssetSupport
@@ -338,6 +339,21 @@ YML
 
           shell.substatus "Symlink database.yml"
           run "ln -nfs #{paths.shared_config}/database.sqlite3.yml #{paths.active_release_config}/database.yml"
+        end
+      end
+
+      def configure_platform
+        run configure_command
+      end
+
+      def configure_command
+        ENV['EY_SERVERSIDE_CONFIGURE_COMMAND'] || begin
+          configure_script = "/engineyard/bin/app_#{config.app}_configure"
+          return <<-CONFIGURE
+if [ -x "#{configure_script}" ] || which "#{configure_script}" >/dev/null 2>&1; then
+  EY_DEPLOY_APP='#{config.app}' EY_DEPLOY_RELEASE_PATH='#{paths.active_release.to_s}' #{configure_script};
+fi
+          CONFIGURE
         end
       end
 
