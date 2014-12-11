@@ -3,7 +3,7 @@
 ## NEXT
 
   * Supports `config.ref` in deploy hooks. Synonymous with `config.branch` but more correct because the `input_ref` is automatically resolved to a SHA before deploy.
-  * Add new ey.yml option `precompile_assets_command`
+  * Supports new ey.yml option `precompile_assets_command`
     Setting `precompile_assets_command` overrides the asset precompile rake command. (default: `rake assets:precompile RAILS_GROUPS=assets`)
     Bundler binstubs are in PATH so gem binaries will load through bundler.
   * Supports the optional execution of a server defined configure script.
@@ -11,6 +11,8 @@
     If the script does not exist, this step will be skipped and deploy will continue as usual.
   * In order to speed up asset compilation in Rails, the directory `/data/app/current/tmp` is now preserved between deploys to maintain assets cache.
     To disable this feature, set `shared_tmp: false` in `ey.yml`.
+  * Supports new ey.yml option `experimental_sync_assets`
+    Setting to `true` will cause assets to be compiled once and rsync'd to other servers.
 
 ## v2.5.0 (2014-09-23)
 

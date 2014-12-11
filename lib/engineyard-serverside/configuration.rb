@@ -102,8 +102,6 @@ module EY
       def_option :services_check_command, "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
       def_option(:services_setup_command) { "/usr/local/ey_resin/ruby/bin/ey-services-setup #{app}" }
 
-      def_option :restart_groups,         1
-
       DEFAULT_KEEP_RELEASES = 3
 
       def_option :keep_releases,          DEFAULT_KEEP_RELEASES
@@ -119,6 +117,10 @@ module EY
       def_boolean_option :eydeploy_rb,                     true
       def_boolean_option :maintenance_on_migrate,          true
       def_boolean_option(:maintenance_on_restart)          { required_downtime_stack? }
+
+      # experimental, need feedback from people using it, feature implementation subject to change or removal
+      def_option :restart_groups, 1
+      def_boolean_option :experimental_sync_assets, false
 
       alias app_name app
       alias environment framework_env # legacy because it would be nice to have less confusion around "environment"
