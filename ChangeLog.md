@@ -2,6 +2,10 @@
 
 ## NEXT
 
+  *
+
+## v2.6.1 (2014-12-18)
+
   * Fixes a problem where integrate would not use the existing release path, thus breaking rollback and other deploy coordination that relies on having the same path between servers.
 
 ## v2.6.0 (2014-12-11)
