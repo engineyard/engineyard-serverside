@@ -105,8 +105,10 @@ module EY
         Time.now.utc.strftime("%Y%m%d%H%M%S")
       end
 
+      # if active_release is already set, it's set because we're operating on
+      # an existing release. This happens during integrate
       def new_release!
-        @active_release = path(:releases, release_dirname)
+        @active_release ||= path(:releases, release_dirname)
       end
 
       # If no active release is defined, use current
