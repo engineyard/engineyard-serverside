@@ -2,7 +2,7 @@
 
 ## NEXT
 
-  *
+  * Use newest bundler 1.7.9 as the default when no bundler is specified in the Gemfile.
 
 ## v2.6.1 (2014-12-18)
 
