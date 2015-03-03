@@ -7,6 +7,7 @@
 ## v2.6.2 (2015-02-03)
 
   * Use newest bundler 1.7.9 as the default when no bundler is specified in the Gemfile.
+  * Fixes a typo that prevented a useful error message when a child process exits abnormally.
 
 ## v2.6.1 (2014-12-18)
 
