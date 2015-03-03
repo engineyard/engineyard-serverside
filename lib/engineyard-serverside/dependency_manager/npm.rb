@@ -10,7 +10,7 @@ module EY
 
         def install
           shell.status "Installing npm packages (package.json detected)"
-          run "cd #{paths.active_release} && npm install"
+          run %{cd #{paths.active_release} && export GIT_SSH="#{ENV['GIT_SSH']}" && npm install}
         end
       end
     end

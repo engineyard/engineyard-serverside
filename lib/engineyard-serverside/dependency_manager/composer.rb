@@ -44,7 +44,7 @@ To fix this problem, commit your composer.lock to the repository and redeploy.
         end
 
         def composer_install
-          run "composer install --no-interaction --no-dev --optimize-autoloader --working-dir #{paths.active_release}"
+          run %{export GIT_SSH="#{ENV['GIT_SSH']}" && composer install --no-interaction --no-dev --optimize-autoloader --working-dir #{paths.active_release}}
         end
 
         def composer_selfupdate
