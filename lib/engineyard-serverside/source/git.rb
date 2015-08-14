@@ -49,7 +49,7 @@ class EY::Serverside::Source::Git < EY::Serverside::Source
       (run_and_success?("git checkout --force #{quiet} '#{to_checkout}'") ||
         run_and_success?("git reset --hard #{quiet} '#{to_checkout}'")) &&
         run_and_success?("git submodule sync") &&
-        run_and_success?("git submodule update --init") &&
+        run_and_success?("git submodule update --init --recursive") &&
         run_and_success?("git clean -dfq")
     end
   end
