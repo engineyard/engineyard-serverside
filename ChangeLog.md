@@ -4,6 +4,10 @@
 
   *
 
+## v2.6.4 (2015-08-14)
+
+  * use --recursive when updating git submodules
+
 ## v2.6.3 (2015-03-03)
 
   *
