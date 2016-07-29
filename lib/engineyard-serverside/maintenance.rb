@@ -70,7 +70,8 @@ module EY
         run "mkdir -p #{maintenance_page_dirname}"
         public_system_symlink_warning
         @up = true
-        run "cp #{source_path} #{enabled_maintenance_page_pathname}"
+        maintenance_page_html = File.read(source_path)
+        run "echo '#{maintenance_page_html}' > #{enabled_maintenance_page_pathname}"
       end
 
       def disable
