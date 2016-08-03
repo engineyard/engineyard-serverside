@@ -71,7 +71,11 @@ module EY
         public_system_symlink_warning
         @up = true
         maintenance_page_html = File.read(source_path)
-        run "echo '#{maintenance_page_html}' > #{enabled_maintenance_page_pathname}"
+        if maintenance_page_html.index("'")
+          run "cp #{source_path} #{enabled_maintenance_page_pathname}"
+        else
+          run "echo '#{maintenance_page_html}' > #{enabled_maintenance_page_pathname}"
+        end
       end
 
       def disable
