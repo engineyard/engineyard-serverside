@@ -72,8 +72,11 @@ module EY
         @up = true
         maintenance_page_html = File.read(source_path)
         if maintenance_page_html.index("'")
+          #if the html contains an aprostophe it's probably custom coming from your app so will work on app slaves even if the serverside versions mistmatch
           run "cp #{source_path} #{enabled_maintenance_page_pathname}"
         else
+          #run fans out to all app servers but the serverside version is only isntalled on the server being used to deploy
+          #so if the serveside version being used isn't installed on a given app server the cp command would fail, but this echo will still work
           run "echo '#{maintenance_page_html}' > #{enabled_maintenance_page_pathname}"
         end
       end
