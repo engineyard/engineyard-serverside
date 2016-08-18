@@ -25,17 +25,16 @@ module EY
       end
 
       def gem_binary
-        File.join(Gem.default_bindir, 'gem')
+        gem_bin_path = File.join(Gem.default_bindir, 'gem')
+        if File.exists?("/usr/local/ey_resin/bin/ruby")
+          "/usr/local/ey_resin/bin/ruby -rubygems #{gem_bin_path}"
+        else
+          gem_bin_path
+        end
       end
 
       def binary
-        resin_path = "/usr/local/ey_resin/ruby/bin/engineyard-serverside"
-        if File.exists?(resin_path)
-          resin_path
-        else
-          #gem relative path causes deploy hook failures if gem version mismatches with other app servers
-          File.expand_path("../../../bin/#{gem_name}", __FILE__)
-        end
+        File.expand_path("../../../bin/#{gem_name}", __FILE__)
       end
 
       def hook_executor
