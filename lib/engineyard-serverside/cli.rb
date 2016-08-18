@@ -192,7 +192,7 @@ module EY
       def propagate(servers, shell)
         shell.status "Verifying and propagating #{About.name_with_version} to all servers."
 
-        gem_binary = File.join(Gem.default_bindir, 'gem')
+        gem_binary = About.gem_binary
         remote_gem_file = File.join(Dir.tmpdir, About.gem_filename)
 
         # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
