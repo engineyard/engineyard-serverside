@@ -120,10 +120,9 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
             shell.substatus "Clean bundle forced (--clean)"
             run clean_bundle
           else
-            check_ruby   = "#{config.ruby_version_command} | diff - #{paths.ruby_version} >/dev/null 2>&1"
             check_system = "#{config.system_version_command} | diff - #{paths.system_version} >/dev/null 2>&1"
             shell.substatus "Checking for system version changes"
-            run "#{check_ruby} && #{check_system} || #{clean_bundle}"
+            run "#{check_system} || #{clean_bundle}"
           end
         end
 
