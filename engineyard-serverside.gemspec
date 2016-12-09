@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency('rspec', '~>2.14')
   s.add_development_dependency('rake', '~>10.0.0')
-  s.add_development_dependency('rdoc')
+  s.add_development_dependency('rdoc', '~>4.2.2')
   s.add_development_dependency('timecop', '0.6.1')
   s.add_development_dependency('simplecov')
   s.add_development_dependency('engineyard-serverside-adapter', '~>2.4.0')
