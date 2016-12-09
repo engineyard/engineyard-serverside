@@ -10,7 +10,17 @@ module EY
 
         def install
           shell.status "Installing npm packages (package.json detected)"
-          run %{cd #{paths.active_release} && export GIT_SSH="#{ENV['GIT_SSH']}" && npm install}
+          run %{cd #{paths.active_release} && export GIT_SSH="#{ENV['GIT_SSH']}" && npm install #{npm_install_options.join(" ")}}
+        end
+
+        def npm_install_options
+          options = []
+          options += ['--production'] if npm_production?
+          options
+        end
+
+        def npm_production?
+          ENV['NODE_ENV'] == 'production'
         end
       end
     end
