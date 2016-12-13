@@ -10,6 +10,7 @@ module EY
 
         def install
           shell.status "Installing npm packages (package.json detected)"
+          run "mkdir -p #{paths.shared_node_modules} && ln -nfs #{paths.shared_node_modules} #{paths.active_node_modules}"
           run %{cd #{paths.active_release} && export GIT_SSH="#{ENV['GIT_SSH']}" && npm install #{npm_install_options.join(" ")}}
         end
 

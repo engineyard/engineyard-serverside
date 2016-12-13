@@ -68,6 +68,7 @@ module EY
       def_path :shared_log,               [:shared,         'log']
       def_path :shared_tmp,               [:shared,         'tmp']
       def_path :shared_config,            [:shared,         'config']
+      def_path :shared_node_modules,      [:shared,         'node_modules']
       def_path :shared_system,            [:shared,         'system']
       def_path :default_repository_cache, [:shared,         'cached-copy']
       def_path :enabled_maintenance_page, [:shared_system,  'maintenance.html']
@@ -90,6 +91,7 @@ module EY
       def_path :composer_lock,            [:active_release, 'composer.lock']
       def_path :active_release_config,    [:active_release, 'config']
       def_path :active_log,               [:active_release, 'log']
+      def_path :active_node_modules,      [:active_release, 'node_modules']
       def_path :active_tmp,               [:active_release, 'tmp']
 
       def initialize(opts)
