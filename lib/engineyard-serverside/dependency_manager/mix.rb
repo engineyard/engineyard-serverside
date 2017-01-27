@@ -81,20 +81,6 @@ To fix this problem, commit your mix.lock to your repository and redeploy.
           "ruby -S bundle _#{bundler_version}_ install #{bundle_install_options.join(" ")}"
         end
 
-        def clean_bundle_on_system_version_change
-          # diff exits with 0 for same and 1/2 for different/file not found.
-          clean_bundle = "rm -Rf #{paths.bundled_gems}"
-
-          if config.clean?
-            shell.substatus "Clean bundle forced (--clean)"
-            run clean_bundle
-          else
-            check_system = "#{config.system_version_command} | diff - #{paths.system_version} >/dev/null 2>&1"
-            shell.substatus "Checking for system version changes"
-            run "#{check_system} || #{clean_bundle}"
-          end
-        end
-
         def bundler_version
           @bundler_version ||= lockfile && lockfile.bundler_version || self.class.default_version
         end
@@ -135,17 +121,6 @@ To fix this problem, commit your mix.lock to your repository and redeploy.
             any_ruby_adapter = %w[mysql2 mysql do_mysql pg do_postgres].any? do |type|
               @contents.index(/^\s+#{type}\s\([^\)]+\)$/)
             end
-
-            any_jruby_adapter = %w[mysql postgresql postgres].any? do |type|
-              @contents.index(/^\s+jdbc-#{type}\s\([^\)]+\)$/) || @contents.index(/^\s+activerecord-jdbc#{type}-adapter\s\([^\)]+\)$/)
-            end
-
-            any_ruby_adapter || any_jruby_adapter
-          end
-
-          def uses_sqlite3?
-            !any_database_adapter? && @contents.index(/^\s+sqlite3\s\([^\)]+\)$/)
-          end
 
           def parse
             parse_from_metadata ||
