@@ -94,6 +94,7 @@ module EY
       def_option :bundler,                'detect'
       def_option :composer,               'detect'
       def_option :npm,                    'detect'
+      def_option :mix,                    'detect'
       def_option :bundle_options,         nil
       def_option(:bundle_without)         { %w[test development] - [framework_env] }
 
