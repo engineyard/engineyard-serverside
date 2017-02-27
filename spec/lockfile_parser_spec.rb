@@ -99,7 +99,7 @@ describe "the bundler version retrieved from the lockfile" do
     end
 
     it "uses the default version when we get a pessimistic qualifier and is lower than the default version" do
-      expect(subject.fetch_version('~>', '1.7.1')).to eq(EY::Serverside::DependencyManager::Bundler.default_version)
+      expect(subject.fetch_version('~>', '1.13.1')).to eq(EY::Serverside::DependencyManager::Bundler.default_version)
     end
 
     it "uses the given version when we get a pessimistic qualifier that doesn't match the default version" do
