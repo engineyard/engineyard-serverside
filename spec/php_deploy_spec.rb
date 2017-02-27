@@ -11,6 +11,10 @@ describe "Deploying an application that uses PHP and Composer" do
           deploy_test_application('php_composer_lock')
         end
 
+        it "runs nginx.conf integration" do
+          expect(@deployer.commands.grep(/nginx\.conf/)).not_to be_empty
+        end
+
         it "runs 'composer install'" do
           install_cmd = @deployer.commands.grep(/composer install/).first
           expect(install_cmd).not_to be_nil
@@ -33,13 +37,23 @@ describe "Deploying an application that uses PHP and Composer" do
         end
 
         it "does not run composer" do
-          expect(@deployer.commands.grep(/composer/)).to be_empty
+          expect(@deployer.commands.grep(/composer install/)).to be_empty
+        end
+
+        context "with nginx.conf disabled in ey.yml" do
+          it "does not run nginx.conf integration" do
+            expect(@deployer.commands.grep(/nginx\.conf/)).to be_empty
+          end
         end
       end
 
       context "WITHOUT a composer.lock but with composer.json" do
         before(:all) do
           deploy_test_application('php_no_composer_lock')
+        end
+
+        it "runs nginx.conf integration" do
+          expect(@deployer.commands.grep(/nginx\.conf/)).not_to be_empty
         end
 
         it "outputs a warning about deploying without a .lock" do

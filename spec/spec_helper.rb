@@ -33,6 +33,18 @@ module EY
   end
 end
 
+module EY
+  module Serverside
+    class NginxConf
+      def create_testable_config
+        # BSD/GNU differences too fiddly to test
+        true
+      end
+    end
+  end
+end
+
+
 module SpecDependencyHelpers
   $NPM_INSTALLED = system('which npm 2>&1')
   unless $NPM_INSTALLED
@@ -172,6 +184,13 @@ echo "Running composer with $@"
     SCRIPT
   end
 
+  def mock_nginx(&block)
+    mock_command('nginx', <<-SCRIPT, &block)
+#!/bin/bash
+echo "Running nginx with $@"
+    SCRIPT
+  end
+
   def mock_sudo(&block)
     mock_command('sudo', <<-SCRIPT, &block)
 #!/bin/bash
@@ -279,6 +298,7 @@ exec "$@"
     FullTestDeploy.on_create_callback = block
 
     mock_bundler(extra_config['bundle_install_fails'])
+    mock_nginx
     with_mocked_commands do
       capture do
         EY::Serverside::CLI.start(@argv)
@@ -308,6 +328,7 @@ exec "$@"
 
     FullTestDeploy.on_create_callback = block
 
+    mock_nginx
     mock_bundler(bundle_install_fails)
 
     with_mocked_commands do

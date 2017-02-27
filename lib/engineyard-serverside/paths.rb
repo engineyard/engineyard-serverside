@@ -93,6 +93,7 @@ module EY
       def_path :active_log,               [:active_release, 'log']
       def_path :active_node_modules,      [:active_release, 'node_modules']
       def_path :active_tmp,               [:active_release, 'tmp']
+      def_path :nginx_conf,               [:active_release, 'nginx.conf']
 
       def initialize(opts)
         @opts             = opts
