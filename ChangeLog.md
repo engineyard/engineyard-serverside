@@ -4,6 +4,10 @@
 
   *
 
+## v2.6.5 (2017-01-26)
+
+  * Use bundler 1.13.6 as the default when no bundler is specified in the Gemfile.
+
 ## v2.6.4 (2015-08-14)
 
   * use --recursive when updating git submodules
