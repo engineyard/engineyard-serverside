@@ -6,10 +6,13 @@ end
 
 
 unless RUBY_VERSION =~ /^1\.8\./
-  # Ruby 1.9.x only.
   require 'simplecov'
+  SimpleCov.coverage_dir 'coverage/outside'
   SimpleCov.start do
-    add_filter "lib/vendor/"
+    add_filter '/spec/'
+    add_filter '/features/'
+    add_filter '/mock/'
+    add_filter '/lib/vendor/'
   end
 end
 
@@ -282,7 +285,7 @@ exec "$@"
     mock_bundler(extra_config['bundle_install_fails'])
     with_mocked_commands do
       capture do
-        EY::Serverside::CLI.start(@argv)
+        EY::Serverside::CLI::App.start(@argv)
       end
     end
   ensure
@@ -313,7 +316,7 @@ exec "$@"
 
     with_mocked_commands do
       capture do
-        EY::Serverside::CLI.start(@argv)
+        EY::Serverside::CLI::App.start(@argv)
       end
     end
   ensure
@@ -327,7 +330,7 @@ exec "$@"
 
     with_mocked_commands do
       capture do
-        EY::Serverside::CLI.start(@argv)
+        EY::Serverside::CLI::App.start(@argv)
       end
     end
   end
@@ -338,7 +341,7 @@ exec "$@"
 
     with_mocked_commands do
       capture do
-        EY::Serverside::CLI.start(@argv)
+        EY::Serverside::CLI::App.start(@argv)
       end
     end
   end
@@ -349,7 +352,7 @@ exec "$@"
 
     with_mocked_commands do
       capture do
-        EY::Serverside::CLI.start(@argv)
+        EY::Serverside::CLI::App.start(@argv)
       end
     end
   end

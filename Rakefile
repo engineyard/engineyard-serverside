@@ -16,8 +16,21 @@ task :coverage_env do
   ENV['COVERAGE'] = '1'
 end
 
-task :test => :spec
-task :default => :spec
+task :inside do
+  base_dir = File.expand_path(File.join(__FILE__, '..'))
+  `ln -nsf #{base_dir}/spec-inside #{base_dir}/spec`
+end
+
+task :outside do
+  base_dir = File.expand_path(File.join(__FILE__, '..'))
+  `ln -nsf #{base_dir}/spec-outside #{base_dir}/spec`
+end
+
+task :inside_spec => [:inside, :spec]
+task :outside_spec => [:outside, :spec]
+
+task :test => [:inside_spec, :outside_spec]
+task :default => :test
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'

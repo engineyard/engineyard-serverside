@@ -2,5 +2,8 @@
 pkg
 .bundle
 *.gem
-spec/fixtures/gitrepo
+spec-*/fixtures/gitrepo
 /coverage
+*~
+*.swp
+/spec
