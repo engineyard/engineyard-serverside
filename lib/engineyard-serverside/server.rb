@@ -3,13 +3,45 @@ require 'tempfile'
 
 module EY
   module Serverside
-    class Server < Struct.new(:hostname, :roles, :name, :user)
-      def self.from_hash(server_hash)
-        new(server_hash[:hostname], Set.new(server_hash[:roles].map{|r|r.to_sym}), server_hash[:name], server_hash[:user])
+    class Server
+      attr_reader :hostname, :roles, :name, :user
+
+      def initialize(hostname, roles, name, user)
+        @hostname = hostname
+        @name = name
+        @user = user
+
+        @roles = Set.new(roles.map {|role| role.to_sym})
       end
 
-      def authority
-        "#{user}@#{hostname}"
+      # Initialize a new Server from a hash of server elements
+      def self.from_hash(server_hash)
+        new(
+          server_hash[:hostname],
+          server_hash[:roles],
+          server_hash[:name],
+          server_hash[:user]
+        )
+      end
+
+      # Make a known hosts tempfile to absorb host fingerprints so we don't show
+      #
+      #     Warning: Permanently added 'xxx' (RSA) to the list of known hosts.
+      #
+      # for every ssh command.
+      # (even with StrictHostKeyChecking=no, the warning output is annoying)
+      def self.known_hosts_file
+        @known_hosts_file ||= Tempfile.new('ey-ss-known-hosts')
+      end
+
+      def matches_roles?(set)
+        (roles & Set.new(set.map {|role| role.to_sym})).any?
+      end
+
+      def command_on_server(prefix, cmd, &block)
+        command = block ? block.call(self, cmd.dup) : cmd
+        command = "#{prefix} #{Escape.shell_command([command])}"
+        local? ? command : remote_command(command)
       end
 
       def inspect
@@ -17,21 +49,19 @@ module EY
         "#{hostname}(#{role}#{name_s})"
       end
 
-      def role
-        roles.to_a.first
-      end
-
-      def matches_roles?(set)
-        (roles & set).any?
-      end
-
-      def roles=(roles)
-        roles_set = Set.new roles.map{|r| r.to_sym}
-        super roles_set
-      end
-
       def local?
         hostname == 'localhost'
+      end
+
+
+      private
+
+      def authority
+        "#{user}@#{hostname}"
+      end
+
+      def role
+        roles.to_a.first
       end
 
       def sync_directory_command(directory, ignore_existing = false)
@@ -58,30 +88,12 @@ module EY
         ])
       end
 
-      def command_on_server(prefix, cmd, &block)
-        command = block ? block.call(self, cmd.dup) : cmd
-        command = "#{prefix} #{Escape.shell_command([command])}"
-        local? ? command : remote_command(command)
-      end
-
-      def run(command)
-        yield local? ? command : remote_command(command)
-      end
-
       # Explicitly putting that space in helps us make sure we don't
       # accidentally leave off the space on the end of ssh_command.
       def remote_command(command)
-        ssh_command + " " + Escape.shell_command(["#{user}@#{hostname}", command])
-      end
-
-      # Make a known hosts tempfile to absorb host fingerprints so we don't show
-      #
-      #     Warning: Permanently added 'xxx' (RSA) to the list of known hosts.
-      #
-      # for every ssh command.
-      # (even with StrictHostKeyChecking=no, the warning output is annoying)
-      def self.known_hosts_file
-        @known_hosts_file ||= Tempfile.new('ey-ss-known-hosts')
+        ssh_command +
+          " " +
+          Escape.shell_command(["#{user}@#{hostname}", command])
       end
 
       def ssh_command

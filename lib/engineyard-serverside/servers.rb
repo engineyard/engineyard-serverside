@@ -6,22 +6,61 @@ require 'engineyard-serverside/spawner'
 module EY
   module Serverside
     class Servers
-
       class DuplicateHostname < StandardError
         def initialize(hostname)
           super "EY::Serverside::Server '#{hostname}' duplicated!"
         end
       end
 
-      # Array compatibility
+      ## Array compatibility
       extend Forwardable
       include Enumerable
-      def_delegators :@servers, :each, :size, :empty?
-      def select(*a, &b) self.class.new @servers.select(*a,&b), @shell end
-      def reject(*a, &b) self.class.new @servers.reject(*a,&b), @shell end
-      def to_a() @servers end
-      def ==(other) other.respond_to?(:to_a) && other.to_a == to_a end
 
+      def_delegators :servers, :each, :size, :empty?
+
+
+
+      attr_reader :servers, :shell, :cache
+
+      def initialize(servers, shell)
+        @servers = servers
+        @shell = shell
+        @cache = {}
+      end
+
+      def self.from_hashes(server_hashes, shell)
+        seen = []
+
+        servers = server_hashes.map {|server_hash|
+          server = Server.from_hash(server_hash)
+          hostname = server.hostname
+
+          raise DuplicateHostname.new(hostname) if seen.include?(hostname)
+
+          seen.push(hostname)
+          server
+        }
+
+        new(servers, shell)
+      end
+      
+      
+        #
+      def select(*a, &b)
+        self.class.new @servers.select(*a,&b), @shell
+      end
+
+      def reject(*a, &b)
+        self.class.new @servers.reject(*a,&b), @shell
+      end
+
+      def to_a()
+        @servers
+      end
+
+      def ==(other)
+        other.respond_to?(:to_a) && other.to_a == to_a
+      end
 
       def self.from_hashes(server_hashes, shell)
         servers = server_hashes.inject({}) do |memo, server_hash|

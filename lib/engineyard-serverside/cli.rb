@@ -2,6 +2,7 @@ require 'thor'
 require 'pathname'
 require 'engineyard-serverside/about'
 require 'engineyard-serverside/deploy'
+require 'engineyard-serverside/propagator'
 require 'engineyard-serverside/shell'
 require 'engineyard-serverside/servers'
 require 'engineyard-serverside/cli_helpers'
@@ -165,7 +166,7 @@ module EY
 
       def init_and_propagate(*args)
         init(*args) do |servers, config, shell|
-          propagate(servers, shell)
+          Propagator.propagate(servers, shell)
           yield servers, config, shell
         end
       end
@@ -186,26 +187,6 @@ module EY
         rescue Exception => e
           shell.fatal "#{e.backtrace[0]}: #{e.message} (#{e.class})"
           raise
-        end
-      end
-
-      def propagate(servers, shell)
-        shell.status "Verifying and propagating #{About.name_with_version} to all servers."
-
-        gem_binary = About.gem_binary
-        remote_gem_file = File.join(Dir.tmpdir, About.gem_filename)
-
-        # the [,)] is to stop us from looking for e.g. 0.5.1, seeing
-        # 0.5.11, and mistakenly thinking 0.5.1 is there
-        check_command = %{#{gem_binary} list #{About.gem_name} | grep "#{About.gem_name}" | egrep -q "#{About.version.gsub(/\./, '\.')}[,)]"}
-        install_command = "#{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'"
-
-        servers.remote.run_for_each! do |server|
-          check   = server.command_on_server('sh -l -c', check_command)
-          scp     = server.scp_command(About.gem_file, remote_gem_file)
-          install = server.command_on_server('sudo sh -l -c', install_command)
-
-          "(#{check}) || ((#{scp}) && (#{install}))"
         end
       end
 
