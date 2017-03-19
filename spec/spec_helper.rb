@@ -4,7 +4,8 @@ unless defined?(Bundler)
   require 'rubygems'
 end
 
-if ENV['COVERAGE']
+
+unless RUBY_VERSION =~ /^1\.8\./
   # Ruby 1.9.x only.
   require 'simplecov'
   SimpleCov.start do

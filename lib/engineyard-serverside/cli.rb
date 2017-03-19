@@ -4,6 +4,7 @@ require 'engineyard-serverside/about'
 require 'engineyard-serverside/deploy'
 require 'engineyard-serverside/propagator'
 require 'engineyard-serverside/shell'
+require 'engineyard-serverside/server_hash_extractor'
 require 'engineyard-serverside/servers'
 require 'engineyard-serverside/cli_helpers'
 
@@ -191,7 +192,11 @@ module EY
       end
 
       def load_servers(config, shell)
-        EY::Serverside::Servers.from_hashes(assemble_instance_hashes(config), shell)
+        #EY::Serverside::Servers.from_hashes(assemble_instance_hashes(config), shell)
+        EY::Serverside::Servers.from_hashes(
+          ServerHashExtractor.hashes(options, config),
+          shell
+        )
       end
 
       def assemble_instance_hashes(config)
