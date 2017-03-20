@@ -6,6 +6,9 @@ module EY
   module Serverside
     module CLI
       module Workflows
+
+        # DisablingMaintenance is a Workflow that removes the maintenance page
+        # for the application specified in the options
         class DisablingMaintenance < Base
           include Helpers
 

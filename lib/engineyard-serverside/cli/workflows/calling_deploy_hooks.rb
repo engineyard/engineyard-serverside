@@ -5,6 +5,9 @@ module EY
   module Serverside
     module CLI
       module Workflows
+
+        # CallingDeployHooks is a Workflow that, given a hook_name option,
+        # executes the requested deploy hook
         class CallingDeployHooks < Base
           private
           def procedure

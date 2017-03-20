@@ -1,6 +1,9 @@
 module EY
   module Serverside
     module CLI
+
+      # Helpers is a set of methods that define options and such for an App
+      # task
       module Helpers
         def account_app_env_options
           method_option :app,              :type     => :string,

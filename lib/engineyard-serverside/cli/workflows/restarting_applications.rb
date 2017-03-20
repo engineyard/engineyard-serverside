@@ -4,6 +4,9 @@ module EY
   module Serverside
     module CLI
       module Workflows
+
+        # RestartingApplications is a Workflow that restarts the application
+        # specified in the options
         class RestartingApplications < Base
           private
           def procedure

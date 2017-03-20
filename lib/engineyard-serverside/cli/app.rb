@@ -12,6 +12,9 @@ require 'engineyard-serverside/cli/workflows'
 module EY
   module Serverside
     module CLI
+
+      # App is the actual Thor-based entry point for the engineyard-serverside
+      # CLI application
       class App < Thor
 
         extend Helpers

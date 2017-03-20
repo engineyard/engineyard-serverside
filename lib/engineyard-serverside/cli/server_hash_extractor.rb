@@ -1,6 +1,10 @@
 module EY
   module Serverside
     module CLI
+
+      # ServerHashExtractor, given an options hash and a deploy configuration,
+      # generates an array of hashes that can be used to instantiate Server
+      # objects
       class ServerHashExtractor
         def self.hashes(options, config)
           new(options, config).hashes

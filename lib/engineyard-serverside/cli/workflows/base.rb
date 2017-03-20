@@ -1,14 +1,14 @@
 require 'engineyard-serverside/about'
 require 'engineyard-serverside/cli/server_hash_extractor'
+require 'engineyard-serverside/cli/workflows/errors'
 require 'engineyard-serverside/configuration'
 
 module EY
   module Serverside
     module CLI
       module Workflows
-        class Undefined < StandardError
-        end
-
+        
+        # Base is the template from which all Workflows are derived
         class Base
           attr_reader :options
 

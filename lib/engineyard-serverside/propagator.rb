@@ -3,7 +3,9 @@ require 'engineyard-serverside/about'
 
 module EY
   module Serverside
-    # Propagator ensures that this gem is installed on a set of servers.
+
+    # Propagator ensures that a proper version of the engineyard-serverside
+    # gem is installed on a given set of servers
     class Propagator
       def self.propagate(servers, shell)
         new(servers, shell).propagate

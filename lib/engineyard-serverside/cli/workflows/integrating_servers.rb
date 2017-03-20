@@ -4,6 +4,9 @@ module EY
   module Serverside
     module CLI
       module Workflows
+
+        # IntegratingServers is a Workflow that attempts to integrate new
+        # servers into an existing environment
         class IntegratingServers
           private
           def procedure

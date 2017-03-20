@@ -10,6 +10,9 @@ require 'engineyard-serverside/cli/workflows/showing_maintenance_status'
 module EY
   module Serverside
     module CLI
+
+      # Workflows is a collection of reified procedures that handle the
+      # various requirements of our CLI app
       module Workflows
         DEFINED = {
           :deploy => DeployingApplications,

@@ -5,6 +5,9 @@ module EY
   module Serverside
     module CLI
       module Workflows
+
+        # RollingBackApplications is a Workflow that attempts to roll the
+        # application specified in the options back to its previous deployment
         class RollingBackApplications < Base
           include Helpers
 
