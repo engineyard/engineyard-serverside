@@ -4,6 +4,11 @@ RSpec::Core::RakeTask.new do |t|
   t.pattern = 'spec/**/*_spec.rb'
 end
 
+RSpec::Core::RakeTask.new(:spec2) do |t|
+  t.rspec_opts = %w[--color]
+  t.pattern = 'spec/**/*_spec.rb'
+end
+
 RSpec::Core::RakeTask.new(:php) do |spec|
   t.libs << 'lib' << 'spec'
   t.pattern = 'spec/**/*php*_spec.rb'
@@ -27,10 +32,10 @@ task :outside do
 end
 
 task :inside_spec => [:inside, :spec]
-task :outside_spec => [:outside, :spec]
+task :outside_spec => [:outside, :spec2]
 
 task :test => [:inside_spec, :outside_spec]
-task :default => :test
+task :default => [:inside_spec, :outside_spec]
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'
