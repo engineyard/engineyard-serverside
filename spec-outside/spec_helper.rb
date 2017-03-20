@@ -13,6 +13,7 @@ unless RUBY_VERSION =~ /^1\.8\./
     add_filter '/features/'
     add_filter '/mock/'
     add_filter '/lib/vendor/'
+    add_group 'CLI Workflows', 'lib/engineyard-serverside/cli/workflows/'
   end
 end
 
