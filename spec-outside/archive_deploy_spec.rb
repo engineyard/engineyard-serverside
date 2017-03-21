@@ -27,7 +27,7 @@ describe "Deploying a simple application" do
     argv = adapter.deploy.commands.last.to_argv[2..-1]
     with_mocked_commands do
       capture do
-        EY::Serverside::CLI.start(argv)
+        EY::Serverside::CLI::App.start(argv)
       end
     end
   end

@@ -4,6 +4,11 @@ RSpec::Core::RakeTask.new do |t|
   t.pattern = 'spec/**/*_spec.rb'
 end
 
+RSpec::Core::RakeTask.new(:spec2) do |t|
+  t.rspec_opts = %w[--color]
+  t.pattern = 'spec/**/*_spec.rb'
+end
+
 RSpec::Core::RakeTask.new(:php) do |spec|
   t.libs << 'lib' << 'spec'
   t.pattern = 'spec/**/*php*_spec.rb'
@@ -16,8 +21,21 @@ task :coverage_env do
   ENV['COVERAGE'] = '1'
 end
 
-task :test => :spec
-task :default => :spec
+task :inside do
+  base_dir = File.expand_path(File.join(__FILE__, '..'))
+  `ln -nsf #{base_dir}/spec-inside #{base_dir}/spec`
+end
+
+task :outside do
+  base_dir = File.expand_path(File.join(__FILE__, '..'))
+  `ln -nsf #{base_dir}/spec-outside #{base_dir}/spec`
+end
+
+task :inside_spec => [:inside, :spec]
+task :outside_spec => [:outside, :spec2]
+
+task :test => [:inside_spec, :outside_spec]
+task :default => [:inside_spec, :outside_spec]
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'
