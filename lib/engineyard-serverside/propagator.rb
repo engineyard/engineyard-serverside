@@ -13,7 +13,7 @@ module EY
 
       extend Forwardable
 
-      def_delegators About, :gem_file, :gem_filename, :gem_name,
+      def_delegators About, :gem_binary, :gem_file, :gem_filename, :gem_name,
         :name_with_version, :version
 
       attr_reader :servers, :shell
