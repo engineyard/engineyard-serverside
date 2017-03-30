@@ -93,6 +93,11 @@ module EY
       def_path :active_log,               [:active_release, 'log']
       def_path :active_node_modules,      [:active_release, 'node_modules']
       def_path :active_tmp,               [:active_release, 'tmp']
+      def_path :mix_ex,                   [:active_release, 'mix.exs']
+      def_path :mix_lock,                 [:active_release, 'mix.lock']
+      def_path :elixir_deps,              [:shared,         'deps']
+      def_path :active_elixir_deps,       [:active_release, 'deps']
+      def_path :elixir_rel,               [:shared,         'rel']
 
       def initialize(opts)
         @opts             = opts
@@ -188,4 +193,3 @@ module EY
     end
   end
 end
-
