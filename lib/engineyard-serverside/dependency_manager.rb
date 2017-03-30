@@ -24,8 +24,9 @@ module EY
       AVAILABLE_MANAGERS = {
         'bundler'  => Bundler,
         'composer' => Composer,
-        'npm'      => Npm,
-        'mix'      => Mix
+        'mix'      => Mix,
+        'npm'      => Npm
+
       }
 
       include Enumerable
