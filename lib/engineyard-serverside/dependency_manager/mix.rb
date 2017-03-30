@@ -20,6 +20,8 @@ module EY
             shell.status "Installing  packages (mix.ex detected)"
             run "mkdir -p #{paths.elixir_deps} && ln -nfs #{paths.elixir_deps} #{paths.active_elixir_deps}"
             run %{cd #{paths.active_release} && export GIT_SSH="#{ENV['GIT_SSH']}" && mix deps.get #{mix_install_options.join(" ")}}
+            run %{cd ln -nfs #{paths.shared_config}/prod.secret.exs #{paths.active_release_config}/prod.secret.exs}
+            run %{cd ln -nfs #{paths.shared_config}/customer.secret.exs #{paths.active_release_config}/customer.secret.exs}
             run %{cd #{paths.active_release} && #{elixir_compile} && rsync -avHl #{paths.active_release}/rel #{paths.elixir_rel}}
           end
 
@@ -29,8 +31,6 @@ module EY
             options
           end
 
-          def compile
-            shell.status ""
 
           def mix_production?
             ENV['MIX_ENV'] == 'prod'
