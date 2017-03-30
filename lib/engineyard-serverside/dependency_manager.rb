@@ -24,7 +24,7 @@ module EY
       AVAILABLE_MANAGERS = {
         'bundler'  => Bundler,
         'composer' => Composer,
-        'npm'      => Npm
+        'npm'      => Npm,
         'mix'      => Mix
       }
 
