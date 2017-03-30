@@ -15,12 +15,13 @@ module EY
 
           #Eventually add to ey.yml for either phoenix or mix compile
           def elixir_compile
-            mix phoenix.digest
+            "mix phoenix.digest"
           end
 
           def install
             shell.status "Installing  packages (mix.ex detected)"
             run "mkdir -p #{paths.elixir_deps} && ln -nfs #{paths.elixir_deps} #{paths.active_elixir_deps}"
+            run %{mkdir -p #{paths.active_release}/priv/static}
             run %{ln -nfs #{paths.shared_config}/prod.secret.exs #{paths.active_release_config}/prod.secret.exs}
             run %{ln -nfs #{paths.shared_config}/customer.secret.exs #{paths.active_release_config}/customer.secret.exs}
             run %{cd #{paths.active_release} && export GIT_SSH="#{ENV['GIT_SSH']}" && mix deps.get #{mix_install_options.join(" ")}}
