@@ -25,7 +25,7 @@ module EY
             run %{ln -nfs #{paths.shared_config}/prod.secret.exs #{paths.active_release_config}/prod.secret.exs}
             run %{ln -nfs #{paths.shared_config}/customer.secret.exs #{paths.active_release_config}/customer.secret.exs}
             run %{cd #{paths.active_release} && export GIT_SSH="#{ENV['GIT_SSH']}" && mix deps.get #{mix_install_options.join(" ")}}
-            run %{cd #{paths.active_release} && #{elixir_compile} && rsync -avHl #{paths.active_release}/rel/ #{paths.elixir_rel}}
+            run %{cd #{paths.active_release} && #{elixir_compile} && mix release && rsync -avHl #{paths.active_release}/rel/ #{paths.elixir_rel}}
           end
 
           def mix_install_options

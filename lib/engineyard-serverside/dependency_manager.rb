@@ -21,6 +21,7 @@ module EY
       # Registry pattern be damned. Hard code it and fix it when we want to
       # support dynamic loading. Right now we have no way to load dependency
       # managers dynamically, so why support it?
+      # The AVAILABLE_MANAGERS hash order determines run order
       AVAILABLE_MANAGERS = {
         'bundler'  => Bundler,
         'composer' => Composer,
