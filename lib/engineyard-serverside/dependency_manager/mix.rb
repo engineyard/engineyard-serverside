@@ -34,9 +34,14 @@ module EY
             run %{cd #{paths.active_release} && #{elixir_compile} && mix release.init && mix release && rsync -avHl #{paths.active_release}/_bundle/ #{paths.elixir_rel}}
           end
 
-          #Eventually add to ey.yml for either phoenix or mix compile
+          #Detection for phoenix or a standard elixir application
           def elixir_compile
-            "mix phoenix.digest"
+            mix_ex = File.read(paths.mix_ex)
+            if mix_ex.match('phoenix')
+              "mix phoenix.digest"
+            else
+              "mix compile"
+            end
           end
 
 
