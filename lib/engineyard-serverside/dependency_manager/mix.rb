@@ -14,9 +14,9 @@ module EY
           end
 
           def release_manager
-            if file.match('exrm')
+            if paths.mix_ex.match('exrm')
               exrm_release
-            elsif file.match('distillery')
+            elsif paths.mix_ex.match('distillery')
               distillery_release
             else
               shell.status "Please install distillery or exrm in your project"
