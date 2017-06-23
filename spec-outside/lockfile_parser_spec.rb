@@ -43,6 +43,10 @@ describe "the bundler version retrieved from the lockfile" do
     expect(get_version('1.0.6-no-bundler')).to eq('1.0.6')
   end
 
+  it "gets the version from a 1.15.1 lockfile w/o dependency" do
+    expect(get_version('1.15.1-no-bundler')).to eq('1.15.1')
+  end
+
   it "raises an error if it can't parse the file" do
     expect { get_version('not-a-lockfile') }.to raise_error(RuntimeError, /Malformed or pre bundler-1.0.0 Gemfile.lock/)
   end

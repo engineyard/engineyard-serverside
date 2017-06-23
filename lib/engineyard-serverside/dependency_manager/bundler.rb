@@ -142,6 +142,10 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         class Lockfile
           attr_reader :bundler_version
 
+          METADATA     = 'METADATA'.freeze
+          BUNDLED      = 'BUNDLED WITH'.freeze
+          DEPENDENCIES = 'DEPENDENCIES'.freeze
+
           def initialize(lockfile_contents, default = EY::Serverside::DependencyManager::Bundler.default_version)
             @contents = lockfile_contents
             @default = default
@@ -179,9 +183,8 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
           end
 
           def parse
-            parse_from_metadata ||
-              parse_from_dependencies ||
-              raise("Malformed or pre bundler-1.0.0 Gemfile.lock: #{@contents[0,50]}...")
+            @bundler_version = parse_from_metadata || parse_from_bundled_with || parse_from_dependencies
+            raise("Malformed or pre bundler-1.0.0 Gemfile.lock: #{@contents[0,50]}...") unless @bundler_version
           end
 
           def slice_section(header)
@@ -194,25 +197,28 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
           end
 
           def parse_from_metadata
-            section = slice_section('METADATA')
-
-            if section.empty?
-              return nil
-            end
+            section = slice_section(METADATA)
+            return if section.empty?
 
             result = section.scan(/^\s*version:\s*(.*)$/).first
-            @bundler_version = result ? result.first : @default
+            result ? result.first : @default
+          end
+
+          def parse_from_bundled_with
+            section = slice_section(BUNDLED)
+            return if section.empty?
+
+            result = section.scan(/^#{BUNDLED}\s*(.*)$/).first
+            result ? result.first : @default
           end
 
           def dependencies_section
-            @dependencies_section ||= slice_section('DEPENDENCIES')
+            @dependencies_section ||= slice_section(DEPENDENCIES)
           end
 
           def parse_from_dependencies
             section = dependencies_section
-            if section.empty?
-              return nil
-            end
+            return if section.empty?
 
             result = scan_gem('bundler', section)
             bundler_version = result ? result.last : nil
