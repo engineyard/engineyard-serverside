@@ -408,16 +408,16 @@ defaults:
 
       def symlink_tasks
         [
-          ["Symlink shared pids directory",         "ln -nfs #{paths.shared}/pids #{paths.active_tmp}/pids"],
-          ["Symlink shared log directory",          "rm -rf #{paths.active_log} && ln -nfs #{paths.shared_log} #{paths.active_log}"],
-          ["Remove public/system if symlinked",     "if [ -L \"#{paths.public_system}\" ]; then rm -rf #{paths.public_system}; fi"],
-          ["Create public directory",               "mkdir -p #{paths.public}"],
-          ["Symlink public system directory",       "if [ ! -e \"#{paths.public_system}\" ]; then ln -ns #{paths.shared_system} #{paths.public_system}; fi"],
-          ["Create config directory",               "mkdir -p #{paths.active_release_config}"],
-          ["Symlink other shared config files",     "find #{paths.shared_config} -maxdepth 1 -type f -not -name 'database.yml' -exec ln -s {} #{paths.active_release_config} \\;"],
-          ["Symlink database.yml if needed",        "if [ -f \"#{paths.shared_config}/database.yml\" ]; then ln -nfs #{paths.shared_config}/database.yml #{paths.active_release_config}/database.yml; fi"],
-          ["Symlink newrelic.yml if needed",        "if [ -f \"#{paths.shared_config}/newrelic.yml\" ]; then ln -nfs #{paths.shared_config}/newrelic.yml #{paths.active_release_config}/newrelic.yml; fi"],
-          ["Symlink mongrel_cluster.yml if needed", "if [ -f \"#{paths.shared_config}/mongrel_cluster.yml\" ]; then ln -nfs #{paths.shared_config}/mongrel_cluster.yml #{paths.active_release_config}/mongrel_cluster.yml; fi"],
+          ["Symlink shared pids directory",          "ln -nfs #{paths.shared}/pids #{paths.active_tmp}/pids"],
+          ["Symlink shared log directory",           "rm -rf #{paths.active_log} && ln -nfs #{paths.shared_log} #{paths.active_log}"],
+          ["Remove public/system if symlinked",      "if [ -L \"#{paths.public_system}\" ]; then rm -rf #{paths.public_system}; fi"],
+          ["Create public directory",                "mkdir -p #{paths.public}"],
+          ["Symlink public system directory",        "if [ ! -e \"#{paths.public_system}\" ]; then ln -ns #{paths.shared_system} #{paths.public_system}; fi"],
+          ["Create config directory",                "mkdir -p #{paths.active_release_config}"],
+          ["Symlink other shared config files",      "find #{paths.shared_config} -maxdepth 1 -type f -not -name 'database*.yml' -exec ln -s {} #{paths.active_release_config} \\;"],
+          ["Symlink datatabse*.yml files if needed", "find #{paths.shared_config} -maxdepth 1 -type f -name 'database*.yml' -exec ln -nfs {} #{paths.active_release_config} \\;"],
+          ["Symlink newrelic.yml if needed",         "if [ -f \"#{paths.shared_config}/newrelic.yml\" ]; then ln -nfs #{paths.shared_config}/newrelic.yml #{paths.active_release_config}/newrelic.yml; fi"],
+          ["Symlink mongrel_cluster.yml if needed",  "if [ -f \"#{paths.shared_config}/mongrel_cluster.yml\" ]; then ln -nfs #{paths.shared_config}/mongrel_cluster.yml #{paths.active_release_config}/mongrel_cluster.yml; fi"],
         ]
       end
 
