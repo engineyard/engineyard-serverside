@@ -6,8 +6,15 @@ module EY
       class Bundler < Base
         DEFAULT_VERSION = "1.14.6"
 
+        # Number of Bundler workers (--jobs)
+        JOBS_NUMBER = 4
+
         def self.default_version
           DEFAULT_VERSION
+        end
+
+        def self.jobs_number
+          JOBS_NUMBER
         end
 
         def detected?
@@ -103,6 +110,11 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
             "--path",     "#{paths.bundled_gems}",
             "--binstubs", "#{paths.binstubs}",
           ]
+
+          # Install gems in parallel (Bundler.1.5+ only)
+          # @see EYPP-58
+          options += ["--jobs", self.class.jobs_number] if check_version(bundler_version, ">= 1.5")
+
           options += ["--deployment"] if lockfile
           options += config.extra_bundle_install_options
           options
@@ -137,6 +149,17 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
           if lockfile_path.exist?
             @lockfile = Lockfile.new(lockfile_path.read, self.class.default_version)
           end
+        end
+
+        ##
+        # Checks that given version is satisfies give requirement.
+        #
+        # @param [String] version
+        # @param [String] requirement
+        # @return [true, false]
+        #
+        def check_version(version, requirement)
+          Gem::Requirement.new( requirement ).satisfied_by? Gem::Version.new( version )
         end
 
         class Lockfile
