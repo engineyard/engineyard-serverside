@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe "Deploying an application that uses Bundler" do
   VERSION_PATTERN = Regexp.quote(::EY::Serverside::DependencyManager::Bundler.default_version)
+  PARALLEL_JOBS = ::EY::Serverside::DependencyManager::Bundler.jobs_number
 
   context "with a Gemfile.lock" do
     before(:all) do
@@ -18,6 +19,11 @@ describe "Deploying an application that uses Bundler" do
     it "runs 'bundle install' with --deployment" do
       expect(@bundle_install_command).not_to be_nil
       expect(@bundle_install_command).to include('--deployment')
+    end
+
+    it "runs 'bundle install' with --jobs #{PARALLEL_JOBS}" do
+      expect(@bundle_install_command).not_to be_nil
+      expect(@bundle_install_command).to include("--jobs #{PARALLEL_JOBS}")
     end
 
     it "removes bundled_gems directory if the ruby or system version changed" do
@@ -92,6 +98,11 @@ describe "Deploying an application that uses Bundler" do
       expect(@bundle_install_command).not_to match(/--deployment/)
     end
 
+    it "runs 'bundle install' with --jobs #{PARALLEL_JOBS}" do
+      expect(@bundle_install_command).not_to be_nil
+      expect(@bundle_install_command).to include("--jobs #{PARALLEL_JOBS}")
+    end
+
     it "exports GIT_SSH for the bundle install" do
       expect(@bundle_install_command).to match(/export GIT_SSH/)
     end
@@ -135,5 +146,15 @@ describe "Deploying an application that uses Bundler" do
       expect(deploy_dir.join('current', 'after_bundle.ran' )).not_to exist
     end
   end
-end
 
+  context "with outdated bundler" do
+    before :all do
+      deploy_test_application( "bundler_old" )
+      @bundle_install_command = @deployer.commands.grep( /bundle _1.3.6_ install/ ).first
+    end
+
+    it "doesn't run 'bundle install' with --jobs" do
+      expect( @bundle_install_command ).to_not include "--jobs"
+    end
+  end
+end
