@@ -418,6 +418,8 @@ defaults:
           ["Symlink database.yml if needed",        "if [ -f \"#{paths.shared_config}/database.yml\" ]; then ln -nfs #{paths.shared_config}/database.yml #{paths.active_release_config}/database.yml; fi"],
           ["Symlink newrelic.yml if needed",        "if [ -f \"#{paths.shared_config}/newrelic.yml\" ]; then ln -nfs #{paths.shared_config}/newrelic.yml #{paths.active_release_config}/newrelic.yml; fi"],
           ["Symlink mongrel_cluster.yml if needed", "if [ -f \"#{paths.shared_config}/mongrel_cluster.yml\" ]; then ln -nfs #{paths.shared_config}/mongrel_cluster.yml #{paths.active_release_config}/mongrel_cluster.yml; fi"],
+          ["Create initializers directory",         "mkdir -p #{paths.active_release_initializers}"],
+          ["Symlink cdn.rb initializer if needed",  "if [ -f \"#{paths.shared_initializers}/cdn.rb\" ]; then ln -nfs #{paths.shared_initializers}/cdn.rb #{paths.active_release_initializers}/_cdn.rb; fi"],
         ]
       end
 
