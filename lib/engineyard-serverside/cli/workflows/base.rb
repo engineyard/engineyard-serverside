@@ -36,7 +36,7 @@ module EY
 
           private
           def config
-            @config ||= EY::Serverside::Deploy::Configuration.new(options)
+            @config ||= EY::Serverside::Configuration.new(options)
           end
 
           def shell

@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe EY::Serverside::Deploy::Configuration do
+describe EY::Serverside::Configuration do
   describe "default options" do
     it "has defaults" do
-      @config = EY::Serverside::Deploy::Configuration.new({
+      @config = EY::Serverside::Configuration.new({
         'app' => 'app_name',
         'environment_name' => 'env_name',
         'account_name' => 'acc',
@@ -40,7 +40,7 @@ describe EY::Serverside::Deploy::Configuration do
     end
 
     it "raises when required options are not given" do
-      @config = EY::Serverside::Deploy::Configuration.new({})
+      @config = EY::Serverside::Configuration.new({})
       expect { @config.app_name }.to raise_error
       expect { @config.environment_name }.to raise_error
       expect { @config.account_name }.to raise_error
@@ -54,7 +54,7 @@ describe EY::Serverside::Deploy::Configuration do
     end
 
     it "uses strategy if set" do
-      @config = EY::Serverside::Deploy::Configuration.new(
+      @config = EY::Serverside::Configuration.new(
         options.merge({'strategy' => 'IntegrationSpec', 'git' => 'git@github.com:engineyard/todo.git'})
       )
       capture do # deprecation warning
@@ -64,21 +64,21 @@ describe EY::Serverside::Deploy::Configuration do
     end
 
     it "uses source_class if set" do
-      @config = EY::Serverside::Deploy::Configuration.new(
+      @config = EY::Serverside::Configuration.new(
         options.merge({'source_class' => 'IntegrationSpec', 'git' => 'git@github.com:engineyard/todo.git'})
       )
       expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::IntegrationSpec)
     end
 
     it "infers a git source" do
-      @config = EY::Serverside::Deploy::Configuration.new(
+      @config = EY::Serverside::Configuration.new(
         options.merge({ 'git' => 'git@github.com:engineyard/todo.git' })
       )
       expect(@config.source(test_shell)).to be_a_kind_of(EY::Serverside::Source::Git)
     end
 
     it "infers a archive source" do
-      @config = EY::Serverside::Deploy::Configuration.new(
+      @config = EY::Serverside::Configuration.new(
         options.merge({'archive' => 'https://github.com/engineyard/todo/archive/master.zip'})
       )
 
@@ -88,7 +88,7 @@ describe EY::Serverside::Deploy::Configuration do
 
   context "command line options" do
     before do
-      @config = EY::Serverside::Deploy::Configuration.new({
+      @config = EY::Serverside::Configuration.new({
         'repository_cache' => @tempdir,
         'app' => 'app_name',
         'stack' => 'nginx_passenger',
@@ -129,7 +129,7 @@ describe EY::Serverside::Deploy::Configuration do
   describe "ey.yml loading" do
     before(:each) do
       @tempdir = `mktemp -d -t ey_yml_spec.XXXXX`.strip
-      @config = EY::Serverside::Deploy::Configuration.new({
+      @config = EY::Serverside::Configuration.new({
         'repository_cache' => @tempdir,
         'app' => 'app_name',
         'environment_name' => 'env_name',

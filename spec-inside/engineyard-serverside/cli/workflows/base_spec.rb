@@ -13,7 +13,7 @@ module EY
           let(:workflow) {described_class.new(options)}
 
           before(:each) do
-            # Both the Shell and Deploy::Configuration classes are used in
+            # Both the Shell and Configuration classes are used in
             # the Workflow private API. However, since we're not actually
             # testing their behavior (nor that of an actual workflow) here,
             # we'll need to make sure that we can use them in a predictable
@@ -22,7 +22,7 @@ module EY
               to receive(:new).
               and_return(shell)
 
-            allow(EY::Serverside::Deploy::Configuration).
+            allow(EY::Serverside::Configuration).
               to receive(:new).
               and_return(config)
 
@@ -148,8 +148,8 @@ module EY
             end
 
             describe '#config' do
-              it 'is a Deploy Configuration for our options' do
-                expect(EY::Serverside::Deploy::Configuration).
+              it 'is a Configuration for our options' do
+                expect(EY::Serverside::Configuration).
                   to receive(:new).
                   with(options).
                   and_return(config)

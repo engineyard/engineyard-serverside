@@ -9,7 +9,7 @@ require 'engineyard-serverside/source/archive'
 
 module EY
   module Serverside
-    class Deploy::Configuration
+    class Configuration
       include Paths::LegacyHelpers # deploy hooks depend on these to be here as well. Don't remove without plenty of deprecation warnings.
 
       # Defines a fetch method for the specified key.

@@ -69,7 +69,7 @@ describe "deploy hooks" do
 
   context "deploy hook API" do
     def deploy_hook(options={})
-      config = EY::Serverside::Deploy::Configuration.new({
+      config = EY::Serverside::Configuration.new({
         'app' => 'app_name',
         'framework_env' => 'staging',
         'current_roles' => ['solo'],

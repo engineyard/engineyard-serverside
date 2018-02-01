@@ -191,7 +191,7 @@ chmod 0700 #{path}
         count = config.keep_releases.to_i
         if count < 1
           shell.error "Refusing to delete all releases! keep_releases must be >= 1 (got #{count})"
-          count = EY::Serverside::Deploy::Configuration::DEFAULT_KEEP_RELEASES
+          count = EY::Serverside::Configuration::DEFAULT_KEEP_RELEASES
           shell.warning "Running instead with default value for keep_releases: #{count}"
         end
         clean_release_directory(paths.releases, count)

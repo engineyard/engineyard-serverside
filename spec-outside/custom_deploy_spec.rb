@@ -25,7 +25,7 @@ describe "the EY::Serverside::Deploy API" do
       def gc_repository_cache()      @call_order << 'gc_repository_cache'     ; super end
     end
 
-    config = EY::Serverside::Deploy::Configuration.new(default_configuration)
+    config = EY::Serverside::Configuration.new(default_configuration)
 
     td = TestDeploy.realnew(test_servers, config, test_shell)
     mock_bundler
@@ -75,7 +75,7 @@ describe "the EY::Serverside::Deploy API" do
 
     describe "eydeploy_rb disabled" do
       before do
-        @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir.to_s, 'eydeploy_rb' => 'false')
+        @config = EY::Serverside::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir.to_s, 'eydeploy_rb' => 'false')
         @deploy = FullTestDeploy.realnew(test_servers, @config, test_shell)
       end
 
@@ -88,7 +88,7 @@ describe "the EY::Serverside::Deploy API" do
 
     describe "eydeploy_rb detect or enabled" do
       before do
-        @config = EY::Serverside::Deploy::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir.to_s, 'eydeploy_rb' => 'true')
+        @config = EY::Serverside::Configuration.new('app' => 'app_name', 'repository_cache' => @tempdir.to_s, 'eydeploy_rb' => 'true')
         @deploy = FullTestDeploy.realnew(test_servers, @config, test_shell)
       end
 
