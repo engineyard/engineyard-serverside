@@ -21,12 +21,6 @@ module EY
       end
 
 
-      describe '#fetch' do
-        context 'for required options'
-
-        context 'for '
-      end
-
       describe '#app' do
         let(:app) {configuration.app}
 
@@ -239,7 +233,144 @@ module EY
         end
       end
 
-      describe '#load_ey_yml_data'
+      describe '#load_ey_yml_data' do
+        let(:data) {{}}
+        let(:shell) {Object.new}
+        let(:environment_name) {'loading'}
+        let(:options) {{app: 'some app', environment_name: environment_name}}
+        let(:load_ey_yml_data) {configuration.load_ey_yml_data(data, shell)}
+
+        before(:each) do
+          # Stub out the shell methods involved in this thing
+          [:info, :substatus, :debug].each do |message|
+            allow(shell).to receive(message)
+          end
+        end
+
+        context 'without defaults or environment-specific data' do
+          it 'is false' do
+            expect(load_ey_yml_data).to eql(false)
+          end
+
+          it 'does not change the config internal data' do
+            original_config_sources = configuration.
+              instance_eval {@config_sources.clone}
+
+            load_ey_yml_data
+
+            new_config_sources = configuration.
+              instance_eval {@config_sources.clone}
+
+            expect(new_config_sources).to eql(original_config_sources)
+          end
+
+          it 'alerts on the shell regarding the lack of an ey.yml' do
+            expect(shell).
+              to receive(:info).
+              with('No matching ey.yml configuration found for environment "loading".')
+
+            load_ey_yml_data
+          end
+
+          it 'sends debug information to the shell' do
+            expect(shell).
+              to receive(:debug).
+              with("ey.yml:\n#{data.pretty_inspect}")
+
+            load_ey_yml_data
+          end
+        end
+
+        context 'when the data contains environments' do
+          let(:environments) {{}}
+          let(:data) {{'environments' => environments}}
+
+          context 'and those environments include the configured environment' do
+            let(:environments) {{environment_name => {'foo' => 'bar'}}}
+
+            it 'adds a config source' do
+
+              original_config_sources = configuration.
+                instance_eval {@config_sources.clone}
+
+              load_ey_yml_data
+
+              new_config_sources = configuration.
+                instance_eval {@config_sources.clone}
+
+              expect(new_config_sources.length).
+                to eql(original_config_sources.length + 1)
+            end
+          end
+
+          context 'but those environments lack the configured environemnt' do
+            it 'does not add a config source' do
+              original_config_sources = configuration.
+                instance_eval {@config_sources.clone}
+
+              load_ey_yml_data
+
+              new_config_sources = configuration.
+                instance_eval {@config_sources.clone}
+
+              expect(new_config_sources).to eql(original_config_sources)
+            end
+          end
+        end
+
+        context 'when the data contains defaults' do
+          let(:defaults) {{}}
+          let(:data) {{'defaults' => defaults}}
+
+          it 'adds a config source' do
+
+            original_config_sources = configuration.
+              instance_eval {@config_sources.clone}
+
+            load_ey_yml_data
+
+            new_config_sources = configuration.
+              instance_eval {@config_sources.clone}
+
+            expect(new_config_sources.length).
+              to eql(original_config_sources.length + 1)
+          end
+        end
+
+        context 'when both defaults and environment-specific data is present' do
+          let(:defaults) {{'scope' => 'default'}}
+          let(:environments) {{environment_name => {'scope' => 'environment'}}}
+          let(:data) {{'defaults' => defaults, 'environments' => environments}}
+
+          it 'adds a config source for each' do
+            original_config_sources = configuration.
+              instance_eval {@config_sources.clone}
+
+            load_ey_yml_data
+
+            new_config_sources = configuration.
+              instance_eval {@config_sources.clone}
+
+            expect(new_config_sources.length).
+              to eql(original_config_sources.length + 2)
+          end
+
+          it 'gives higher priority to environment-specific data' do
+            load_ey_yml_data
+
+            config_sources = configuration.instance_eval {@config_sources.clone}
+
+            defaults_priority = config_sources.
+              index {|source| source['scope'] == 'default'}
+
+            environments_priority = config_sources.
+              index {|source| source['scope'] == 'environment'}
+
+            expect(defaults_priority < environments_priority).to eql(true)
+          end
+        end
+
+      end
 
       describe '#has_key?'
 
@@ -267,9 +398,70 @@ module EY
         
       end
 
-      describe '#source'
+      describe '#source' do
+        let(:shell) {Object.new}
+        let(:source) {configuration.source(shell)}
 
-      describe '#load_source'
+        context 'when both archive and git options are set' do
+          let(:options) {{git: 'one thing', archive: 'another thing'}}
+          before(:each) do
+            allow(shell).to receive(:fatal)
+          end
+
+          it 'raises an error' do
+            expect {source}.
+              to raise_error(
+                "Both --git and --archive specified. Precedence is not defined. Aborting"
+            )
+          end
+        end
+
+        context 'when archive is set' do
+          let(:options) {{app: 'some app', archive: 'some archive'}}
+
+          it 'is an Archive source' do
+            archive = Object.new
+
+            expect(EY::Serverside::Source::Archive).
+              to receive(:new).
+              with(
+                shell,
+                verbose: configuration.verbose,
+                repository_cache: configuration.paths.repository_cache,
+                app: configuration.app,
+                uri: 'some archive',
+                ref: configuration.branch
+              ).
+              and_return(archive)
+
+            expect(source).to eql(archive)
+          end
+        end
+
+        context 'when git is set' do
+          let(:options) {{app: 'some app', git: 'some repo'}}
+
+          it 'is a Git source' do
+            git = Object.new
+
+            expect(EY::Serverside::Source::Git).
+              to receive(:new).
+              with(
+                shell,
+                verbose: configuration.verbose,
+                repository_cache: configuration.paths.repository_cache,
+                app: configuration.app,
+                uri: 'some repo',
+                ref: configuration.branch
+              ).
+              and_return(git)
+
+            expect(source).to eql(git)
+          end
+
+        end
+
+      end
 
       describe '#paths'
 
