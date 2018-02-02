@@ -50,19 +50,6 @@ module EY
         end
       end
 
-      def fetch_deprecated(attr, replacement, default)
-        called = false
-        result = fetch(attr) { called = true; default }
-        if !called # deprecated attr was found
-          @deprecation_warning ||= {}
-          @deprecation_warning[attr] ||= begin
-                                           EY::Serverside.deprecation_warning "The configuration key '#{attr}' is deprecated in favor of '#{replacement}'."
-                                           true
-                                         end
-        end
-        result
-      end
-
       def_required_option :app
       def_required_option :environment_name
       def_required_option :account_name
@@ -135,27 +122,6 @@ module EY
         append_config_source config # lower priority
       end
 
-      def string_keys(hsh)
-        hsh.inject({}) { |h,(k,v)| h[k.to_s] = v; h }
-      end
-
-      def append_config_source(config_source)
-        @config_sources ||= []
-        @config_sources.unshift(config_source.dup)
-        reload_configuration!
-      end
-
-      def configuration
-        @configuration ||= @config_sources.inject({}) {|low,high| low.merge(high)}
-      end
-      # FIXME: single letter variable is of very questionable value
-      alias :c :configuration
-
-      # reset cached configuration hash
-      def reload_configuration!
-        @configuration = nil
-      end
-
       def load_ey_yml_data(data, shell)
         loaded = false
 
@@ -185,12 +151,6 @@ module EY
           shell.debug "ey.yml:\n#{data.pretty_inspect}"
           false
         end
-      end
-
-      # Fetch a key from the config.
-      # You must supply either a default second argument, or a default block
-      def fetch(key, *args, &block)
-        configuration.fetch(key.to_s, *args, &block)
       end
 
       def [](key)
@@ -238,17 +198,6 @@ module EY
         else # git can be nil for integrate or rollback
           load_source(EY::Serverside::Source::Git, shell, git)
         end
-      end
-
-      def load_source(klass, shell, uri)
-        klass.new(
-          shell,
-          :verbose          => verbose,
-          :repository_cache => paths.repository_cache,
-          :app              => app,
-          :uri              => uri,
-          :ref              => branch
-        )
       end
 
       # Use [] to access attributes instead of calling methods so
@@ -363,6 +312,62 @@ module EY
       rescue
         nil
       end
+
+      private
+
+      def load_source(klass, shell, uri)
+        klass.new(
+          shell,
+          :verbose          => verbose,
+          :repository_cache => paths.repository_cache,
+          :app              => app,
+          :uri              => uri,
+          :ref              => branch
+        )
+      end
+
+      # Fetch a key from the config.
+      # You must supply either a default second argument, or a default block
+      def fetch(key, *args, &block)
+        configuration.fetch(key.to_s, *args, &block)
+      end
+
+      def fetch_deprecated(attr, replacement, default)
+        called = false
+        result = fetch(attr) { called = true; default }
+        if !called # deprecated attr was found
+          @deprecation_warning ||= {}
+          @deprecation_warning[attr] ||= begin
+                                           EY::Serverside.deprecation_warning "The configuration key '#{attr}' is deprecated in favor of '#{replacement}'."
+                                           true
+                                         end
+        end
+        result
+      end
+
+      # reset cached configuration hash
+      def reload_configuration!
+        @configuration = nil
+      end
+
+      def string_keys(hsh)
+        hsh.inject({}) { |h,(k,v)| h[k.to_s] = v; h }
+      end
+
+      def append_config_source(config_source)
+        @config_sources ||= []
+        @config_sources.unshift(config_source.dup)
+        reload_configuration!
+      end
+
+      def configuration
+        @configuration ||= @config_sources.inject({}) {|low,high| low.merge(high)}
+      end
+      # FIXME: single letter variable is of very questionable value
+      alias :c :configuration
+
+
+
     end
   end
 end
