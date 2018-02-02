@@ -33,7 +33,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{app: 'zazoo'}}
+          let(:options) {{:app => 'zazoo'}}
 
           it 'is the configured value' do
             expect(app).to eql('zazoo')
@@ -53,7 +53,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{environment_name: 'zazoo'}}
+          let(:options) {{:environment_name => 'zazoo'}}
 
           it 'is the configured value' do
             expect(environment_name).to eql('zazoo')
@@ -73,7 +73,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{account_name: 'zazoo'}}
+          let(:options) {{:account_name => 'zazoo'}}
 
           it 'is the configured value' do
             expect(account_name).to eql('zazoo')
@@ -93,7 +93,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{framework_env: 'zazoo'}}
+          let(:options) {{:framework_env => 'zazoo'}}
 
           it 'is the configured value' do
             expect(framework_env).to eql('zazoo')
@@ -113,7 +113,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{instances: 'zazoo'}}
+          let(:options) {{:instances => 'zazoo'}}
 
           it 'is the configured value' do
             expect(instances).to eql('zazoo')
@@ -133,7 +133,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{instance_roles: 'zazoo'}}
+          let(:options) {{:instance_roles => 'zazoo'}}
 
           it 'is the configured value' do
             expect(instance_roles).to eql('zazoo')
@@ -153,7 +153,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{instance_names: 'zazoo'}}
+          let(:options) {{:instance_names => 'zazoo'}}
 
           it 'is the configured value' do
             expect(instance_names).to eql('zazoo')
@@ -173,7 +173,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{git: 'zazoo'}}
+          let(:options) {{:git => 'zazoo'}}
 
           it 'is the configured value' do
             expect(git).to eql('zazoo')
@@ -181,7 +181,7 @@ module EY
         end
 
         context 'when configured via deprecated name' do
-          let(:options){{repo: 'zazoo-repo'}}
+          let(:options){{:repo => 'zazoo-repo'}}
 
           before(:each) do
             allow(EY::Serverside).to receive(:deprecation_warning)
@@ -205,7 +205,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{archive: 'zazoo'}}
+          let(:options) {{:archive => 'zazoo'}}
 
           it 'is the configured value' do
             expect(archive).to eql('zazoo')
@@ -225,7 +225,7 @@ module EY
         end
 
         context 'when configured' do
-          let(:options) {{precompile_assets_task: 'zazoo'}}
+          let(:options) {{:precompile_assets_task => 'zazoo'}}
 
           it 'is the configured value' do
             expect(pat).to eql('zazoo')
@@ -237,7 +237,13 @@ module EY
         let(:data) {{}}
         let(:shell) {Object.new}
         let(:environment_name) {'loading'}
-        let(:options) {{app: 'some app', environment_name: environment_name}}
+        let(:options) {
+          {
+            :app => 'some app',
+            :environment_name => environment_name
+          }
+        }
+
         let(:load_ey_yml_data) {configuration.load_ey_yml_data(data, shell)}
 
         before(:each) do
@@ -403,7 +409,7 @@ module EY
         let(:source) {configuration.source(shell)}
 
         context 'when both archive and git options are set' do
-          let(:options) {{git: 'one thing', archive: 'another thing'}}
+          let(:options) {{:git => 'one thing', :archive => 'another thing'}}
           before(:each) do
             allow(shell).to receive(:fatal)
           end
@@ -417,7 +423,7 @@ module EY
         end
 
         context 'when archive is set' do
-          let(:options) {{app: 'some app', archive: 'some archive'}}
+          let(:options) {{:app => 'some app', :archive => 'some archive'}}
 
           it 'is an Archive source' do
             archive = Object.new
@@ -426,11 +432,11 @@ module EY
               to receive(:new).
               with(
                 shell,
-                verbose: configuration.verbose,
-                repository_cache: configuration.paths.repository_cache,
-                app: configuration.app,
-                uri: 'some archive',
-                ref: configuration.branch
+                :verbose => configuration.verbose,
+                :repository_cache => configuration.paths.repository_cache,
+                :app => configuration.app,
+                :uri => 'some archive',
+                :ref => configuration.branch
               ).
               and_return(archive)
 
@@ -439,7 +445,7 @@ module EY
         end
 
         context 'when git is set' do
-          let(:options) {{app: 'some app', git: 'some repo'}}
+          let(:options) {{:app => 'some app', :git => 'some repo'}}
 
           it 'is a Git source' do
             git = Object.new
@@ -448,11 +454,11 @@ module EY
               to receive(:new).
               with(
                 shell,
-                verbose: configuration.verbose,
-                repository_cache: configuration.paths.repository_cache,
-                app: configuration.app,
-                uri: 'some repo',
-                ref: configuration.branch
+                :verbose => configuration.verbose,
+                :repository_cache => configuration.paths.repository_cache,
+                :app => configuration.app,
+                :uri => 'some repo',
+                :ref => configuration.branch
               ).
               and_return(git)
 
@@ -505,7 +511,7 @@ module EY
         end
 
         context 'when a migration command is configured' do
-          let(:options) {{migrate: 'south'}}
+          let(:options) {{:migrate => 'south'}}
 
           it 'is true' do
             expect(migrate).to eql(true)
@@ -548,7 +554,7 @@ module EY
       end
 
       describe '#framework_envs' do
-        let(:options) {{framework_env: 'something'}}
+        let(:options) {{:framework_env => 'something'}}
         let(:framework_envs) {configuration.framework_envs}
 
         it 'is a string' do
@@ -563,7 +569,7 @@ module EY
       end
 
       describe '#set_framework_envs' do
-        let(:options) {{framework_env: 'something'}}
+        let(:options) {{:framework_env => 'something'}}
         let(:set_framework_envs) {configuration.set_framework_envs}
 
         it 'propagates the framework env settings to the local environment' do
@@ -576,7 +582,7 @@ module EY
       end
 
       describe '#extra_bundle_install_options' do
-        let(:options) {{framework_env: 'anything'}}
+        let(:options) {{:framework_env => 'anything'}}
         let(:ebio) {configuration.extra_bundle_install_options}
 
         it 'is an array' do
@@ -586,8 +592,8 @@ module EY
         context 'with configured bundle options' do
           let(:options) {
             {
-              framework_env: 'anything',
-              bundle_options: 'whatever'
+              :framework_env => 'anything',
+              :bundle_options => 'whatever'
             }
           }
 
@@ -600,8 +606,8 @@ module EY
           context 'with a nil bundle without configuration' do
             let(:options) {
               {
-                framework_env: 'anything',
-                bundle_without: nil
+                :framework_env => 'anything',
+                :bundle_without => nil
               }
             }
 
@@ -613,8 +619,8 @@ module EY
           context 'for specific bundle without configurations' do
             let(:options) {
               {
-                framework_env: 'anything',
-                bundle_without: 'fear'
+                :framework_env => 'anything',
+                :bundle_without => 'fear'
               }
             }
 
@@ -623,7 +629,7 @@ module EY
             end
           end
           context 'for test envs' do
-            let(:options) {{framework_env: 'test'}}
+            let(:options) {{:framework_env => 'test'}}
 
             it 'omits the test group' do
               expect(ebio.join(' ')).not_to match(/--without.*test/)
@@ -635,7 +641,7 @@ module EY
           end
 
           context 'for dev envs' do
-            let(:options) {{framework_env: 'development'}}
+            let(:options) {{:framework_env => 'development'}}
 
             it 'omits the development group' do
               expect(ebio.join(' ')).not_to match(/--without.*development/)
@@ -648,7 +654,7 @@ module EY
 
 
           context 'for all other envs' do
-            let(:options) {{framework_env: 'whatever'}}
+            let(:options) {{:framework_env => 'whatever'}}
 
             it 'includes both test and development' do
               expect(ebio.join(' ')).to include('--without test development')
@@ -676,7 +682,7 @@ module EY
 
         context 'when the stack is configured' do
           let(:stack) {nil}
-          let(:options) {{stack: stack}}
+          let(:options) {{:stack => stack}}
 
           context 'as nginx with mongrel' do
             let(:stack) {'nginx_mongrel'}
