@@ -49,6 +49,37 @@ module EY
         it 'contains a Server for each hash passed in' do
           expect(from_hashes.size).to eql(hashes.length)
         end
+
+        context 'when two hashes have the same hostname' do
+          let(:hashes) {
+            [
+              {
+                :hostname => "server1",
+                :roles => [:app],
+                :name => "jim",
+                :user => "deploy"
+              },
+              {
+                :hostname => "server2",
+                :roles => [:app],
+                :name => "bob",
+                :user => "deploy"
+              },
+              {
+                :hostname => "server1",
+                :roles => [:app],
+                :name => "jimbob",
+                :user => "deploy"
+              }
+            ]
+          }
+
+          it 'raises an error' do
+            expect {from_hashes}.
+              to raise_error(described_class::DuplicateHostname)
+          end
+
+        end
       end
 
       describe '#localhost' do
