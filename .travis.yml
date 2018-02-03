@@ -8,6 +8,8 @@ rvm:
 
 sudo: false
 
+dist: precise
+
 notifications:
   recipients:
     - memde@engineyard.com
