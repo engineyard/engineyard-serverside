@@ -23,7 +23,6 @@ module EY
           results
         end
 
-        #protected
         private
 
         def process
@@ -83,7 +82,6 @@ module EY
           end
         end
 
-        private
         def children_by_pid
           @children_by_pid ||= {}
         end
