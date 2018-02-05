@@ -2,31 +2,31 @@ require 'spec_helper'
 
 describe EY::Serverside::Server do
   it "starts off empty" do
-    expect(EY::Serverside::Servers.new([], test_shell)).to be_empty
+    expect(EY::Serverside::ServerCollection.new([], test_shell)).to be_empty
   end
 
   it "loads from hashes" do
-    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}], test_shell)
+    servers = EY::Serverside::ServerCollection.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}], test_shell)
     expect(servers.size).to eq(1)
   end
 
   it "rejects duplicates" do
     expect do
-      EY::Serverside::Servers.from_hashes([
+      EY::Serverside::ServerCollection.from_hashes([
         {:hostname => 'otherhost', :roles => [:fire]},
         {:hostname => 'otherhost', :roles => [:water]},
       ], test_shell)
-    end.to raise_error(EY::Serverside::Servers::DuplicateHostname)
+    end.to raise_error(EY::Serverside::ServerCollection::DuplicateHostname)
   end
 
   it "makes sure your roles are symbols at creation time" do
-    servers = EY::Serverside::Servers.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}], test_shell)
+    servers = EY::Serverside::ServerCollection.from_hashes([{:hostname => 'otherhost', :roles => %w[fire water]}], test_shell)
     servers.each { |server| expect(server.roles).to eq(Set[:fire, :water]) }
   end
 
   context "filtering" do
     before(:each) do
-      @servers = EY::Serverside::Servers.from_hashes([
+      @servers = EY::Serverside::ServerCollection.from_hashes([
         {:hostname => 'localhost', :roles => [:ice, :cold]},
         {:hostname => 'firewater', :roles => [:fire, :water]},
         {:hostname => 'icewater',  :roles => [:ice, :water]},

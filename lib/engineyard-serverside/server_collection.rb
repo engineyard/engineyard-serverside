@@ -5,7 +5,7 @@ require 'engineyard-serverside/spawner'
 
 module EY
   module Serverside
-    class Servers
+    class ServerCollection
 
       class DuplicateHostname < StandardError
         def initialize(hostname)
@@ -17,20 +17,42 @@ module EY
       extend Forwardable
       include Enumerable
       def_delegators :@servers, :each, :size, :empty?
-      def select(*a, &b) self.class.new @servers.select(*a,&b), @shell end
-      def reject(*a, &b) self.class.new @servers.reject(*a,&b), @shell end
-      def to_a() @servers end
-      def ==(other) other.respond_to?(:to_a) && other.to_a == to_a end
 
+      def select(*a, &b)
+        self.class.new @servers.select(*a,&b), @shell
+      end
+
+      def reject(*a, &b)
+        self.class.new @servers.reject(*a,&b), @shell
+      end
+
+      def to_a()
+        @servers
+      end
+
+      def ==(other)
+        other.respond_to?(:to_a) && other.to_a == to_a
+      end
+
+      class << self
+        private
+        def detect_duplicate_hostnames(server_hashes)
+          hostnames = server_hashes.map {|hash| hash[:hostname]}
+
+          # Get the first hostname that appears more than once in the list
+          duplicate = hostnames.detect {|hostname| hostnames.count(hostname) > 1}
+
+          raise DuplicateHostname.new(duplicate) if duplicate
+        end
+      end
 
       def self.from_hashes(server_hashes, shell)
-        servers = server_hashes.inject({}) do |memo, server_hash|
-          server = Server.from_hash(server_hash)
-          raise DuplicateHostname.new(server.hostname) if memo.key?(server.hostname)
-          memo[server.hostname] = server
-          memo
-        end
-        new(servers.values, shell)
+        detect_duplicate_hostnames(server_hashes)
+
+        new(
+          server_hashes.map {|server_hash| Server.from_hash(server_hash)},
+          shell
+        )
       end
 
       def initialize(servers, shell)
@@ -47,14 +69,10 @@ module EY
         reject { |server| server.local? }
       end
 
-      def in_groups(number)
-        div, mod = size.divmod number
-        start = 0
-        number.times do |index|
-          length = div + (mod > 0 && mod > index ? 1 : 0)
-          yield self.class.new(@servers.slice(start, length), @shell)
-          start += length
-        end
+      def in_groups(group_size)
+        each_slice(group_size).to_a.each {|group|
+          yield self.class.new(group, @shell)
+        }
       end
 
       # We look up the same set of servers over and over.
@@ -104,7 +122,7 @@ module EY
       alias sudo sudo_on_each!
 
       def run_for_each(&block)
-        spawner = Spawner.new
+        spawner = Spawner.pool
         each { |server| spawner.add(block.call(server), @shell, server) }
         spawner.run
       end

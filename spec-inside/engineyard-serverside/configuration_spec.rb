@@ -378,8 +378,6 @@ module EY
 
       end
 
-      describe '#has_key?'
-
       describe '#to_json' do
         let(:to_json) {configuration.to_json}
 

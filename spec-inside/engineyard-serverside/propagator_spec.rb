@@ -9,13 +9,13 @@ module EY
       let(:shell) {Object.new}
       let(:server1) {EY::Serverside::Server.new('server1', nil, nil, nil)}
       let(:server2) {EY::Serverside::Server.new('server2', nil, nil, nil)}
-      let(:servers) {EY::Serverside::Servers.new([server1, server2], shell)}
+      let(:servers) {EY::Serverside::ServerCollection.new([server1, server2], shell)}
 
       let(:propagator) {described_class.new(servers, shell)}
 
       before(:each) do
         allow(shell).to receive(:status)
-        allow(EY::Serverside::Spawner).to receive(:new).and_return(spawner)
+        allow(EY::Serverside::Spawner).to receive(:pool).and_return(spawner)
         allow(spawner).to receive(:add)
         allow(spawner).to receive(:run).and_return([])
       end

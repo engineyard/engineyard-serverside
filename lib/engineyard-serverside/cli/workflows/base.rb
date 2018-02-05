@@ -50,7 +50,7 @@ module EY
           end
 
           def servers
-            @servers ||= EY::Serverside::Servers.from_hashes(
+            @servers ||= EY::Serverside::ServerCollection.from_hashes(
               EY::Serverside::CLI::ServerHashExtractor.hashes(options, config),
               shell
             )

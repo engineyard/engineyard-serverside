@@ -222,7 +222,7 @@ exec "$@"
 
   # set up EY::Serverside::Server like we're on a solo
   def test_servers
-    @test_servers ||= EY::Serverside::Servers.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => whoami}], test_shell)
+    @test_servers ||= EY::Serverside::ServerCollection.from_hashes([{:hostname => 'localhost', :roles => %w[solo], :user => whoami}], test_shell)
   end
 
   def default_configuration

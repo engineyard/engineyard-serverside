@@ -195,7 +195,7 @@ module EY
                   with(options, config).
                   and_return(server_hashes)
 
-                expect(EY::Serverside::Servers).
+                expect(EY::Serverside::ServerCollection).
                   to receive(:from_hashes).
                   with(server_hashes, shell).
                   and_return(collection)

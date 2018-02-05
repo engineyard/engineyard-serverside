@@ -5,7 +5,7 @@ require 'engineyard-serverside/deploy'
 require 'engineyard-serverside/propagator'
 require 'engineyard-serverside/shell'
 require 'engineyard-serverside/cli/server_hash_extractor'
-require 'engineyard-serverside/servers'
+require 'engineyard-serverside/server_collection'
 require 'engineyard-serverside/cli/helpers'
 require 'engineyard-serverside/cli/workflows'
 
