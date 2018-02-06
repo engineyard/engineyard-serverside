@@ -7,20 +7,31 @@ module EY
 
         # IntegratingServers is a Workflow that attempts to integrate new
         # servers into an existing environment
-        class IntegratingServers
+        class IntegratingServers < Base
           private
           def procedure
-            # so that we deploy to the same place there that we have here
-            integrate_options[:release_path] = current_app_dir.realpath.to_s
-
-            # we have to deploy the same SHA there as here
-            integrate_options[:branch] = current_app_dir.join('REVISION').read.strip
-
-            # always rebundle gems on integrate to make sure the instance comes up correctly.
-            integrate_options[:clean] = true
+            set_up_extra_options
 
             propagate_serverside
 
+            chown_sync_clean
+            
+            # deploy local-ref to other instances into /data/$app/local-current
+            deployer.cached_deploy
+          end
+
+          def set_up_extra_options
+            # We want to target the current release
+            options[:release_path] = current_app_dir.realpath.to_s
+
+            # We also want to target the currently released revision
+            options[:branch] = current_app_dir.join('REVISION').read.strip
+
+            # Always rebundle gems on integrate to make sure the instance comes up correctly
+            options[:clean] = true
+          end
+
+          def chown_sync_clean
             # We have to rsync the entire app dir, so we need all the permissions to be correct!
             owner_user = config.user
             owner_group = config.group
@@ -36,16 +47,10 @@ module EY
               "(#{chown}) && (#{sync}) && (#{clean})"
             end
 
-            # deploy local-ref to other instances into /data/$app/local-current
-            EY::Serverside::Deploy.new(servers, config, shell).cached_deploy
           end
 
           def task_name
             "integrate-#{options[:instances].join('-')}".gsub(/[^-.\w]/,'')
-          end
-
-          def integrate_options
-            @integrate_options ||= options.dup
           end
 
           def app_dir
