@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'ostruct'
 
 require 'engineyard-serverside/cli/workflows/integrating_servers'
 
