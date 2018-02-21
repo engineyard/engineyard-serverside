@@ -58,7 +58,8 @@ module EY
           # This is a hack right now, but I haven't iterated over it enough for a good solution yet.
           if config.experimental_sync_assets?
             shell.status "Compiling assets once on localhost (experimental_sync_assets: true)"
-            shell.logged_system("sh -l -c '#{cd} && #{task}'")
+            compilation_result = shell.logged_system("sh -l -c '#{cd} && #{task}'")
+            raise "Assets compilation error" unless compilation_result.success?
 
             shell.status "Syncing assets to other remote servers (experimental_sync_assets: true)"
             runner.servers.remote.run_for_each do |server|
