@@ -1,0 +1,4 @@
+environments:
+  env:
+    precompile_assets: true
+    experimental_sync_assets: true
