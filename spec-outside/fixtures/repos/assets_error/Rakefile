@@ -1,0 +1,4 @@
+desc "Compilation will fail with non-zero exit status"
+task "assets:precompile" do
+  sh "exit 1"
+end

@@ -29,6 +29,14 @@ describe "Deploying a Rails 3.1 application" do
       expect(read_output).not_to include("Reusing existing assets")
     end
 
+    it "raises error in a experimental_sync_assets mode and stops deployment" do
+      expect do
+        deploy_test_application('assets_error')
+      end.to raise_error(RuntimeError)
+      expect(deploy_dir.join('current', 'precompiled')).not_to exist
+      expect(deploy_dir.join('current', 'public', 'assets')).not_to exist
+    end
+
     it "precompile assets again when redeploying a ref with changes" do
       deploy_test_application('assets_enabled_in_ey_yml')
       expect(deploy_dir.join('current', 'precompiled')).to exist

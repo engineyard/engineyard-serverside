@@ -1,8 +1,8 @@
 # ChangeLog
 
-## NEXT
+## v2.6.15
 
-  *
+  * Raise asset compilation error in case of `experimental_sync_assets` is turned on.
 
 ## v2.6.5 (2017-01-26)
 
