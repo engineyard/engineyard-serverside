@@ -1,5 +1,9 @@
 # ChangeLog
 
+## v2.6.16
+
+  * Supports new ey.yml option `ignore_ey_config_warning`. When set to true, will not warn when ey_config is missing.
+
 ## v2.6.15
 
   * Raise asset compilation error in case of `experimental_sync_assets` is turned on.

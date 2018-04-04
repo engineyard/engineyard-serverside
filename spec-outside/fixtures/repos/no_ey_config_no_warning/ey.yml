@@ -1,0 +1,5 @@
+defaults:
+  ignore_ey_config_warning: true
+environments:
+  env:
+    ignore_database_adapter_warning: true

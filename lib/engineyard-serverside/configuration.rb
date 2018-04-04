@@ -101,6 +101,7 @@ module EY
       def_option(:group)                  { user }
       def_option :services_check_command, "which /usr/local/ey_resin/ruby/bin/ey-services-setup >/dev/null 2>&1"
       def_option(:services_setup_command) { "/usr/local/ey_resin/ruby/bin/ey-services-setup #{app}" }
+      def_option :ignore_ey_config_warning, false
 
       DEFAULT_KEEP_RELEASES = 3
 

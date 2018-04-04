@@ -30,6 +30,7 @@ describe EY::Serverside::Deploy::Configuration do
       expect(@config.verbose).to eq(false)
       expect(@config.copy_exclude).to eq([])
       expect(@config.ignore_database_adapter_warning).to eq(false)
+      expect(@config.ignore_ey_config_warning).to eq(false)
       expect(@config.ignore_gemfile_lock_warning).to eq(false)
       expect(@config.bundle_without).to eq(%w[test development])
       expect(@config.extra_bundle_install_options).to eq(%w[--without test development])
