@@ -6,6 +6,18 @@ describe "Deploying an application with services" do
   let(:services_yml) { {"servicio" => {"foo" => "bar"}}.to_yaml }
 
   describe "without ey_config" do
+    describe "with services and disabled ey_config warnings" do
+      before do
+        deploy_test_application('no_ey_config_no_warning', 'config' => {
+          'services_setup_command' => "echo '#{services_yml}' > #{shared_services_file}"
+        })
+      end
+
+      it "no warns about missing ey_config" do
+        expect(read_stderr).not_to include("WARNING: Gemfile.lock does not contain ey_config")
+      end
+    end
+
     describe "with services" do
       before do
         deploy_test_application('no_ey_config', 'config' => {

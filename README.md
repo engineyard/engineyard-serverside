@@ -51,6 +51,7 @@ A typical application will not need most of these options.
       asset_strategy: shifting                  # choose an alternet asset management strategy. See rails_assets/strategy.rb for more info.
       asset_roles: :all                         # specify on which roles to compile assets (default: [:app, :app_master, :solo])
       ignore_database_adapter_warning: true     # hide database adapter warning if you don't use MySQL or PostgreSQL (default: false)
+      ignore_ey_config_warning: true            # hide ey_config warning if you don't use it (default: false)
       ignore_gemfile_lock_warning: true         # hide warning when Gemfile is present but Gemfile.lock is missing. (default: false)
       keep_releases: 3                          # keep more or less releases (default: 3; Recommended: >= 2; MUST BE >= 1, with 1 being experimental)
       keep_failed_releases: 3                   # keep more or less failed releases (default: 3)

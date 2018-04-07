@@ -66,7 +66,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
         end
 
         def show_ey_config_instructions
-          if lockfile && !lockfile.has_ey_config?
+          if lockfile && !lockfile.has_ey_config? && !config.ignore_ey_config_warning
             shell.warning "Gemfile.lock does not contain ey_config. Add gem 'ey_config' to your Gemfile to access service configurations through EY::Config."
           end
         end
