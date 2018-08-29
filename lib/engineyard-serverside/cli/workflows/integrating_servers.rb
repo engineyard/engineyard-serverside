@@ -7,18 +7,26 @@ module EY
 
         # IntegratingServers is a Workflow that attempts to integrate new
         # servers into an existing environment
-        class IntegratingServers
-          private
-          def procedure
+        class IntegratingServers < Base
+          def initialize(options = {})
+            super
+
+            # We need to set some extra options, but options is frozen by
+            # the time we get here, so dupe it!
+            @options = options.dup
+
             # so that we deploy to the same place there that we have here
-            integrate_options[:release_path] = current_app_dir.realpath.to_s
+            @options[:release_path] = current_app_dir.realpath.to_s
 
             # we have to deploy the same SHA there as here
-            integrate_options[:branch] = current_app_dir.join('REVISION').read.strip
+            @options[:branch] = current_app_dir.join('REVISION').read.strip
 
             # always rebundle gems on integrate to make sure the instance comes up correctly.
-            integrate_options[:clean] = true
+            @options[:clean] = true
+          end
 
+          private
+          def procedure
             propagate_serverside
 
             # We have to rsync the entire app dir, so we need all the permissions to be correct!
