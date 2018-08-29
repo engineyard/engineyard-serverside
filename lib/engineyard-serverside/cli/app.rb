@@ -119,7 +119,7 @@ module EY
         verbose_option
         desc "integrate", "Integrate other instances into this cluster"
         def integrate
-          Workflows.perform(:integrate, :options => options)
+          Workflows.perform(:integrate, options)
         end
 
         account_app_env_options
