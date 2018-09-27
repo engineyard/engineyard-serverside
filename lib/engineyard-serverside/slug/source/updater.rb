@@ -11,6 +11,7 @@ module EY
           include Runner
 
           step :create_source_cache
+          step :ensure_ssh_wrapper
           step :determine_if_clone_needed
           step :clone_if_necessary
           step :prune_source_cache
@@ -22,16 +23,17 @@ module EY
           step :update_submodules
           step :clean_source_cache
 
-          attr_reader :source_cache, :uri, :git, :quiet, :ref
+          attr_reader :source_cache, :uri, :git, :quiet, :ref, :config
 
           def initialize(input = {})
             @input = input
+            @config = input[:config]
             source = input[:config].source
             @source_cache = source.source_cache
             @uri = source.uri
             @quiet = source.opts[:verbose] ? '' : '--quiet'
             @ref = source.ref
-            @git = "git --git-dir #{source_cache}/.git --work-tree #{source_cache}"
+            @git = "#{wrapped_git} --git-dir #{source_cache}/.git --work-tree #{source_cache}"
           end
 
           def update
@@ -40,11 +42,39 @@ module EY
 
           private
 
+          def wrapped_git
+            "GIT_SSH=#{paths.ssh_wrapper} git"
+          end
+
           def create_source_cache(input = {})
             begin
               source_cache.mkpath
             rescue
               return Failure(:error => "Could not create #{source_cache}")
+            end
+
+            Success(input)
+          end
+
+          def ensure_ssh_wrapper(input = {})
+            wrapper_location = paths.ssh_wrapper
+
+            return Success(input) if File.executable?(wrapper_location)
+
+            begin
+              wrapper = File.open(wrapper_location, 'w', 0700)
+              wrapper.write <<-WRAPPER
+#!/bin/sh
+
+unset SSH_AUTH_SOCK
+
+command=$(wcho "$*" | sed -e 's/^-batch //')
+
+ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o LogLevel=INFO -o IdentityFile=#{paths.deploy_key} -o IdentitiesOnly=yes ${command}
+WRAPPER
+              wrapper.close
+            rescue => e
+              return Failure(input.merge(:error => e))
             end
 
             Success(input)
@@ -126,7 +156,7 @@ module EY
             return Failure(
               input.merge(:error => "Could not sync submodules")
             ) unless Dir.chdir(source_cache) {
-              run_and_success?('git submodule sync')
+              run_and_success?("#{wrapped_git} submodule sync")
             }
 
             Success(input)
@@ -136,7 +166,7 @@ module EY
             return Failure(
               input.merge(:error => "Could not update submodules")
             ) unless Dir.chdir(source_cache) {
-              run_and_success?('git submodule update --init --recursive')
+              run_and_success?("#{wrapped_git} submodule update --init --recursive")
             }
 
             Success(input)
@@ -150,6 +180,10 @@ module EY
             }
 
             Success(input)
+          end
+
+          def paths
+            config.paths
           end
 
         end
