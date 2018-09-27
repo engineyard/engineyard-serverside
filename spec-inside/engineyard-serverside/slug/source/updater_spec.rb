@@ -14,6 +14,9 @@ module EY
           let(:source_uri) {'https://whatever'}
           let(:source) {Object.new}
           let(:servers) {[]}
+          let(:deploy_key) {"/path/to/deploy/key"}
+          let(:ssh_wrapper) {"/path/to/ssh/wrapper"}
+          let(:paths) {Object.new}
           let(:config) {Object.new}
           let(:shell) {Object.new}
 
@@ -25,10 +28,13 @@ module EY
 
           before(:each) do
             allow(config).to receive(:source).and_return(source)
+            allow(config).to receive(:paths).and_return(paths)
             allow(source).to receive(:uri).and_return(source_uri)
             allow(source).to receive(:source_cache).and_return(source_cache)
             allow(source).to receive(:opts).and_return(source_opts)
             allow(source).to receive(:ref).and_return(source_ref)
+            allow(paths).to receive(:ssh_wrapper).and_return(ssh_wrapper)
+            allow(paths).to receive(:deploy_key).and_return(deploy_key)
             allow(source_cache).to receive(:mkpath)
             allow(source_cache).to receive(:to_s).and_return('source_cache')
           end
@@ -43,6 +49,7 @@ module EY
             expect(steps).to eql(
               [
                 :create_source_cache,
+                :ensure_ssh_wrapper,
                 :determine_if_clone_needed,
                 :clone_if_necessary,
                 :prune_source_cache,
@@ -97,6 +104,92 @@ module EY
                 expect(create_source_cache.error[:error]).to eql("Could not create #{source_cache}")
               end
             end
+          end
+
+          describe '#ensure_ssh_wrapper' do
+            let(:wrapper) {updater.send(:ensure_ssh_wrapper, input)}
+
+            context 'when the wrapper already exists' do
+              before(:each) do
+                allow(File).
+                  to receive(:executable?).
+                  with(ssh_wrapper).
+                  and_return(true)
+              end
+
+              it 'is a success' do
+                expect(wrapper).to be_a(Result::Success)
+              end
+
+              it 'does not modify its input' do
+                expect(wrapper.value).to eql(input)
+              end
+            end
+
+            context 'when the wrapper does not exist' do
+              let(:wrapper_file) {Object.new}
+
+              before(:each) do
+                allow(File).
+                  to receive(:executable?).
+                  with(ssh_wrapper).
+                  and_return(false)
+
+                allow(File).
+                  to receive(:open).
+                  with(ssh_wrapper, 'w', 0700).
+                  and_return(wrapper_file)
+
+                allow(wrapper_file).
+                  to receive(:write)
+
+                allow(wrapper_file).
+                  to receive(:close)
+              end
+
+              it 'writes the wrapper file' do
+                expect(File).
+                  to receive(:open).
+                  with(ssh_wrapper, 'w', 0700).
+                  and_return(wrapper_file)
+
+                expect(wrapper_file).
+                  to receive(:write)
+
+                expect(wrapper_file).
+                  to receive(:close)
+
+                wrapper
+              end
+
+              context 'but writing the file raises an error' do
+                let(:onobro) {StandardError.new('onobro')}
+                before(:each) do
+                  allow(wrapper_file).
+                    to receive(:write).
+                    and_raise(onobro)
+                end
+
+                it 'is a failure' do
+                  expect(wrapper).to be_a(Result::Failure)
+                end
+
+                it 'records the error' do
+                  expect(wrapper.error[:error]).to eql(onobro)
+                end
+              end
+
+              context 'and writing the file succeeds' do
+                it 'is a success' do
+                  expect(wrapper).to be_a(Result::Success)
+                end
+
+                it 'does not modify its input' do
+                  expect(wrapper.value).to eql(input)
+                end
+              end
+            end
+
           end
 
           describe '#determine_if_clone_needed' do
@@ -452,20 +545,24 @@ module EY
           describe '#sync_submodules' do
             let(:ref) {updater.ref}
             let(:git) {updater.git}
+            let(:cmd) {"GIT_SSH=#{ssh_wrapper} git submodule sync"}
             let(:sync) {
               updater.send(:sync_submodules, input)
             }
 
             before(:each) do
               allow(Dir).to receive(:chdir).and_yield
-              allow(updater).to receive(:run_and_success?).and_return(false)
+              allow(updater).
+                to receive(:run_and_success?).
+                with(cmd).
+                and_return(false)
             end
 
             context 'when the sync command fails' do
               before(:each) do
                 allow(updater).
                   to receive(:run_and_success?).
-                  with('git submodule sync').
+                  with(cmd).
                   and_return(false)
               end
 
@@ -482,7 +579,7 @@ module EY
               before(:each) do
                 allow(updater).
                   to receive(:run_and_success?).
-                  with('git submodule sync').
+                  with(cmd).
                   and_return(true)
               end
 
@@ -500,20 +597,24 @@ module EY
           describe '#update_submodules' do
             let(:ref) {updater.ref}
             let(:git) {updater.git}
+            let(:cmd) {"GIT_SSH=#{ssh_wrapper} git submodule update --init --recursive"}
             let(:update_submodules) {
               updater.send(:update_submodules, input)
             }
 
             before(:each) do
               allow(Dir).to receive(:chdir).and_yield
-              allow(updater).to receive(:run_and_success?).and_return(false)
+              allow(updater).
+                to receive(:run_and_success?).
+                with(cmd).
+                and_return(false)
             end
 
             context 'when the update command fails' do
               before(:each) do
                 allow(updater).
                   to receive(:run_and_success?).
-                  with('git submodule update --init --recursive').
+                  with(cmd).
                   and_return(false)
               end
 
@@ -531,7 +632,7 @@ module EY
               before(:each) do
                 allow(updater).
                   to receive(:run_and_success?).
-                  with('git submodule update --init --recursive').
+                  with(cmd).
                   and_return(true)
               end
 
@@ -549,20 +650,25 @@ module EY
           describe '#clean_source_cache' do
             let(:ref) {updater.ref}
             let(:git) {updater.git}
+            let(:cmd) {"git clean -dfq"}
+
             let(:clean) {
               updater.send(:clean_source_cache, input)
             }
 
             before(:each) do
               allow(Dir).to receive(:chdir).and_yield
-              allow(updater).to receive(:run_and_success?).and_return(false)
+              allow(updater).
+                to receive(:run_and_success?).
+                with(cmd).
+                and_return(false)
             end
 
             context 'when the clean command fails' do
               before(:each) do
                 allow(updater).
                   to receive(:run_and_success?).
-                  with('git clean -dfq').
+                  with(cmd).
                   and_return(false)
               end
 
@@ -580,7 +686,7 @@ module EY
               before(:each) do
                 allow(updater).
                   to receive(:run_and_success?).
-                  with('git clean -dfq').
+                  with(cmd).
                   and_return(true)
               end
 
