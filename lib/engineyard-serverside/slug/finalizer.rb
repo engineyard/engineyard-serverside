@@ -59,7 +59,13 @@ module EY
         end
 
         def finalize_command(data)
-          "rm -rf #{old_release_path(data)}"
+          [
+            "for release in #{all_releases(data)}/*",
+            %{do if [ -d "${release}" ] && [ "$(basename "${release}")" != "#{data[:release_name]}"]},
+            'then rm -rf "${release}"',
+            'fi',
+            'done'
+          ].join(' ; ')
         end
 
         def old_release_path(data)
