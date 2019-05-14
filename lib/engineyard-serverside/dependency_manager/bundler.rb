@@ -94,7 +94,7 @@ To fix this problem, commit your Gemfile.lock to your repository and redeploy.
           # the [,)] is to stop us from looking for e.g. 0.9.2, seeing
           # 0.9.22, and mistakenly thinking 0.9.2 is there
           has_gem_cmd = %{gem list bundler | grep "bundler " | egrep -q "#{egrep_escaped_version}[,)]"}
-          install_cmd = %{gem install bundler -q --no-rdoc --no-ri -v "#{bundler_version}"}
+          install_cmd = %{gem install bundler -q -v "#{bundler_version}"}
           sudo "#{clean_environment} && #{has_gem_cmd} || #{install_cmd}"
         end
 
