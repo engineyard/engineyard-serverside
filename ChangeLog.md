@@ -1,5 +1,14 @@
 # ChangeLog
 
+## v2.6.18
+
+  * Removes usage of `--no-ri` and `--no-rdoc` for all `gem` operations for compatibility with newer `gem` releases.
+  * Verifies that `bundler` version detection is moved largely to `Gemfile.lock` rather than `Gemfile`.
+
+## v2.6.17
+
+  * Repairs the server integration workflow that was pushed in a bad state in the previous release.
+
 ## v2.6.16
 
   * Supports new ey.yml option `ignore_ey_config_warning`. When set to true, will not warn when ey_config is missing.
@@ -8,7 +17,43 @@
 
   * Raise asset compilation error in case of `experimental_sync_assets` is turned on.
 
-## v2.6.5 (2017-01-26)
+## 2.6.14 (2016-12-13)
+
+  * Create shared/node_modules directory for reuse across deployments.
+
+## 2.6.13 (2016-12-09)
+
+  * Pass --production to npm install when NODE_ENV is production.
+
+## 2.6.12 (2016-12-09)
+
+  * Fix rdoc dev dependency.
+
+## 2.6.11 (2016-11-01)
+
+  * Don't remove the bundled gems directory when ruby version changes.
+
+## 2.6.10 (2016-08-19)
+
+  * Adjust gem propagation to install the gem with a resin prefix for v5 stack.
+
+## 2.6.9 (2016-08-18)
+
+  * (skipped)
+
+## 2.6.8 (2016-08-10)
+
+  * Hardcode path to gem binary to avoid version mismatch problems.
+
+## 2.6.7 (2016-08-03)
+
+  * Fix maintenance page generation.
+
+## 2.6.6 (2016-07-29)
+
+  * Update maintenance page generation.
+
+## 2.6.5 (2016-07-26)
 
   * Use bundler 1.13.6 as the default when no bundler is specified in the Gemfile.
 

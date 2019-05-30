@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('timecop', '0.6.1')
   s.add_development_dependency('simplecov')
   s.add_development_dependency('engineyard-serverside-adapter', '~>2.4.0')
-  s.add_development_dependency('sqlite3')
+  s.add_development_dependency('sqlite3', '~> 1.3.13')
   s.add_development_dependency('mime-types', '~>1.25')
   s.add_development_dependency('json', '<2')
   s.add_development_dependency('cucumber', '~> 1.3.20')
