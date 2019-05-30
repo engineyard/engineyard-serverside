@@ -1,5 +1,10 @@
 # ChangeLog
 
+## v2.6.18
+
+  * Removes usage of `--no-ri` and `--no-rdoc` for all `gem` operations for compatibility with newer `gem` releases.
+  * Verifies that `bundler` version detection is moved largely to `Gemfile.lock` rather than `Gemfile`.
+
 ## v2.6.17
 
   * Repairs the server integration workflow that was pushed in a bad state in the previous release.
