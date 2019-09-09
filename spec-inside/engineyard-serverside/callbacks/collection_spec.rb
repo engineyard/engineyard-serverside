@@ -100,6 +100,23 @@ module EY
               result.select {|h| h.path == Pathname(hook_1_path)}.length
             ).to eql(0)
           end
+
+          context "when a hook is represented by more than one format" do
+            let(:hook_1_path) {deploy_hooks_path.join('hook_2')}
+            let(:hook_2_path) {deploy_hooks_path.join('hook_2.rb')}
+
+            it 'contains the ruby hook' do
+              expect(
+                result.select {|h| h.path == Pathname(hook_2_path)}.length
+              ).to eql(1)
+            end
+
+            it 'omits the other hooks' do
+              expect(
+                result.select {|h| h.path == Pathname(hook_1_path)}.length
+              ).to eql(0)
+            end
+          end
         end
 
         describe '#execute' do

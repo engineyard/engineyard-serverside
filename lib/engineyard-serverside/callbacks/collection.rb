@@ -22,7 +22,10 @@ module EY
         end
 
         def matching(callback)
-          all.select {|hook| hook.matches?(callback.to_sym)}
+          favor(
+            :ruby,
+            all.select {|hook| hook.matches?(callback.to_sym)}
+          )
         end
 
         def execute(runner, callback)
@@ -30,6 +33,13 @@ module EY
         end
 
         private
+        def favor(hook_format, hooks)
+          (
+            hooks.select {|hook| hook.hook_format == hook_format} + 
+            hooks.reject {|hook| hook.hook_format == hook_format}
+          ).first(1)
+        end
+
         def load_app_hooks
           @app_hooks ||= []
 
