@@ -19,8 +19,8 @@ module EY
           let(:result) {described_class.execute(runner, matches)}
 
           before(:each) do
-            allow(hook_1).to receive(:hook_format).and_return(:ruby)
-            allow(hook_2).to receive(:hook_format).and_return(:executable)
+            allow(hook_1).to receive(:flavor).and_return(:ruby)
+            allow(hook_2).to receive(:flavor).and_return(:executable)
           end
 
           it 'dispatches to the proper implementation in the proper order' do

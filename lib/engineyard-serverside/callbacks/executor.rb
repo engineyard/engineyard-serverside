@@ -6,14 +6,14 @@ module EY
     module Callbacks
 
       module Executor
-        FORMATS = {
+        FLAVORS = {
           :ruby => Ruby,
           :executable => Executable,
         }
 
         def self.execute(runner, hooks)
           hooks.each do |hook|
-            FORMATS[hook.hook_format].execute(runner, hook)
+            FLAVORS[hook.flavor].execute(runner, hook)
           end
         end
       end

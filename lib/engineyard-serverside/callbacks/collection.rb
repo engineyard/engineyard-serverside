@@ -33,10 +33,10 @@ module EY
         end
 
         private
-        def favor(hook_format, hooks)
+        def favor(flavor, hooks)
           (
-            hooks.select {|hook| hook.hook_format == hook_format} + 
-            hooks.reject {|hook| hook.hook_format == hook_format}
+            hooks.select {|hook| hook.flavor == flavor} + 
+            hooks.reject {|hook| hook.flavor == flavor}
           ).first(1)
         end
 

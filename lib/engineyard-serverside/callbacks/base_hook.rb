@@ -5,7 +5,7 @@ module EY
     module Callbacks
 
       class BaseHook
-        attr_reader :path, :callback_name, :hook_format
+        attr_reader :path, :callback_name, :flavor
 
         def initialize(file_path)
           @path = Pathname.new(file_path)
@@ -14,13 +14,17 @@ module EY
 
           callback = filename.basename('.rb')
 
-          @hook_format = filename == callback ? :executable : :ruby
+          @flavor = filename == callback ? :executable : :ruby
 
           @callback_name = callback.to_s.to_sym
         end
 
         def matches?(callback)
           callback_name == callback
+        end
+
+        def read
+          path.read
         end
 
         def to_s
