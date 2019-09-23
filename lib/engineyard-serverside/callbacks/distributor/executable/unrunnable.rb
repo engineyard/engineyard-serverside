@@ -1,13 +1,13 @@
-require 'engineyard-serverside/callbacks/executor/base'
+require 'engineyard-serverside/callbacks/distributor/base'
 
 module EY
   module Serverside
     module Callbacks
-      module Executor
+      module Distributor
         module Executable
 
           class Unrunnable < Base
-            def execute
+            def distribute
               shell.warning "Skipping possible deploy hook #{hook} because it is not executable."
             end
           end

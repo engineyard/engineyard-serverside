@@ -1,13 +1,13 @@
 module EY
   module Serverside
     module Callbacks
-      module Executor
+      module Distributor
 
         class Base
           attr_reader :runner, :hook
 
-          def self.execute(runner, hook)
-            new(runner, hook).execute
+          def self.distribute(runner, hook)
+            new(runner, hook).distribute
           end
 
           def initialize(runner, hook)
@@ -15,8 +15,8 @@ module EY
             @hook = hook
           end
 
-          def execute
-            raise 'Unimplemented Hook Executor!'
+          def distribute
+            raise 'Unimplemented Hook Distributor!'
           end
 
           def config

@@ -1,13 +1,13 @@
-require 'engineyard-serverside/callbacks/executor/base'
+require 'engineyard-serverside/callbacks/distributor/base'
 
 module EY
   module Serverside
     module Callbacks
-      module Executor
+      module Distributor
         module Executable
 
           class Runnable < Base
-            def execute
+            def distribute
               shell.status "Running deploy hook: #{hook}"
 
               runner.run [About.hook_executor, hook.callback_name].join(' ') do |server, cmd|

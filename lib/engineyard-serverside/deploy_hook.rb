@@ -27,6 +27,7 @@ module EY
 
       def eval_hook(code, hook_path = nil)
         hook_path ||= config.paths.deploy_hook(hook_name)
+        shell.info "Executing #{hook_path} ..."
         display_deprecation_warnings(code, hook_path)
         CallbackContext.
           new(config, shell, hook_path).

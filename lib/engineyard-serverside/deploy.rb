@@ -453,7 +453,7 @@ defaults:
       def callback(what)
         load_callbacks
         @callbacks_reached ||= true
-        @callbacks_collection.execute(self, what)
+        @callbacks_collection.distribute(self, what)
       end
 
       def source

@@ -1,15 +1,15 @@
-require 'engineyard-serverside/callbacks/executor/base'
+require 'engineyard-serverside/callbacks/distributor/base'
 
 require 'escape'
 
 module EY
   module Serverside
     module Callbacks
-      module Executor
+      module Distributor
         module Ruby
 
-          class Implementation < Base
-            def execute
+          class Distributor < Base
+            def distribute
               shell.status "Running deploy hook: #{hook}.rb"
 
               runner.run escaped_command(hook) do |server, cmd|
