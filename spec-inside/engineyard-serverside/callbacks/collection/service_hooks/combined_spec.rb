@@ -143,6 +143,11 @@ module EY
 
               before(:each) do
                 allow(distributor).to receive(:distribute)
+
+                # Bypass Base#minimize_ruby
+                allow(collection).to receive(:minimize_ruby) {|matches|
+                  matches
+                }
               end
 
               it 'distributes matching hooks via an distributor' do

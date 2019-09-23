@@ -27,7 +27,12 @@ module EY
           end
 
           def distribute(runner, callback)
-            Distributor.distribute(runner, matching(callback))
+            Distributor.distribute(
+              runner,
+              minimize_ruby(
+                matching(callback)
+              )
+            )
           end
 
           private
@@ -36,6 +41,14 @@ module EY
               hooks.select {|hook| hook.flavor == flavor} + 
               hooks.reject {|hook| hook.flavor == flavor}
             ).first(1)
+          end
+
+          def minimize_ruby(hooks)
+            first_ruby = hooks.select {|hook| hook.flavor == :ruby}.first
+
+            return hooks unless first_ruby
+
+            ([first_ruby] + hooks.select {|hook| hook.flavor != :ruby}).flatten
           end
 
           def load_hooks

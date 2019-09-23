@@ -139,6 +139,11 @@ module EY
                 with(name).
                 and_return(matched)
 
+              # Bypass Base#minimize_ruby
+              allow(collection).to receive(:minimize_ruby) {|matches|
+                matches
+              }
+
               allow(distributor).to receive(:distribute)
             end
 

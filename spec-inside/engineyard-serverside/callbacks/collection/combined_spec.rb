@@ -49,6 +49,13 @@ module EY
               to receive(:matching).
               and_return([service_hook_2])
 
+            # Make all of our "hooks" of the executable flavor by default
+            [
+              deploy_hook_1, deploy_hook_2, service_hook_1, service_hook_2
+            ].each do |hook|
+              allow(hook).to receive(:flavor).and_return(:executable)
+            end
+
           end
 
           describe '.load' do
@@ -146,6 +153,29 @@ module EY
               expect(distributor).not_to receive(:distribute).with(runner, :hook_1)
 
               result
+            end
+
+            context 'when there are multiple matching ruby hooks' do
+              before(:each) do
+                allow(service_hook_2).to receive(:flavor).and_return(:ruby)
+                allow(deploy_hook_1).to receive(:flavor).and_return(:ruby)
+              end
+
+              it 'distributes the first ruby hook' do
+                expect(distributor).
+                  to receive(:distribute).
+                  with(runner, [service_hook_2])
+
+                result
+              end
+
+              it 'does not distribute any other ruby hook' do
+                expect(distributor).
+                  not_to receive(:distribute).
+                  with(runner, [service_hook_2, deploy_hook_1])
+
+                result
+              end
             end
           end
         end
