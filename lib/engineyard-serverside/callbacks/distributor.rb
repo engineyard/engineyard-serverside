@@ -6,11 +6,6 @@ module EY
     module Callbacks
 
       module Distributor
-        FLAVORS = {
-          :ruby => Ruby,
-          :executable => Executable,
-        }
-
         def self.distribute(runner, hooks)
           ViabilityFilter.
             call({:candidates => hooks}).

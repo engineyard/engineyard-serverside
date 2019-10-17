@@ -5,9 +5,9 @@ module EY
     module Callbacks
       module Distributor
 
-
         class ViabilityFilter
           include Railway
+
           step :normalize_input
           step :check_ruby_candidates
           step :check_executable_candidates
