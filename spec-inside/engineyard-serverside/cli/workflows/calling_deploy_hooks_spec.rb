@@ -9,6 +9,8 @@ module EY
         describe CallingDeployHooks do
           let(:config) {Object.new}
           let(:shell) {Object.new}
+          let(:paths) {Object.new}
+          let(:callbacks) {Object.new}
           let(:hook_name) {'joe'}
           let(:options) {{:hook_name => hook_name}}
           let(:workflow) {described_class.new(options)}
@@ -19,9 +21,13 @@ module EY
 
             allow(config).to receive(:verbose)
             allow(config).to receive(:app)
+            allow(config).to receive(:paths).and_return(paths)
 
             allow(workflow).to receive(:shell).and_return(shell)
             allow(workflow).to receive(:config).and_return(config)
+
+            allow(Callbacks).to receive(:load).and_return(callbacks)
+            allow(callbacks).to receive(:execute)
           end
 
           it 'is a CLI Workflow' do
@@ -38,11 +44,6 @@ module EY
 
             let(:perform) {workflow.perform}
 
-            before(:each) do
-              allow_any_instance_of(EY::Serverside::DeployHook).
-                to receive(:call)
-            end
-
             it 'does not propagates serverside' do
               expect(workflow).not_to receive(:propagate_serverside)
 
@@ -50,12 +51,8 @@ module EY
             end
 
             it 'calls the requested deploy hook' do
-              expect(EY::Serverside::DeployHook).
-                to receive(:new).
-                with(config, shell, hook_name).
-                and_return(deploy_hook)
-
-              expect(deploy_hook).to receive(:call)
+              expect(Callbacks).to receive(:load).with(paths).and_return(callbacks)
+              expect(callbacks).to receive(:execute).with(config, shell, hook_name)
 
               perform
             end
