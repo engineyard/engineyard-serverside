@@ -1,13 +1,18 @@
-require 'engineyard-serverside/callbacks/distributor/base'
-
 module EY
   module Serverside
     module Callbacks
       module Distributor
 
-        class Remote < Base
+        class Remote
+          attr_reader :runner, :hook
+
           def self.distribute(runner, hook)
             new(runner, hook).distribute
+          end
+
+          def initialize(runner, hook)
+            @runner = runner
+            @hook = hook
           end
 
           def distribute
@@ -31,6 +36,18 @@ module EY
           end
 
           private
+          def config
+            runner.config
+          end
+
+          def shell
+            runner.shell
+          end
+
+          def paths
+            runner.paths
+          end
+
           def escaped_command(hook)
             Escape.shell_command(command_for(hook))
           end

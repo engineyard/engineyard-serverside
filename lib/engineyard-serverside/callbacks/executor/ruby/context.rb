@@ -1,10 +1,11 @@
 require 'engineyard-serverside/shell/helpers'
+require 'engineyard-serverside/callbacks/executor/base'
 
 module EY
   module Serverside
     module Callbacks
       module Executor
-        module Ruby
+        class Ruby < Base
 
           class Context
             include EY::Serverside::Shell::Helpers

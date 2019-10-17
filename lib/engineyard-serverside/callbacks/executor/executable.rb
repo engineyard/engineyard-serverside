@@ -111,7 +111,6 @@ module EY
             end
 
             name.to_s
-            end
           end
         end
 

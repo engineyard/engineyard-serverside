@@ -11,7 +11,7 @@ module EY
           step :normalize_input
           step :check_ruby_candidates
           step :check_executable_candidates
-          step :calculate_hook_name
+          step :calculate_callback_name
 
           def normalize_input(input = {})
             input[:viable] = []
@@ -45,12 +45,12 @@ module EY
             Success(input)
           end
 
-          def calculate_hook_name(input = {})
+          def calculate_callback_name(input = {})
             if input[:viable].empty?
               return Failure(input.merge({:reason => :no_viable_hooks}))
             end
 
-            Success(input[:viable].first.hook_name)
+            Success(input[:viable].first.callback_name)
           end
         end
 

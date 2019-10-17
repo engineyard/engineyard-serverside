@@ -7,6 +7,7 @@ module EY
 
         class Base
           include Railway
+
           attr_reader :config, :shell, :hook
 
           def self.execute(config, shell, hook)

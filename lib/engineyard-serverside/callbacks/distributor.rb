@@ -8,9 +8,10 @@ module EY
       module Distributor
         def self.distribute(runner, hooks)
           ViabilityFilter.
+            new.
             call({:candidates => hooks}).
-            and_then {|hook_name|
-              Remote.distribute(runner, hook_name)
+            and_then {|callback_name|
+              Remote.distribute(runner, callback_name)
             }
         end
       end

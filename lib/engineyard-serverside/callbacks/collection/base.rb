@@ -1,4 +1,5 @@
 require 'engineyard-serverside/callbacks/distributor'
+require 'engineyard-serverside/callbacks/executor'
 
 module EY
   module Serverside
@@ -32,6 +33,14 @@ module EY
               minimize_ruby(
                 matching(callback)
               )
+            )
+          end
+
+          def execute(config, shell, callback)
+            Executor.execute(
+              config,
+              shell,
+              matching(callback)
             )
           end
 
