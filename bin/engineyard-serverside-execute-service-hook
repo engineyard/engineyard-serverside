@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # This script is used to execute non-ruby service hooks. It's called from

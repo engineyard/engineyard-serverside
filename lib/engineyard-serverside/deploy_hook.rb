@@ -13,17 +13,21 @@ module EY
       end
 
       def call
-        hooks.each do |hook|
-          Dir.chdir(config.paths.active_release.to_s) do
-            if desc = syntax_error(hook.path)
-              hook_name = hook.path.basename
-              abort "*** [Error] Invalid Ruby syntax in hook: #{hook_name} ***\n*** #{desc.chomp} ***"
-            else
-              eval_hook(hook.read, hook.path)
-            end
-          end
-        end
+        hooks.execute
       end
+
+      #def call
+        #hooks.each do |hook|
+          #Dir.chdir(config.paths.active_release.to_s) do
+            #if desc = syntax_error(hook.path)
+              #hook_name = hook.path.basename
+              #abort "*** [Error] Invalid Ruby syntax in hook: #{hook_name} ***\n*** #{desc.chomp} ***"
+            #else
+              #eval_hook(hook.read, hook.path)
+            #end
+          #end
+        #end
+      #end
 
       def eval_hook(code, hook_path = nil)
         hook_path ||= config.paths.deploy_hook(hook_name)
@@ -70,8 +74,7 @@ Please fix this error before retrying.
       def hooks
         @hooks ||= Callbacks.
           load(config.paths).
-          matching(hook_name.to_s).
-          select {|hook| hook.flavor == :ruby}
+          matching(hook_name.to_s)
       end
 
     end

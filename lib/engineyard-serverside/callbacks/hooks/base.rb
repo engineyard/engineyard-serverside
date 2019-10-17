@@ -31,6 +31,10 @@ module EY
           def to_s
             raise "Unimplemented"
           end
+
+          def short_name
+            raise "Unimplemented"
+          end
         end
 
       end

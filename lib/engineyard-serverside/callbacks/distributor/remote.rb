@@ -5,13 +5,13 @@ module EY
     module Callbacks
       module Distributor
 
-        class Ruby < Base
+        class Remote < Base
           def self.distribute(runner, hook)
             new(runner, hook).distribute
           end
 
           def distribute
-            shell.status "Running deploy hook: #{hook}.rb"
+            shell.status "Running deploy hook: #{hook}"
 
             runner.run escaped_command(hook) do |server, cmd|
               instance_args = [
@@ -32,7 +32,7 @@ module EY
 
           private
           def escaped_command(hook)
-            Escape.shell_command(command_for(hook.callback_name))
+            Escape.shell_command(command_for(hook))
           end
 
           def command_for(hook_name)

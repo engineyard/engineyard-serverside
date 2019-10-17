@@ -9,6 +9,10 @@ module EY
           def to_s
             "deploy/#{callback_name}"
           end
+
+          def short_name
+            callback_name
+          end
         end
 
       end

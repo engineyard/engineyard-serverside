@@ -1,5 +1,5 @@
-require 'engineyard-serverside/callbacks/distributor/ruby'
-require 'engineyard-serverside/callbacks/distributor/executable'
+require 'engineyard-serverside/callbacks/distributor/remote'
+require 'engineyard-serverside/callbacks/distributor/viability_filter'
 
 module EY
   module Serverside
@@ -12,9 +12,11 @@ module EY
         }
 
         def self.distribute(runner, hooks)
-          hooks.each do |hook|
-            FLAVORS[hook.flavor].distribute(runner, hook)
-          end
+          ViabilityFilter.
+            call({:candidates => hooks}).
+            and_then {|hook_name|
+              Remote.distribute(runner, hook_name)
+            }
         end
       end
 

@@ -16,6 +16,10 @@ module EY
           def to_s
             "service/#{service_name}/#{callback_name}"
           end
+
+          def short_name
+            "#{service_name}/#{callback_name}"
+          end
         end
 
       end
