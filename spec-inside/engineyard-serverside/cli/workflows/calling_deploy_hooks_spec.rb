@@ -50,7 +50,7 @@ module EY
               perform
             end
 
-            it 'calls the requested deploy hook' do
+            it 'calls the requested deploy hook via the Callbacks system' do
               expect(Callbacks).to receive(:load).with(paths).and_return(callbacks)
               expect(callbacks).to receive(:execute).with(config, shell, hook_name)
 

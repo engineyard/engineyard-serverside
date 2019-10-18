@@ -12,7 +12,7 @@ module EY
         }
 
         def self.execute(config, shell, hooks)
-          hooks.ech do |hook|
+          hooks.each do |hook|
             FLAVORS[hook.flavor].execute(config, shell, hook)
           end
         end

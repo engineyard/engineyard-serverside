@@ -1,11 +1,10 @@
 require 'engineyard-serverside/shell/helpers'
-require 'engineyard-serverside/callbacks/executor/base'
 
 module EY
   module Serverside
     module Callbacks
       module Executor
-        class Ruby < Base
+        module Ruby
 
           class Context
             include EY::Serverside::Shell::Helpers
@@ -14,7 +13,7 @@ module EY
 
             def initialize(config, shell, hook)
               @configuration = config
-              @config.set_framework_envs
+              @configuration.set_framework_envs
               @shell = shell
               @node = config.node
               @hook = hook
@@ -30,7 +29,7 @@ module EY
 
             def method_missing(meth, *args, &blk)
               if config.respond_to?(meth)
-                shell.warning "Use of `#{meth}` (via method_missing) is deprecated in favor of `config.#{meth}` for improved error messages and compatibility.\n\tin #{hook_path}"
+                shell.warning "Use of `#{meth}` (via method_missing) is deprecated in favor of `config.#{meth}` for improved error messages and compatibility.\n\tin #{hook.path}"
                 config.send(meth, *args, &blk)
               else
                 super

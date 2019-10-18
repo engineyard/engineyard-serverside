@@ -21,11 +21,10 @@ module EY
           end
 
           def execute
-            result = call
-            handle_failure(result.error) if result.failure?
+            call.or_else {|payload| handle_failure(payload)}
           end
 
-          def handle_failure(payload)
+          def handle_failure(payload = {})
             raise "Unimplemented Hook Executor!"
           end
 

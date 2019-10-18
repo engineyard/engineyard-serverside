@@ -15,7 +15,7 @@ module EY
           step :calculate_wrapper
           step :run_hook
 
-          def handle_failure(payload)
+          def handle_failure(payload = {})
             case payload[:reason]
 
             when :not_executable
