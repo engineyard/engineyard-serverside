@@ -19,11 +19,11 @@ module EY
             case payload[:reason]
 
             when :not_executable
-              abort "*** Hook is not executable: #{hook_path} ***\n"
+              abort "*** [Error] Hook is not executable: #{hook_path} ***\n"
             when :execution_failed
-              abort "*** Hook failed to exit cleanly: #{hook_path} ***\n"
+              abort "*** [Error] Hook failed to exit cleanly: #{hook_path} ***\n"
             else
-              abort "*** [Error] An unknown error occurred for hook: #{hook_path} ***"
+              abort "*** [Error] An unknown error occurred for hook: #{hook_path} ***\n"
             end
           end
 
@@ -54,8 +54,11 @@ module EY
           end
 
           def run_hook(input = {})
-            cmd = "#{hook_env_vars} #{config.framework_envs} #{input[:wrapper]} #{hook.short_name}"
-            result = run(cmd)
+            env = "#{input[:environment]} #{config.framework_envs}"
+            wrapper = input[:wrapper]
+            name = hook.short_name
+
+            result = run("#{env} #{wrapper} #{name}")
 
             unless result.success?
               return Failure(
