@@ -13,14 +13,20 @@ module EY
 
         describe '.distribute' do
           let(:runner) {Object.new}
+          let(:shell) {Object.new}
           let(:hook_1) {Object.new}
           let(:hook_2) {Object.new}
           let(:matches) {[hook_2, hook_1]}
           let(:filter) {Object.new}
           let(:hook_name) {:some_hook}
-          let(:filter_args) {{:candidates => matches}}
           let(:failure) {Result::Failure.new({})}
           let(:success) {Result::Success.new(hook_name)}
+          let(:filter_args) {
+            {
+              :candidates => matches,
+              :shell => shell
+            }
+          }
 
           let(:result) {described_class.distribute(runner, matches)}
 
@@ -33,12 +39,14 @@ module EY
 
             allow(described_class::Remote).to receive(:distribute)
 
-            allow(filter).to receive(:call)
+            allow(filter).to receive(:call).and_return(failure)
+
+            allow(runner).to receive(:shell).and_return(shell)
           end
 
           it 'filters the hooks for viability' do
-            expect(filter).
-              to receive(:call).
+            puts "failure == '#{failure}'"
+            expect(filter).to receive(:call).
               with(filter_args).
               and_return(failure)
 
@@ -49,7 +57,7 @@ module EY
             before(:each) do
               allow(filter).
                 to receive(:call).
-                with({:candidates => matches}).
+                with(filter_args).
                 and_return(Result::Success.new(hook_name))
             end
 

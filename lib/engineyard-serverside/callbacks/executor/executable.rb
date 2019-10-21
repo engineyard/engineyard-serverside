@@ -19,7 +19,7 @@ module EY
             case payload[:reason]
 
             when :not_executable
-              abort "*** [Error] Hook is not executable: #{hook_path} ***\n"
+              true
             when :execution_failed
               abort "*** [Error] Hook failed to exit cleanly: #{hook_path} ***\n"
             else

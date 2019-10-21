@@ -39,7 +39,13 @@ module EY
               select {|hook| hook.flavor == :executable}
 
             hooks.each do |hook|
-              input[:viable].push(hook) if hook.path.executable?
+              if hook.path.executable?
+                input[:viable].push(hook)
+              else
+                input[:shell].warning(
+                  "Skipping possible deploy hook #{hook} because it is not executable."
+                )
+              end
             end
 
             Success(input)

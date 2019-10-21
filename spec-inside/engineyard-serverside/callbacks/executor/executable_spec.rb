@@ -27,12 +27,14 @@ module EY
           let(:config_json) {'a big ol hash'}
           let(:verbose) {false}
           let(:execution_success) {true}
+          let(:hook_string) {'hooky'}
 
           let(:executor) {described_class.new(config, shell, hook)}
 
           before(:each) do
             allow(hook).to receive(:path).and_return(hook_path)
             allow(hook).to receive(:short_name).and_return(short_name)
+            allow(hook).to receive(:to_s).and_return(hook_string)
             allow(hook).
               to receive(:respond_to?).
               with(:service_name).
@@ -344,14 +346,8 @@ module EY
             context 'when the hook is not actually executable' do
               let(:reason) {:not_executable}
 
-              it 'aborts with a message about the bad hook' do
-                expect(executor).
-                  to receive(:abort).
-                  with(
-                    "*** [Error] Hook is not executable: #{hook_path} ***\n"
-                  )
-
-                result
+              it 'does nothing and returns true' do
+                expect(result).to eql(true)
               end
             end
 

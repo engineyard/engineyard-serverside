@@ -11,6 +11,7 @@ module EY
       module Distributor
 
         describe ViabilityFilter do
+          let(:shell) {Object.new}
           let(:ruby_hook) {Object.new}
           let(:executable_hook) {Object.new}
           let(:executable_path) {Object.new}
@@ -28,6 +29,8 @@ module EY
 
             allow(executable_hook).to receive(:path).and_return(executable_path)
             allow(executable_path).to receive(:executable?).and_return(false)
+
+            allow(shell).to receive(:warning)
           end
 
           it 'is a Railway' do
@@ -48,8 +51,14 @@ module EY
           end
 
           describe '#normalize_input' do
-            let(:candidates) {[hooks]}
-            let(:input) {{:candidates => candidates}}
+            let(:candidates) {hooks}
+
+            let(:input) {
+              {
+                :candidates => candidates,
+                :shell => shell
+              }
+            }
 
             let(:result) {filter.normalize_input(input)}
 
@@ -74,6 +83,7 @@ module EY
             let(:input) {
               {
                 :candidates => hooks,
+                :shell => shell,
                 :viable => []
               }
             }
@@ -97,6 +107,7 @@ module EY
             let(:input) {
               {
                 :candidates => hooks,
+                :shell => shell,
                 :viable => []
               }
             }
@@ -126,6 +137,16 @@ module EY
                 allow(executable_path).to receive(:executable?).and_return(false)
               end
 
+              it 'warns the user that the hook is being skipped' do
+                expect(shell).
+                  to receive(:warning).
+                  with(
+                    "Skipping possible deploy hook #{executable_hook} because it is not executable."
+                  )
+
+                result
+              end
+
               it 'omits that hook from the viable array' do
                 expect(result.value[:viable]).not_to include(executable_hook)
               end
@@ -138,6 +159,7 @@ module EY
             let(:input) {
               {
                 :candidates => hooks,
+                :shell => shell,
                 :viable => viable
               }
             }
