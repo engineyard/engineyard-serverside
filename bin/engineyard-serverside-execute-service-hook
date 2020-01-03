@@ -28,7 +28,7 @@ _app_path=$(dirname $(dirname ${EY_DEPLOY_RELEASE_PATH}))
 _service_hooks_path="${_app_path}/shared/hooks"
 
 # Run the hook.
-_hook_path="${service_hooks_path}/${HOOK}""
+_hook_path="${service_hooks_path}/${HOOK}"
 if [ ! \( -f ${_hook_path} -a -x ${_hook_path} \) ]; then
   abort "${_hook_path} must exist and be executable"
 fi
