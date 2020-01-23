@@ -29,6 +29,8 @@ module EY
 
           def validate_hook(input = {})
             unless hook_path.executable?
+              shell.warning("Skipping possible deploy hook #{hook} because it is not executable.")
+
               return Failure(
                 input.merge(
                   {
