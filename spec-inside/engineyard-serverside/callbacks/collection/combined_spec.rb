@@ -128,6 +128,52 @@ module EY
             end
           end
 
+          describe '#execute' do
+            let(:config) {Object.new}
+            let(:shell) {Object.new}
+            let(:callback) {Object.new}
+            let(:matches) {[]}
+
+            let(:result) {collection.execute(config, shell, callback)}
+
+            before(:each) do
+              allow(Executor).to receive(:execute)
+              allow(shell).to receive(:info)
+              allow(collection).
+                to receive(:matching).
+                with(callback).
+                and_return(matches)
+            end
+
+            context 'when there are matching hooks' do
+              let(:matches) {[Object.new]}
+
+              it 'executes those matching hooks' do
+                expect(Executor).to receive(:execute).with(config, shell, matches)
+
+                result
+              end
+            end
+
+            context 'when there are not matching hooks' do
+              let(:matches) {[]}
+
+              it 'logs a message about the lack of matching hooks' do
+                expect(shell).
+                  to receive(:info).
+                  with("No hooks detected for #{callback}. Skipping.")
+
+                result
+              end
+
+              it 'does not execute any hooks' do
+                expect(Executor).not_to receive(:execute)
+
+                result
+              end
+            end
+          end
+
           describe '#distribute' do
             let(:runner) {Object.new}
             let(:name) {:hook_2}

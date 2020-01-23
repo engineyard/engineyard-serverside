@@ -20,6 +20,10 @@ module EY
             hooks
           end
 
+          def empty?
+            hooks.empty?
+          end
+
           def matching(callback)
             favor(
               :ruby,
@@ -37,11 +41,14 @@ module EY
           end
 
           def execute(config, shell, callback)
-            Executor.execute(
-              config,
-              shell,
-              matching(callback)
-            )
+            matches = matching(callback)
+
+            if matches.empty?
+              shell.info("No hooks detected for #{callback}. Skipping.")
+              return
+            end
+
+            Executor.execute(config, shell, matches)
           end
 
           private

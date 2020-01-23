@@ -28,6 +28,7 @@ module EY
 
             allow(Callbacks).to receive(:load).and_return(callbacks)
             allow(callbacks).to receive(:execute)
+            allow(callbacks).to receive(:empty?).and_return(false)
           end
 
           it 'is a CLI Workflow' do

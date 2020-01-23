@@ -11,8 +11,7 @@ module EY
         class CallingDeployHooks < Base
           private
           def procedure
-            Callbacks.
-              load(config.paths).
+            Callbacks.load(config.paths).
               execute(config, shell, hook_name)
           end
 

@@ -5,7 +5,7 @@ require 'engineyard-serverside/rails_assets'
 require 'engineyard-serverside/maintenance'
 require 'engineyard-serverside/dependency_manager'
 require 'engineyard-serverside/dependency_manager/legacy_helpers'
-require 'engineyard-serverside/callbacks'
+require 'engineyard-serverside/callbacks/distributor'
 
 module EY
   module Serverside
@@ -451,9 +451,8 @@ defaults:
       end
 
       def callback(what)
-        load_callbacks
         @callbacks_reached ||= true
-        @callbacks_collection.distribute(self, what)
+        Callbacks::Distributor.distribute(self, what)
       end
 
       def source
@@ -511,10 +510,6 @@ defaults:
 
       def compile_assets
         RailsAssets.detect_and_compile(config, shell, self)
-      end
-
-      def load_callbacks
-        @callbacks_collection ||= Callbacks.load(paths)
       end
     end   # DeployBase
 
