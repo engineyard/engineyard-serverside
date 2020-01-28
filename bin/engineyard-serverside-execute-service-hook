@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# This script is used to execute non-ruby deploy hooks. It's called from
+# This script is used to execute non-ruby service hooks. It's called from
 # EY::Serverside::Deploy#callback. If you'd like to call it directly you should
 # be careful to replicate everything done in EY::Serverside::Deploy or your
 # hook code may not execute as planned.
@@ -23,8 +23,12 @@ HOOK=${1:-}
 [ -d ${EY_DEPLOY_RELEASE_PATH} ] || abort "EY_DEPLOY_RELEASE_PATH must exist and be a directory"
 cd ${EY_DEPLOY_RELEASE_PATH}
 
+# Set up the service hook paths
+_app_path=$(dirname $(dirname ${EY_DEPLOY_RELEASE_PATH}))
+_service_hooks_path="${_app_path}/shared/hooks"
+
 # Run the hook.
-_hook_path=deploy/${HOOK}
+_hook_path="${_service_hooks_path}/${HOOK}"
 if [ ! \( -f ${_hook_path} -a -x ${_hook_path} \) ]; then
   abort "${_hook_path} must exist and be executable"
 fi

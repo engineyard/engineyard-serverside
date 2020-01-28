@@ -5,6 +5,7 @@ require 'engineyard-serverside/rails_assets'
 require 'engineyard-serverside/maintenance'
 require 'engineyard-serverside/dependency_manager'
 require 'engineyard-serverside/dependency_manager/legacy_helpers'
+require 'engineyard-serverside/callbacks/distributor'
 
 module EY
   module Serverside
@@ -451,26 +452,7 @@ defaults:
 
       def callback(what)
         @callbacks_reached ||= true
-
-        if paths.deploy_hook(what).exist?
-          shell.status "Running deploy hook: deploy/#{what}.rb"
-          run Escape.shell_command(base_callback_command_for(what)) do |server, cmd|
-            per_instance_args = []
-            per_instance_args << '--current-roles' << server.roles.to_a.join(' ')
-            per_instance_args << '--current-name'  << server.name.to_s if server.name
-            per_instance_args << '--config'        << config.to_json
-            cmd << " " << Escape.shell_command(per_instance_args)
-          end
-        elsif paths.executable_deploy_hook(what).executable?
-          shell.status "Running deploy hook: deploy/#{what}"
-          run [About.hook_executor, what.to_s].join(' ') do |server, cmd|
-            cmd = hook_env_vars(server).reject{|k,v| v.nil?}.map{|k,v|
-              "#{k}=#{Escape.shell_command([v])}"
-            }.join(' ') + ' ' + config.framework_envs + ' ' + cmd
-          end
-        elsif paths.executable_deploy_hook(what).exist?
-          shell.warning "Skipping possible deploy hook deploy/#{what} because it is not executable."
-        end
+        Callbacks::Distributor.distribute(self, what)
       end
 
       def source
@@ -479,31 +461,6 @@ defaults:
       end
 
       protected
-
-      def base_callback_command_for(what)
-        cmd =  [About.binary, 'hook', what.to_s]
-        cmd << '--app'              << config.app
-        cmd << '--environment-name' << config.environment_name
-        cmd << '--account-name'     << config.account_name
-        cmd << '--release-path'     << paths.active_release.to_s
-        cmd << '--framework-env'    << config.framework_env.to_s
-        cmd << '--verbose' if config.verbose
-        cmd
-      end
-
-      def hook_env_vars(server)
-        {
-          'EY_DEPLOY_ACCOUNT_NAME' => config.account_name,
-          'EY_DEPLOY_APP' => config.app,
-          'EY_DEPLOY_CONFIG' => config.to_json,
-          'EY_DEPLOY_CURRENT_ROLES' => server.roles.to_a.join(' '),
-          'EY_DEPLOY_CURRENT_NAME' => server.name ? server.name.to_s : nil,
-          'EY_DEPLOY_ENVIRONMENT_NAME' => config.environment_name,
-          'EY_DEPLOY_FRAMEWORK_ENV' => config.framework_env.to_s,
-          'EY_DEPLOY_RELEASE_PATH' => paths.active_release.to_s,
-          'EY_DEPLOY_VERBOSE' => (config.verbose ? '1' : '0'),
-        }
-      end
 
       # FIXME: Legacy method, warn and remove.
       def serverside_bin

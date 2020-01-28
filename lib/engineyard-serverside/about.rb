@@ -40,6 +40,10 @@ module EY
       def hook_executor
         binary + "-execute-hook"
       end
+
+      def service_hook_executor
+        binary + "-execute-service-hook"
+      end
     end
   end
 end
