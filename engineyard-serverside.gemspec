@@ -18,17 +18,18 @@ Gem::Specification.new do |s|
   s.default_executable = "engineyard-serverside"
   s.require_path = 'lib'
 
-  s.add_development_dependency('rspec', '~>2.14')
+  s.add_development_dependency('rspec', '~> 3.9.0')
   s.add_development_dependency('rake', '~>10.0.0')
   s.add_development_dependency('rdoc', '~>4.2.2')
   s.add_development_dependency('timecop', '0.6.1')
-  s.add_development_dependency('simplecov')
+  s.add_development_dependency('simplecov', '~> 0.15.1')
+  s.add_development_dependency('simplecov-html', '~> 0.10.2')
   s.add_development_dependency('engineyard-serverside-adapter', '~>2.4.0')
   s.add_development_dependency('sqlite3', '~> 1.3.13')
   s.add_development_dependency('mime-types', '~>1.25')
   s.add_development_dependency('json', '<2')
-  s.add_development_dependency('cucumber', '~> 1.3.20')
-  s.add_development_dependency('aruba', '~> 0.14.2')
+  s.add_development_dependency('cucumber', '~> 3.1.2')
+  s.add_development_dependency('aruba', '~> 0.14.14')
 
   s.required_rubygems_version = %q{>= 1.3.6}
   s.test_files = Dir.glob("spec/**/*")
