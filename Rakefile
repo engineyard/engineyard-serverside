@@ -1,5 +1,9 @@
 require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
+require 'cucumber/rake/task'
+
+Cucumber::Rake::Task.new
+
 RSpec::Core::RakeTask.new do |t|
   t.rspec_opts = %w[--color]
   t.pattern = 'spec/**/*_spec.rb'
@@ -15,6 +19,16 @@ RSpec::Core::RakeTask.new(:php) do |spec|
   t.pattern = 'spec/**/*php*_spec.rb'
 end
 
+RSpec::Core::RakeTask.new(:inside) do |t|
+  t.rspec_opts = %w[--color]
+  t.pattern = 'spec-inside/**/*_spec.rb'
+end
+
+RSpec::Core::RakeTask.new(:outside) do |t|
+  t.rspec_opts = %w[--color]
+  t.pattern = 'spec-outside/**/*_spec.rb'
+end
+
 desc "Run specs and generate coverage data"
 task :coverage => [:coverage_env, :spec]
 
@@ -22,21 +36,11 @@ task :coverage_env do
   ENV['COVERAGE'] = '1'
 end
 
-task :inside do
-  base_dir = File.expand_path(File.join(__FILE__, '..'))
-  `ln -nsf #{base_dir}/spec-inside #{base_dir}/spec`
-end
-
-task :outside do
-  base_dir = File.expand_path(File.join(__FILE__, '..'))
-  `ln -nsf #{base_dir}/spec-outside #{base_dir}/spec`
-end
-
 task :inside_spec => [:inside, :spec]
 task :outside_spec => [:outside, :spec2]
 
-task :test => [:inside_spec, :outside_spec]
-task :default => [:inside_spec, :outside_spec]
+task :test => [:cucumber, :inside, :outside]
+task :default => [:test]
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
 require 'engineyard-serverside'
