@@ -11,10 +11,10 @@ module EY
       let(:name) {'superserverx5000'}
       let(:user) {'joe'}
       let(:server_hash) {{
-        hostname: hostname,
-        roles: roles,
-        name: name,
-        user: user
+        :hostname => hostname,
+        :roles => roles,
+        :name => name,
+        :user => user
       }}
 
       let(:server) {described_class.from_hash(server_hash)}
