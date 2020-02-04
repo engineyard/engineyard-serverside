@@ -19,16 +19,6 @@ RSpec::Core::RakeTask.new(:php) do |spec|
   t.pattern = 'spec/**/*php*_spec.rb'
 end
 
-RSpec::Core::RakeTask.new(:inside) do |t|
-  t.rspec_opts = %w[--color]
-  t.pattern = 'spec-inside/**/*_spec.rb'
-end
-
-RSpec::Core::RakeTask.new(:outside) do |t|
-  t.rspec_opts = %w[--color]
-  t.pattern = 'spec-outside/**/*_spec.rb'
-end
-
 desc "Run specs and generate coverage data"
 task :coverage => [:coverage_env, :spec]
 
@@ -36,10 +26,7 @@ task :coverage_env do
   ENV['COVERAGE'] = '1'
 end
 
-task :inside_spec => [:inside, :spec]
-task :outside_spec => [:outside, :spec2]
-
-task :test => [:cucumber, :inside, :outside]
+task :test => [:cucumber, :spec]
 task :default => [:test]
 
 $LOAD_PATH.unshift File.expand_path("../lib", __FILE__)
