@@ -284,7 +284,7 @@ module EY
           end
 
           it 'forces the encoding to UTF-8' do
-            expect(msg).to receive(:force_encoding).with(Encoding::UTF_8)
+            expect(msg).to receive(:force_encoding).with(::Encoding::UTF_8)
 
             result
           end
