@@ -270,8 +270,8 @@ module EY
       end
 
       describe '#status' do
-        let(:msg) {Object.new}
-        let(:gsubbed) {Object.new}
+        let(:msg) {'some message'}
+        let(:gsubbed) {'gsubbed'}
         let(:result) {shell.status(msg)}
 
         before(:each) do
@@ -307,8 +307,8 @@ module EY
       end
 
       describe '#substatus' do
-        let(:msg) {Object.new}
-        let(:gsubbed) {Object.new}
+        let(:msg) {'some message'}
+        let(:gsubbed) {'gsubbed'}
         let(:result) {shell.substatus(msg)}
 
         before(:each) do
@@ -420,9 +420,9 @@ module EY
       end
 
       describe '#command_show' do
-        let(:cmd) {Object.new}
-        let(:continued) {Object.new}
-        let(:prefixed) {Object.new}
+        let(:cmd) {'some command'}
+        let(:continued) {'continued command'}
+        let(:prefixed) {'prefixed continued command'}
         let(:result) {shell.command_show(cmd)}
 
         before(:each) do
@@ -456,8 +456,8 @@ module EY
       end
 
       describe '#comand_out' do
-        let(:msg) {Object.new}
-        let(:indented) {Object.new}
+        let(:msg) {'some message'}
+        let(:indented) {'indented message'}
         let(:result) {shell.command_out(msg)}
 
         before(:each) do
@@ -481,8 +481,8 @@ module EY
       end
 
       describe '#command_err' do
-        let(:msg) {Object.new}
-        let(:indented) {Object.new}
+        let(:msg) {'some message'}
+        let(:indented) {'indented message'}
         let(:result) {shell.command_err(msg)}
 
         before(:each) do
