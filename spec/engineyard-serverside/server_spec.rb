@@ -140,7 +140,7 @@ module EY
         let(:result) {server.role}
 
         it 'is the first role in the role list' do
-          expect(result).to eql(:romeo)
+          expect(result).to eql(Set(roles).to_a.first)
         end
       end
 
