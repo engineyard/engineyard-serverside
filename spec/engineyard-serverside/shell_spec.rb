@@ -278,15 +278,19 @@ module EY
           allow(msg).to receive(:gsub).and_return(gsubbed)
         end
 
-        context 'when the messgae supports forced encoding' do
-          before(:each) do
-            allow(msg).to receive(:force_encoding)
-          end
+        # This example literally cannot come up in ruby-1.8.7, as the `Encoding` module
+        # `String#force_encoding` method totally aren't a thing until ruby-1.9.3
+        if RUBY_VERSION >= "1.9.3"
+          context 'when the message supports forced encoding' do
+            before(:each) do
+              allow(msg).to receive(:force_encoding)
+            end
 
-          it 'forces the encoding to UTF-8' do
-            expect(msg).to receive(:force_encoding).with(::Encoding::UTF_8)
+            it 'forces the encoding to UTF-8' do
+              expect(msg).to receive(:force_encoding).with(::Encoding::UTF_8)
 
-            result
+              result
+            end
           end
         end
 
