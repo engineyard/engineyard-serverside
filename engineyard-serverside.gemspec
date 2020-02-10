@@ -29,8 +29,10 @@ Gem::Specification.new do |s|
   s.add_development_dependency('mime-types', '~>1.25')
   s.add_development_dependency('json', '<2')
   s.add_development_dependency('cucumber', '~> 1.3.20')
+  s.add_development_dependency('contracts', '= 0.9')
   s.add_development_dependency('aruba', '~> 0.14.14')
+  s.add_development_dependency('factis', '~> 1.0.1')
 
   s.required_rubygems_version = %q{>= 1.3.6}
-  s.test_files = Dir.glob("spec/**/*")
+  s.test_files = Dir.glob("spec/**/*") + Dir.glob("features/**/*")
 end
