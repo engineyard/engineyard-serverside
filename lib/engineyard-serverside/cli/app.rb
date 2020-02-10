@@ -8,6 +8,7 @@ require 'engineyard-serverside/cli/server_hash_extractor'
 require 'engineyard-serverside/servers'
 require 'engineyard-serverside/cli/helpers'
 require 'engineyard-serverside/cli/workflows'
+require 'engineyard-serverside/version'
 
 module EY
   module Serverside
@@ -129,6 +130,11 @@ module EY
         desc "restart", "Restart app servers, conditionally enabling maintenance page"
         def restart
           Workflows.perform(:restart, options)
+        end
+
+        desc "version", "Show the engineyard-serverside version"
+        def version
+          puts EY::Serverside::VERSION
         end
       end
     end
