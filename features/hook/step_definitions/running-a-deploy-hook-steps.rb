@@ -79,6 +79,8 @@ end
 Then %r{^the (.+) executable deploy hook is executed$} do |callback_name|
   expected = "EY_DEPLOY_ACCOUNT_NAME=#{account_name} EY_DEPLOY_APP=#{app_name} EY_DEPLOY_CONFIG='{\"app\":\"#{app_name}\",\"environment_name\":\"#{env_name}\",\"account_name\":\"#{account_name}\",\"framework_env\":\"#{framework_env}\",\"release_path\":\"#{release_path}\",\"hook_name\":\"#{callback_name}\"}' EY_DEPLOY_CURRENT_ROLES='' EY_DEPLOY_ENVIRONMENT_NAME=#{env_name} EY_DEPLOY_FRAMEWORK_ENV=#{framework_env} EY_DEPLOY_RELEASE_PATH=#{release_path} EY_DEPLOY_VERBOSE=0 RAILS_ENV=#{framework_env} RACK_ENV=#{framework_env} NODE_ENV=#{framework_env} MERB_ENV=#{framework_env} #{project_root.join('bin', 'engineyard-serverside-execute-hook')} #{callback_name}"
 
+  puts "executed commands: '#{ExecutedCommands.executed}'"
+  puts "expected: '#{expected}'"
   expect(ExecutedCommands.executed).to include(expected)
 end
 
