@@ -140,6 +140,12 @@ Then %r{^the (.+) executable hook for my service is not executed$} do |callback_
     to eql(false)
 end
 
+Given %r{^my app's (.+) executable deploy hook is not actually executable$} do |callback_name|
+  hook = deploy_hooks_path.join(callback_name)
+
+  hook.chmod(0644)
+end
+
 Then %{I see the output} do
   puts "OUTPUT START\n\n#{output_text}\n\nOUTPUT END"
 end

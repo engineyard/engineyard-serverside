@@ -198,10 +198,37 @@ Feature: Running A Deploy Hook
       | before_restart        |
       | after_restart         |
       | after_deploy          |
-  #Scenario: Running a callback with both service hooks and deploy hooks
+
+
+  Scenario Outline: Executable hooks without the executable bit get skipped
+    Given my app has a <Callback Name> executable deploy hook
+    But my app's <Callback Name> executable deploy hook is not actually executable
+    And I have a service named selective
+    Given my service has a <Callback Name> executable hook
+    When I run the <Callback Name> callback
+    Then the <Callback Name> executable hook for my service is executed
+    But the <Callback Name> executable deploy hook is not executed
+
+    Examples:
+      | Callback Name         |
+      | before_deploy         |
+      | before_bundle         |
+      | after_bundle          |
+      | before_compile_assets |
+      | after_compile_assets  |
+      | before_migrate        |
+      | after_migrate         |
+      | before_symlink        |
+      | after_symlink         |
+      | before_restart        |
+      | after_restart         |
+      | after_deploy          |
 
     #@failure
   #Scenario: Ruby hooks with syntax errors cause an error
+
+    #@failure
+  #Scenario: Ruby hook errors cause an error
 
     #@failure
   #Scenario: Executable hooks that are not actually executable cause an error
