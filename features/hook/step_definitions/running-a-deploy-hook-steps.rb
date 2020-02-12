@@ -77,13 +77,13 @@ Given %r{^my app has a (.+) executable deploy hook$} do |callback_name|
 end
 
 Then %r{^the (.+) executable deploy hook is executed$} do |callback_name|
-  expected = "EY_DEPLOY_ACCOUNT_NAME=#{account_name} EY_DEPLOY_APP=#{app_name} EY_DEPLOY_CONFIG='{\"app\":\"#{app_name}\",\"environment_name\":\"#{env_name}\",\"account_name\":\"#{account_name}\",\"framework_env\":\"#{framework_env}\",\"release_path\":\"#{release_path}\",\"hook_name\":\"#{callback_name}\"}' EY_DEPLOY_CURRENT_ROLES='' EY_DEPLOY_ENVIRONMENT_NAME=#{env_name} EY_DEPLOY_FRAMEWORK_ENV=#{framework_env} EY_DEPLOY_RELEASE_PATH=#{release_path} EY_DEPLOY_VERBOSE=0 RAILS_ENV=#{framework_env} RACK_ENV=#{framework_env} NODE_ENV=#{framework_env} MERB_ENV=#{framework_env} #{project_root.join('bin', 'engineyard-serverside-execute-hook')} #{callback_name}".split.sort.join(' ')
+  found = ExecutedCommands.
+    executed.
+    select {|x|
+      x.match(/engineyard-serverside-execute-hook #{callback_name}/)
+    }.length > 0
 
-  candidates = ExecutedCommands.executed.map {|cmd| cmd.split.sort.join(' ')}
-
-  puts "candidates: '#{candidates}'"
-  puts "expected: '#{expected}'"
-  expect(candidates).to include(expected)
+    expect(found).to eql(true)
 end
 
 Then %{I see the output} do
