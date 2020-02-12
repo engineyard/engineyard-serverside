@@ -34,10 +34,12 @@ class Runatron
                   allow(Logger).to receive(:new).and_return($logger)
 
                   EY::Serverside::CLI::App.start(@argv)
+                  0
                 rescue StandardError => e
                   b = e.backtrace
                   @stderr.puts("#{b.shift}: #{e.message} (#{e.class})")
                   @stderr.puts(b.map {|s| "\tfrom #{s}"}.join("\n"))
+                  255
                 rescue SystemExit => e
                   e.status
                 ensure

@@ -26,6 +26,7 @@ end
 
 Given %r{^my app's name is (.+)$} do |app_name|
   memorize_fact(:app_name, app_name)
+  setup_release_path
 end
 
 Given %r{^my app lives in an environment named (.+)$} do |env_name|
@@ -76,7 +77,10 @@ end
 
 Given %r{^my app has a (.+) ruby deploy hook$} do |callback_name|
   setup_deploy_hooks_path
-  FileUtils.touch(deploy_hooks_path.join("#{callback_name}.rb"))
+  hook = deploy_hooks_path.join("#{callback_name}.rb")
+  f = File.open(hook.to_s, 'w')
+  f.write('true')
+  f.close
 end
 
 Then %r{^the (.+) ruby deploy hook is executed$} do |callback_name|
@@ -110,7 +114,11 @@ end
 Given %r{^my service has a (.+) ruby hook$} do |callback_name|
   setup_service_path(service_name)
 
-  FileUtils.touch(service_path(service_name).join("#{callback_name}.rb"))
+  hook = service_path(service_name).join("#{callback_name}.rb")
+
+  f = File.open(hook.to_s, 'w')
+  f.write('true')
+  f.close
 end
 
 Then %r{^the (.+) ruby hook for my service is executed$} do |callback_name|
