@@ -152,6 +152,29 @@ Feature: Running A Deploy Hook
       | before_restart        |
       | after_restart         |
       | after_deploy          |
+
+  Scenario Outline: Running a callback with both Ruby and Executable service hooks
+    Given I have a service named selective
+    Given my service has a <Callback Name> executable hook
+    Given my service has a <Callback Name> ruby hook
+    When I run the <Callback Name> callback
+    Then the <Callback Name> ruby hook for my service is executed
+    But the <Callback Name> executable hook for my service is not executed
+
+    Examples:
+      | Callback Name         |
+      | before_deploy         |
+      | before_bundle         |
+      | after_bundle          |
+      | before_compile_assets |
+      | after_compile_assets  |
+      | before_migrate        |
+      | after_migrate         |
+      | before_symlink        |
+      | after_symlink         |
+      | before_restart        |
+      | after_restart         |
+      | after_deploy          |
   #Scenario: Running a callback with a Ruby service hook
 
   #Scenario: Running a callback with an Executable service hook
