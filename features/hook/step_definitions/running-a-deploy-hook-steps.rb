@@ -16,6 +16,10 @@ def framework_env
   recall_fact(:framework_env)
 end
 
+def service_name
+  recall_fact(:service_name)
+end
+
 Given %r{^my account name is (.+)$} do |account_name|
   memorize_fact(:account_name, account_name)
 end
@@ -48,7 +52,22 @@ end
 
 When %r{^I run the (.+) callback$} do |callback_name|
   #puts "Data: '#{Dir["#{data_path}/**/*"]}'"
-  step %(I run `engineyard-serverside hook #{callback_name} --app=#{app_name} --environment-name=#{env_name} --account-name=#{account_name} --framework-env=#{framework_env} --release-path=#{release_path}`)
+
+  config = {:deploy_to => app_path.to_s}
+
+  command = [
+    'engineyard-serverside',
+    'hook',
+    callback_name,
+    "--app=#{app_name}",
+    "--environment-name=#{env_name}",
+    "--account-name=#{account_name}",
+    "--framework-env=#{framework_env}",
+    "--release-path=#{release_path}",
+    "--config='#{config.to_json}'"
+  ].join(' ')
+
+  step %(I run `#{command}`)
 end
 
 Then %r{^I see a notice that the (.+) callback was skipped$} do |callback_name|
@@ -82,6 +101,22 @@ end
 
 Then %r{^the (.+) executable deploy hook is not executed$} do |callback_name|
   expect(ExecutedCommands.deploy_hook_executed?(callback_name)).to eql(false)
+end
+
+Given %r{^I have a service named (.+)$} do |service_name|
+  memorize_fact(:service_name, service_name)
+end
+
+Given %r{^my service has a (.+) ruby hook$} do |callback_name|
+  setup_service_path(service_name)
+
+  FileUtils.touch(service_path(service_name).join("#{callback_name}.rb"))
+end
+
+Then %r{^the (.+) ruby hook for my service is executed$} do |callback_name|
+  hook = service_path(service_name).join("#{callback_name}.rb")
+
+  expect(output_text).to include("Executing #{hook}")
 end
 
 Then %{I see the output} do
