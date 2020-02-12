@@ -88,12 +88,28 @@ Feature: Running A Deploy Hook
       | before_restart        |
       | after_restart         |
       | after_deploy          |
-  #Scenario Outline: Running a callback with an Executable deploy hook
-    #Given the george app has a <Callback Name> executable hook
-    #When I run `engineyard-serverside hook <Callback Name>`
 
-  #Scenario: Running a callback with both Ruby and Executable deploy hooks
+  Scenario Outline: Running a callback with both Ruby and Executable deploy hooks
+    Given my app has a <Callback Name> executable deploy hook
+    Given my app has a <Callback Name> ruby deploy hook
+    When I run the <Callback Name> callback
+    Then the <Callback Name> ruby deploy hook is executed
+    But the <Callback Name> executable deploy hook is not executed
 
+    Examples:
+      | Callback Name         |
+      | before_deploy         |
+      | before_bundle         |
+      | after_bundle          |
+      | before_compile_assets |
+      | after_compile_assets  |
+      | before_migrate        |
+      | after_migrate         |
+      | before_symlink        |
+      | after_symlink         |
+      | before_restart        |
+      | after_restart         |
+      | after_deploy          |
   #Scenario: Running a callback with a Ruby service hook
 
   #Scenario: Running a callback with an Executable service hook

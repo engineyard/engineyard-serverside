@@ -77,13 +77,11 @@ Given %r{^my app has a (.+) executable deploy hook$} do |callback_name|
 end
 
 Then %r{^the (.+) executable deploy hook is executed$} do |callback_name|
-  found = ExecutedCommands.
-    executed.
-    select {|x|
-      x.match(/engineyard-serverside-execute-hook #{callback_name}/)
-    }.length > 0
+  expect(ExecutedCommands.deploy_hook_executed?(callback_name)).to eql(true)
+end
 
-    expect(found).to eql(true)
+Then %r{^the (.+) executable deploy hook is not executed$} do |callback_name|
+  expect(ExecutedCommands.deploy_hook_executed?(callback_name)).to eql(false)
 end
 
 Then %{I see the output} do

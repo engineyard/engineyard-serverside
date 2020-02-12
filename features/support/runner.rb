@@ -16,9 +16,13 @@ module ExecutedCommands
     @executed = nil
   end
 
-  def self.hook_executed?(path)
-    executed.select {|x| x.match(/#{Regexp.escape(path)}/)}.length > 0
+  def self.deploy_hook_executed?(callback_name)
+    executed.
+      select {|x|
+        x.match(%r{engineyard-serverside-execute-hook #{callback_name}})
+      }.length > 0
   end
+
 end
 
 module Runner
