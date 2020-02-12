@@ -119,6 +119,27 @@ Then %r{^the (.+) ruby hook for my service is executed$} do |callback_name|
   expect(output_text).to include("Executing #{hook}")
 end
 
+Given %r{^my service has a (.+) executable hook$} do |callback_name|
+  setup_service_path(service_name)
+
+  hook = service_path(service_name).join(callback_name)
+  f = File.open(hook.to_s, 'w')
+  f.write("#!/bin/bash\n\necho #{hook.to_s}")
+  f.close
+
+  hook.chmod(0755)
+end
+
+Then %r{^the (.+) executable hook for my service is executed$} do |callback_name|
+  expect(ExecutedCommands.service_hook_executed?(service_name, callback_name)).
+    to eql(true)
+end
+
+Then %r{^the (.+) executable hook for my service is not executed$} do |callback_name|
+  expect(ExecutedCommands.service_hook_executed?(service_name, callback_name)).
+    to eql(false)
+end
+
 Then %{I see the output} do
   puts "OUTPUT START\n\n#{output_text}\n\nOUTPUT END"
 end

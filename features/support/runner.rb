@@ -23,6 +23,15 @@ module ExecutedCommands
       }.length > 0
   end
 
+  def self.service_hook_executed?(service_name, callback_name)
+    executed.
+      select {|x|
+        x.match(
+          %r{engineyard-serverside-execute-service-hook #{service_name}/#{callback_name}}
+        )
+      }.length > 0
+  end
+
 end
 
 module Runner
