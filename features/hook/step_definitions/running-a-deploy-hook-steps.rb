@@ -80,9 +80,7 @@ def write_ruby_deploy_hook(callback_name, content)
 
   hook = deploy_hooks_path.join("#{callback_name}.rb")
 
-  f = File.open(hook.to_s, 'w')
-  f.write(content)
-  f.close
+  File.write(hook.to_s, content.to_s)
 end
 
 Given %r{^my app has a (.+) ruby deploy hook$} do |callback_name|
@@ -161,7 +159,7 @@ Given %r{^my app's (.+) executable deploy hook is not actually executable$} do |
 end
 
 Given %r{^my app's (.+) ruby deploy hook contains syntax errors$} do |callback_name|
-  write_ruby_deploy_hook(callback_name, "# encoding: UTF-8\n\n)_!$")
+  write_ruby_deploy_hook(callback_name, "# encoding: UTF-8\n\n)")
 end
 
 Then %r{^I see a notice about the (.+) syntax error$} do |callback_name|
