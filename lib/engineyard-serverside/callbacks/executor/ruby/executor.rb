@@ -80,6 +80,7 @@ module EY
 
             def validate_hook(input = {})
               output = `#{ruby_bin} -c #{hook_path} 2>&1`
+              puts "hook validation output: '#{output}'"
               unless output =~ /Syntax OK/
                 return Failure(
                   input.merge(

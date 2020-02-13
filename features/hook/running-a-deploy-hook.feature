@@ -229,6 +229,7 @@ Feature: Running A Deploy Hook
     Given my app has a <Callback Name> ruby deploy hook
     But my app's <Callback Name> ruby deploy hook contains syntax errors
     When I run the <Callback Name> callback
+    Then I see the output
     Then I see a notice about the <Callback Name> syntax error
     And the <Callback Name> ruby deploy hook is not executed
 
