@@ -161,7 +161,7 @@ Given %r{^my app's (.+) executable deploy hook is not actually executable$} do |
 end
 
 Given %r{^my app's (.+) ruby deploy hook contains syntax errors$} do |callback_name|
-  write_ruby_deploy_hook(callback_name, ')_!$')
+  write_ruby_deploy_hook(callback_name, "# encoding: UTF-8\n\n)_!$")
 end
 
 Then %r{^I see a notice about the (.+) syntax error$} do |callback_name|
