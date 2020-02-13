@@ -179,6 +179,17 @@ Then %r(^my service's (.+) ruby hook is not executed$) do |callback_name|
   expect(output_text).not_to include("Executing #{hook}")
 end
 
+Given %r{^my service's (.+) ruby hook is prone to errors$} do |callback_name|
+  write_ruby_service_hook(callback_name, "raise 'a ruckus'")
+end
+
+Then %r{^I see a notice about the (.+) exception$} do |callback_name|
+  hook = service_path(service_name).join("#{callback_name}.rb")
+
+  expect(output_text).
+    to include("Exception raised in hook #{hook.to_s}")
+end
+
 Then %r{^the (.+) ruby deploy hook is not executed$} do |callback_name|
   expect(output_text).
     not_to include("Executing #{deploy_hooks_path.join("#{callback_name}.rb")}")
