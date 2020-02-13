@@ -224,8 +224,29 @@ Feature: Running A Deploy Hook
       | after_restart         |
       | after_deploy          |
 
-    #@failure
-  #Scenario: Ruby hooks with syntax errors cause an error
+    @error
+  Scenario Outline: Ruby hooks with syntax errors cause an error
+    Given my app has a <Callback Name> ruby deploy hook
+    But my app's <Callback Name> ruby deploy hook contains syntax errors
+    When I run the <Callback Name> callback
+    Then I see a notice about the <Callback Name> syntax error
+    And the <Callback Name> ruby deploy hook is not executed
+
+    Examples:
+      | Callback Name         |
+      | before_deploy         |
+      | before_bundle         |
+      | after_bundle          |
+      | before_compile_assets |
+      | after_compile_assets  |
+      | before_migrate        |
+      | after_migrate         |
+      | before_symlink        |
+      | after_symlink         |
+      | before_restart        |
+      | after_restart         |
+      | after_deploy          |
+
 
     #@failure
   #Scenario: Ruby hook errors cause an error

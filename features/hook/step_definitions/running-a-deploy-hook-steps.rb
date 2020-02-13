@@ -75,12 +75,18 @@ Then %r{^I see a notice that the (.+) callback was skipped$} do |callback_name|
   expect(output_text).to include("#{callback_name}. Skipping.")
 end
 
-Given %r{^my app has a (.+) ruby deploy hook$} do |callback_name|
+def write_ruby_deploy_hook(callback_name, content)
   setup_deploy_hooks_path
+
   hook = deploy_hooks_path.join("#{callback_name}.rb")
+
   f = File.open(hook.to_s, 'w')
-  f.write('true')
+  f.write(content)
   f.close
+end
+
+Given %r{^my app has a (.+) ruby deploy hook$} do |callback_name|
+  write_ruby_deploy_hook(callback_name, 'true')
 end
 
 Then %r{^the (.+) ruby deploy hook is executed$} do |callback_name|
@@ -152,6 +158,20 @@ Given %r{^my app's (.+) executable deploy hook is not actually executable$} do |
   hook = deploy_hooks_path.join(callback_name)
 
   hook.chmod(0644)
+end
+
+Given %r{^my app's (.+) ruby deploy hook contains syntax errors$} do |callback_name|
+  write_ruby_deploy_hook(callback_name, ')_!$')
+end
+
+Then %r{^I see a notice about the (.+) syntax error$} do |callback_name|
+  hook = deploy_hooks_path.join("#{callback_name}.rb")
+  expect(output_text).to include("*** [Error] Invalid Ruby syntax in hook: #{hook}")
+end
+
+Then %r{^the (.+) ruby deploy hook is not executed$} do |callback_name|
+  expect(output_text).
+    not_to include("Executing #{deploy_hooks_path.join("#{callback_name}.rb")}")
 end
 
 Then %{I see the output} do
