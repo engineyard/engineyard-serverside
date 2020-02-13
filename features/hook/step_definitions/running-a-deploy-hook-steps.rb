@@ -80,7 +80,9 @@ def write_ruby_deploy_hook(callback_name, content)
 
   hook = deploy_hooks_path.join("#{callback_name}.rb")
 
-  File.write(hook.to_s, content.to_s)
+  f = File.open(hook.to_s, 'w')
+  f.write(content.to_s)
+  f.close
 end
 
 Given %r{^my app has a (.+) ruby deploy hook$} do |callback_name|
