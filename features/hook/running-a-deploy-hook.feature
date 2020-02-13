@@ -250,7 +250,6 @@ Feature: Running A Deploy Hook
       | after_restart         |
       | after_deploy          |
 
-
     @failure
   Scenario Outline: Ruby hooks with syntax errors cause an error
     Given my app has a <Callback Name> ruby deploy hook
@@ -276,6 +275,3 @@ Feature: Running A Deploy Hook
       | before_restart        |
       | after_restart         |
       | after_deploy          |
-
-    #@failure
-  #Scenario: Executable hooks that are not actually executable cause an error
