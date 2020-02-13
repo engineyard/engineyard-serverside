@@ -85,6 +85,16 @@ def write_ruby_deploy_hook(callback_name, content)
   f.close
 end
 
+def write_ruby_service_hook(callback_name, content)
+  setup_service_path(service_name)
+
+  hook = service_path(service_name).join("#{callback_name}.rb")
+
+  f = File.open(hook.to_s, 'w')
+  f.write(content.to_s)
+  f.close
+end
+
 Given %r{^my app has a (.+) ruby deploy hook$} do |callback_name|
   write_ruby_deploy_hook(callback_name, 'true')
 end
@@ -118,13 +128,7 @@ Given %r{^I have a service named (.+)$} do |service_name|
 end
 
 Given %r{^my service has a (.+) ruby hook$} do |callback_name|
-  setup_service_path(service_name)
-
-  hook = service_path(service_name).join("#{callback_name}.rb")
-
-  f = File.open(hook.to_s, 'w')
-  f.write('true')
-  f.close
+  write_ruby_service_hook(callback_name, 'true')
 end
 
 Then %r{^the (.+) ruby hook for my service is executed$} do |callback_name|
@@ -160,13 +164,19 @@ Given %r{^my app's (.+) executable deploy hook is not actually executable$} do |
   hook.chmod(0644)
 end
 
-Given %r{^my app's (.+) ruby deploy hook contains syntax errors$} do |callback_name|
-  write_ruby_deploy_hook(callback_name, "# encoding: UTF-8\n\n)")
+Given %r{^my service's (.+) ruby hook contains syntax errors$} do |callback_name|
+  write_ruby_service_hook(callback_name, "# encoding: UTF-8\n\n)")
 end
 
 Then %r{^I see a notice about the (.+) syntax error$} do |callback_name|
-  hook = deploy_hooks_path.join("#{callback_name}.rb")
+  hook = service_path(service_name).join("#{callback_name}.rb")
   expect(output_text).to include("*** [Error] Invalid Ruby syntax in hook: #{hook}")
+end
+
+Then %r(^my service's (.+) ruby hook is not executed$) do |callback_name|
+  hook = service_path(service_name).join("#{callback_name}.rb")
+
+  expect(output_text).not_to include("Executing #{hook}")
 end
 
 Then %r{^the (.+) ruby deploy hook is not executed$} do |callback_name|

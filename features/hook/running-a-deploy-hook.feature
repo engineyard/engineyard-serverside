@@ -227,10 +227,12 @@ Feature: Running A Deploy Hook
     @error
   Scenario Outline: Ruby hooks with syntax errors cause an error
     Given my app has a <Callback Name> ruby deploy hook
-    But my app's <Callback Name> ruby deploy hook contains syntax errors
+    And I have a service named selective
+    And my service has a <Callback Name> ruby hook
+    But my service's <Callback Name> ruby hook contains syntax errors
     When I run the <Callback Name> callback
-    Then I see the output
     Then I see a notice about the <Callback Name> syntax error
+    But my service's <Callback Name> ruby hook is not executed
     And the <Callback Name> ruby deploy hook is not executed
 
     Examples:
