@@ -11,12 +11,16 @@ unless RUBY_VERSION =~ /^1\.8\./
   end
 end
 
+require 'cucumber/rspec/doubles'
 require 'aruba/cucumber'
 require 'factis/cucumber'
+require 'devnull'
 require 'engineyard-serverside'
 
 # This is a fun bit of glue to allow us to use Aruba's in-process runner
 class Runatron
+  include RSpec::Mocks::ExampleMethods
+
   def initialize(argv, stdin = STDIN, stdout = STDOUT, stderr = STDERR, kernel = Kernel)
     @argv, @stdin, @stdout, @stderr, @kernel = argv, stdin, stdout, stderr, kernel
   end
@@ -26,12 +30,16 @@ class Runatron
                   $stderr = @stderr
                   $stdin = @stdin
                   $stdout = @stdout
+                  $logger = Logger.new(DevNull.new)
+                  allow(Logger).to receive(:new).and_return($logger)
 
                   EY::Serverside::CLI::App.start(@argv)
+                  0
                 rescue StandardError => e
                   b = e.backtrace
                   @stderr.puts("#{b.shift}: #{e.message} (#{e.class})")
                   @stderr.puts(b.map {|s| "\tfrom #{s}"}.join("\n"))
+                  255
                 rescue SystemExit => e
                   e.status
                 ensure
@@ -47,4 +55,9 @@ end
 Aruba.configure do |config|
   config.command_launcher = :in_process
   config.main_class = Runatron
+end
+
+After do
+  ExecutedCommands.reset
+  cleanup_fs
 end
