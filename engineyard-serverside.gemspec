@@ -35,6 +35,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('factis', '~> 1.0.1')
   s.add_development_dependency('devnull', '~> 0.1.3')
 
+  s.required_ruby_version = '>= 2.3.0'
   s.required_rubygems_version = %q{>= 1.3.6}
   s.test_files = Dir.glob("spec/**/*") + Dir.glob("features/**/*")
 end
