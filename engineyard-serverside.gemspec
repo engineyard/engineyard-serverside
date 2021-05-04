@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
   #s.add_development_dependency('mime-types', '~>1.25')
   #s.add_development_dependency('json', '<2')
   s.add_development_dependency('json', '= 2.5.1')
-  s.add_development_dependency('cucumber', '~> 6.0.0')
+  s.add_development_dependency('cucumber', '~> 4.0.0')
   s.add_development_dependency('contracts', '= 0.9')
   s.add_development_dependency('aruba', '~> 0.14.14')
   s.add_development_dependency('factis', '~> 1.0.1')
