@@ -1,4 +1,4 @@
-require 'multi_json'
+require 'json'
 require 'thor'
 require 'pp'
 require 'yaml'
@@ -131,7 +131,7 @@ module EY
 
       def initialize(options)
         opts = string_keys(options)
-        config = MultiJson.load(opts.delete("config") || "{}")
+        config = JSON.load(opts.delete("config") || "{}")
         append_config_source opts # high priority
         append_config_source config # lower priority
       end
@@ -216,7 +216,7 @@ module EY
       end
 
       def to_json
-        MultiJson.dump(configuration)
+        JSON.dump(configuration)
       end
 
       def node
