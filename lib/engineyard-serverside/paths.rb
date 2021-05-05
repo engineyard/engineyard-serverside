@@ -68,6 +68,7 @@ module EY
       def_path :shared_log,               [:shared,         'log']
       def_path :shared_tmp,               [:shared,         'tmp']
       def_path :shared_config,            [:shared,         'config']
+      def_path :shared_hooks,             [:shared,         'hooks']
       def_path :shared_node_modules,      [:shared,         'node_modules']
       def_path :shared_system,            [:shared,         'system']
       def_path :default_repository_cache, [:shared,         'cached-copy']
@@ -130,8 +131,16 @@ module EY
         path(:deploy_hooks, "#{hook_name}.rb")
       end
 
+      def service_hook(service_name, hook_name)
+        path(:shared_hooks, service_name, "#{hook_name}.rb")
+      end
+
       def executable_deploy_hook(hook_name)
         path(:deploy_hooks, "#{hook_name}")
+      end
+
+      def executable_service_hook(service_name, hook_name)
+        path(:shared_hooks, service_name, "#{hook_name}")
       end
 
       def repository_cache

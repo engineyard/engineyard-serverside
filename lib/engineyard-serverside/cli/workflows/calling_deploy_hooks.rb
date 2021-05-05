@@ -1,5 +1,5 @@
 require 'engineyard-serverside/cli/workflows/base'
-require 'engineyard-serverside/deploy_hook'
+require 'engineyard-serverside/callbacks'
 
 module EY
   module Serverside
@@ -11,10 +11,8 @@ module EY
         class CallingDeployHooks < Base
           private
           def procedure
-            EY::Serverside::DeployHook.
-              new(config, shell, hook_name).
-              call
-
+            Callbacks.load(config.paths).
+              execute(config, shell, hook_name)
           end
 
           def task_name
@@ -25,6 +23,7 @@ module EY
             options[:hook_name]
           end
         end
+
       end
     end
   end

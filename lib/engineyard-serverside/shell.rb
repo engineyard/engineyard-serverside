@@ -48,23 +48,51 @@ module EY
         debug msg.gsub(BOL, SUBSTATUS_PREFIX)
       end
 
-      def fatal(msg)   logger.fatal   "FATAL: #{msg}" end
-      def error(msg)   logger.error   "ERROR: #{msg}" end
-      def warning(msg) logger.warn    "WARNING: #{msg}" end
+      def fatal(msg)
+        logger.fatal("FATAL: #{msg}")
+      end
+
+      def error(msg)
+        logger.error("ERROR: #{msg}")
+      end
+
+      def warning(msg)
+        logger.warn("WARNING: #{msg}")
+      end
       alias warn warning
-      def notice(msg)  logger.warn    msg end
-      def info(msg)    logger.info    msg end
-      def debug(msg)   logger.debug   msg end
-      def unknown(msg) logger.unknown msg end
+
+      def notice(msg)
+        logger.warn(msg)
+      end
+
+      def info(msg)
+        logger.info(msg)
+      end
+
+      def debug(msg)
+        logger.debug(msg)
+      end
+
+      def unknown(msg)
+        logger.unknown(msg)
+      end
 
       # a debug outputter that displays a command being run
       # Formatis like this:
       #   $ cmd blah do \
       #   > something more
       #   > end
-      def command_show(cmd) debug   cmd.gsub(BOL,CMD_CONTINUE).sub(CMD_CONTINUE, CMD_PREFIX) end
-      def command_out(msg)  debug   msg.gsub(BOL,CMD_INDENT) end
-      def command_err(msg)  unknown msg.gsub(BOL,CMD_INDENT) end
+      def command_show(cmd)
+        debug(cmd.gsub(BOL,CMD_CONTINUE).sub(CMD_CONTINUE, CMD_PREFIX))
+      end
+
+      def command_out(msg)
+        debug(msg.gsub(BOL,CMD_INDENT))
+      end
+
+      def command_err(msg)
+        unknown(msg.gsub(BOL,CMD_INDENT))
+      end
 
       def logged_system(cmd, server = nil)
         EY::Serverside::Spawner.run(cmd, self, server)

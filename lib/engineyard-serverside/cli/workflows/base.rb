@@ -7,7 +7,7 @@ module EY
   module Serverside
     module CLI
       module Workflows
-        
+
         # Base is the template from which all Workflows are derived
         class Base
           attr_reader :options

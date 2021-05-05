@@ -6,4 +6,3 @@ spec-*/fixtures/gitrepo
 /coverage
 *~
 *.swp
-/spec

@@ -13,13 +13,10 @@ if defined?(Encoding) && Encoding.respond_to?(:default_internal=) # String.insta
 end
 
 $LOAD_PATH.unshift File.expand_path('vendor/thor/lib', File.dirname(__FILE__))
-$LOAD_PATH.unshift File.expand_path('vendor/systemu/lib', File.dirname(__FILE__))
 $LOAD_PATH.unshift File.expand_path('vendor/escape/lib', File.dirname(__FILE__))
-$LOAD_PATH.unshift File.expand_path('vendor/json_pure/lib', File.dirname(__FILE__))
-$LOAD_PATH.unshift File.expand_path('vendor/multi_json/lib', File.dirname(__FILE__))
 
 require 'escape'
-require 'multi_json'
+require 'json'
 require 'uri'
 
 require 'engineyard-serverside/version'
@@ -28,7 +25,6 @@ require 'engineyard-serverside/about'
 require 'engineyard-serverside/task'
 require 'engineyard-serverside/server'
 require 'engineyard-serverside/deploy'
-require 'engineyard-serverside/deploy_hook'
 require 'engineyard-serverside/cli'
 require 'engineyard-serverside/configuration'
 require 'engineyard-serverside/deprecation'
@@ -40,7 +36,7 @@ module EY
     RemoteFailure = Class.new StandardError
 
     def self.node
-      @node ||= deep_indifferentize(MultiJson.load(dna_json))
+      @node ||= deep_indifferentize(JSON.load(dna_json))
     end
 
     def self.dna_json
