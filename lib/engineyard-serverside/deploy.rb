@@ -236,7 +236,7 @@ chmod 0700 #{path}
             abort_on_bad_paths_in_release_directory
             run_with_callbacks(:symlink)
             sudo "rm -rf #{rolled_back_release}"
-            bundle
+            run_with_callbacks(:bundle)
             shell.status "Restarting with previous release."
             enable_maintenance_page
             run_with_callbacks(:restart)
