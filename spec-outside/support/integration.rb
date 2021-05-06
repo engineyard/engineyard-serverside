@@ -38,6 +38,9 @@ class FullTestDeploy < EY::Serverside::Deploy
     ENV.replace(my_env)
   end
 
+  def handle_after_failure_callback
+  end
+
 end
 
 class EY::Serverside::Deploy
