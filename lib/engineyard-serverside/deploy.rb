@@ -269,7 +269,20 @@ chmod 0700 #{path}
         with_failed_release_cleanup do
           shell.status "Ensuring proper ownership."
           ensure_ownership(paths.active_release)
-          block.call
+          begin
+            block.call
+          rescue => e
+            handle_after_failure_callback
+            raise e
+          end
+        end
+      end
+
+      def handle_after_failure_hook
+        begin
+          callback("after_failure")
+        rescue => e
+          shell.status "after_failure callback raised an error: #{e}\n\nThis error is being ignored, and the failed release is being cleaned up as is."
         end
       end
 
