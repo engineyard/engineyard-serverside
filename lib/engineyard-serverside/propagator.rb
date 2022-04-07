@@ -52,7 +52,7 @@ module EY
       end
 
       def install_command
-        "#{gem_binary} install --no-rdoc --no-ri '#{remote_gem_file}'"
+        "#{gem_binary} install '#{remote_gem_file}'"
       end
     end
   end
